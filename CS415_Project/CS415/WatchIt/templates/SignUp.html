@@ -11,6 +11,13 @@
     <div class="card-container">
         <div class="card">
             <h3 class="text-center mb-4">Sign Up</h3>
+            {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
             <form method="post" action="{% url 'SignUp' %}">
                 {% csrf_token %}
                 <div class="form-group">

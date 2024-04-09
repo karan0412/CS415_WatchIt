@@ -18,15 +18,18 @@ def SignUp (request):
         user_pwd = request.POST.get('user_pwd')
 
         if User.objects.filter(username=user_username).exists():
-            messages.error(request, "Username already exists! Please Login.")
-        elif User.objects.filter(email=user_email).exists():
-            messages.error(request, "Email already exists! Please Login.")
-        else:
-            user = User.objects.create(first_name=user_fname, last_name=user_lname, email=user_email, username=user_username)
-            user.set_password(user_pwd) 
-            user.save()
+            messages.error(request, "Username already exists! Please try a different username.")
+            return render(request, 'SignUp.html')
 
-            return redirect("Login")
+        elif User.objects.filter(email=user_email).exists():
+            messages.error(request, "Email already exists! Please try a different email or login.")
+            return render(request, 'SignUp.html')
+        
+        else:
+            user = User.objects.create_user(first_name=user_fname, last_name=user_lname, email=user_email, username=user_username, password=user_pwd)
+            user.save()
+            # Redirect to login page after successful registration
+            return redirect('login')
             
     return render(request, 'SignUp.html')
 
