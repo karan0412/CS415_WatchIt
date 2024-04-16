@@ -1,13 +1,18 @@
+from django.shortcuts import render
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, render, redirect
 from .models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from .models import Seat, Booking, CinemaHall
+from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods
+import re
+from django.http import JsonResponse
 
 # Create your views here.
 def Home(request):
     return render(request, 'Home.html')
-
 
 def SignUp (request):
     if request.method =='POST':
@@ -63,4 +68,36 @@ def Loggedin(request):
 
 def LogoutUser(request):
     logout(request)
+
     return redirect('Login')
+
+
+def display_hall(request, cinema_hall_id):
+    cinema_hall = CinemaHall.objects.get(pk=cinema_hall_id)
+    seats = list(cinema_hall.seats.all())
+
+    # Custom alphanumeric sorting
+    def alphanum_key(seat):
+        # Split the seat_label into list of ([A, B, C], [1, 2, 3])
+        return [int(text) if text.isdigit() else text.lower() for text in re.split('([0-9]+)', seat.seat_label)]
+    
+    seats.sort(key=alphanum_key)
+
+    return render(request, 'cinema.html', {
+        'cinema_hall': cinema_hall,
+        'seats': seats,
+    })
+
+
+def book_seats(request):
+    if request.method == 'POST':
+        seat_ids = request.POST.getlist('seats[]')
+        seats = Seat.objects.filter(id__in=seat_ids)
+        booking = Booking.objects.create(booking_label="Booking #" + str(request.user.id))
+        booking.seats.set(seats)
+        for seat in seats:
+            seat.availability = False
+            seat.save()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False})
+
