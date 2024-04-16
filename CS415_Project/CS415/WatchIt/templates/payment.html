@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Payment</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'static/css/SignUp.css' %}">
+
+</head>
+
+<body>
+    <div class="card-container">
+        <div class="card">
+            <h3 class="text-center mb-4">Payment</h3>
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            <form method="post" action="{% url 'payment' %}">
+                {% csrf_token %}
+               
+                <div class="form-group">
+                    <label for="cardholder_Name">cardholder_Name:</label>
+                    <input type="text" class="form-control" id="cardholder_Name" name="cardholder_Name" required>
+                </div>
+                <div class="form-group">
+                    <label for="card_number">Card Number:</label>
+                    <input type="text" class="form-control" id="card_number" name="card_number" required>
+                </div>
+                <div class="form-row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="expiry_month">Expire Month:</label>
+                            <select class="form-control" id="expiry_month" name="expiry_month" required>
+                                <option value="">Select Month</option>
+                                {% for month in range_month %}
+                                <option value="{{ month }}">{{ month }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="expiry_year">Expire Year:</label>
+                            <select class="form-control" id="expiry_year" name="expiry_year" required>
+                                <option value="">Select Year</option>
+                                <!-- Add options for years, e.g., from current year to 10 years into the future -->
+                                {% for year in range_year %}
+                                <option value="{{ year }}">{{ year }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <label for="code">CVC Code: </label>
+                    <input type="text" class="form-control" id="code" name="code" required>
+                </div>
+
+                <!-- aunto fill total Amount after seats selected -->
+                <div class="form-group">
+                    <label for="decimal">Total Amount</label>
+                    <input type="text" class="form-control" id="Total" name="Total" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" onclick="redirectToPayment()">Proceed</button>
+            </form>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <script>
+        function redirectToPayment() {
+            window.location.href = "/succesfull/";
+        }
+    </script>
+</body>
+
+</html>
