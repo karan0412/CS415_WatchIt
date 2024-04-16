@@ -1,10 +1,4 @@
-
 from django.shortcuts import render
-
-# Create your views here.
-def Home(request):
-    return render(request, 'Home.html')
-
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, render, redirect
 from .models import User
@@ -19,7 +13,6 @@ from django.http import JsonResponse
 # Create your views here.
 def Home(request):
     return render(request, 'Home.html')
-
 
 def SignUp (request):
     if request.method =='POST':
@@ -75,6 +68,7 @@ def Loggedin(request):
 
 def LogoutUser(request):
     logout(request)
+
     return redirect('Login')
 
 

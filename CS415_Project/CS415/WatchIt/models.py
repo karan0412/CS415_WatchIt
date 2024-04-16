@@ -45,5 +45,3 @@ class Booking(models.Model):
             super().delete(*args, **kwargs)
 
 
-
-
