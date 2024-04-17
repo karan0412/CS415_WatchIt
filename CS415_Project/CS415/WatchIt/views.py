@@ -1,3 +1,4 @@
+import datetime
 from django.shortcuts import render
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, render, redirect
@@ -8,6 +9,8 @@ from .models import Seat, Booking, CinemaHall
 from django.views.decorators.http import require_POST
 from django.views.decorators.http import require_http_methods
 import re
+from django.http import JsonResponse
+from .models import Seat, Booking, CinemaHall, Payment_detail
 from django.http import JsonResponse
 
 # Create your views here.
@@ -100,4 +103,41 @@ def book_seats(request):
             seat.save()
         return JsonResponse({'success': True})
     return JsonResponse({'success': False})
+
+
+def selectTickets(request):
+    if request.method == 'POST':
+        # Assuming the form data contains the selected ticket quantities
+        adult_tickets = request.POST.get('adult_quantity', 0)
+        child_tickets = request.POST.get('child_quantity', 0)
+
+        # Check if any tickets are selected
+        if adult_tickets == '0' and child_tickets == '0':
+            # If no tickets are selected, display a message
+            message = "Please select at least one ticket before proceeding."
+        else:
+            return redirect ('cinema')
+
+    # Render the template normally if tickets are selected or if it's a GET request
+    return render(request, 'selectTickets.html')
+
+def successful (request):
+    return redirect('succesfull')
+
+def payment(request):
+
+    range_month = range(1, 13)
+    
+    current_year = datetime.datetime.now().year
+    range_year = range(current_year, current_year + 10)  # Years from current year to 10 years into the future
+
+    if request.method == 'POST':
+
+        cardholder_Name= request.POST.get('cardholder_Name')
+        Total= request.POST.get('Total')
+
+        Payment_detail.objects.create(payment_Name=cardholder_Name, payment_amount=Total)
+        return redirect('succesfull')  # Redirect to a success page
+
+    return render(request, 'payment.html', {'range_year': range_year,'range_month': range_month})
 
