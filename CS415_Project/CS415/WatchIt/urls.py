@@ -14,4 +14,6 @@ urlpatterns = [
     path("selectTickets",views.selectTickets, name = "SelectTickets"),
     path("payment/", views.payment, name="payment"),
     path("succesfull/", views.successful, name="succesfull"),
+
+
 ]

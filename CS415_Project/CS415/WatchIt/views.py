@@ -1,15 +1,16 @@
 import datetime
 from django.shortcuts import render
-
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, render, redirect
-from .models import Payment_detail, User
+from .models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .models import Seat, Booking, CinemaHall
 from django.views.decorators.http import require_POST
 from django.views.decorators.http import require_http_methods
 import re
+from django.http import JsonResponse
+from .models import Seat, Booking, CinemaHall, Payment_detail
 from django.http import JsonResponse
 
 # Create your views here.
@@ -103,6 +104,7 @@ def book_seats(request):
         return JsonResponse({'success': True})
     return JsonResponse({'success': False})
 
+
 def selectTickets(request):
     if request.method == 'POST':
         # Assuming the form data contains the selected ticket quantities
@@ -138,3 +140,4 @@ def payment(request):
         return redirect('succesfull')  # Redirect to a success page
 
     return render(request, 'payment.html', {'range_year': range_year,'range_month': range_month})
+
