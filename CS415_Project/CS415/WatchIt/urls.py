@@ -10,6 +10,7 @@ urlpatterns = [
     path('Loggedin/', views.Loggedin, name='Loggedin'),
     path("LogoutUser/", views.LogoutUser, name="LogoutUser"),
     path('cinema/<int:cinema_hall_id>/', views.display_hall, name='display_hall'),
+    path('movies/', views.movie_list, name='movie_list'),
     path('book_seats/', views.book_seats, name='book_seats'),
     path("selectTickets",views.selectTickets, name = "SelectTickets"),
     path("payment/", views.payment, name="payment"),
@@ -17,3 +18,7 @@ urlpatterns = [
 
 
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    

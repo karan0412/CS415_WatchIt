@@ -10,7 +10,7 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.http import require_http_methods
 import re
 from django.http import JsonResponse
-from .models import Seat, Booking, CinemaHall, Payment_detail
+from .models import Seat, Booking, CinemaHall, Payment_detail, Movies
 from django.http import JsonResponse
 
 # Create your views here.
@@ -90,6 +90,11 @@ def display_hall(request, cinema_hall_id):
         'cinema_hall': cinema_hall,
         'seats': seats,
     })
+
+def movie_list(request):
+    movies = Movies.objects.all()
+    return render(request, 'movie_list.html', {'movies':movies})
+
 
 
 def book_seats(request):
