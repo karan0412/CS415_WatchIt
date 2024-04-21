@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from django.shortcuts import render
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, render, redirect
@@ -93,7 +93,11 @@ def display_hall(request, cinema_hall_id):
 
 def movie_list(request):
     movies = Movies.objects.all()
-    return render(request, 'movie_list.html', {'movies':movies})
+    now = datetime.now().strftime("%Y-%m-%d")
+    for movie in movies:
+        movie.release_date = movie.release_date.strftime("%Y-%m-%d") if movie.release_date else None
+    
+    return render(request, 'movie_list.html', {'movies':movies, 'now':now})
 
 
 
