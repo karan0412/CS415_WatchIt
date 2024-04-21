@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Select Seats</title>
@@ -9,10 +10,11 @@
     <style>
         #seats-container {
             display: grid;
-            grid-template-columns: repeat({{ cinema_hall.num_cols }}, 40px);
+            grid-template-columns: repeat({{cinema_hall.num_cols }}, 40px);
             grid-gap: 5px;
             justify-content: center;
         }
+
         .seat {
             width: 40px;
             height: 40px;
@@ -24,22 +26,25 @@
             color: white;
             font-weight: bold;
         }
+
         .selected {
             background-color: #FF5722;
         }
+
         .unavailable {
             background-color: #BDBDBD;
             cursor: not-allowed;
         }
     </style>
 </head>
+
 <body>
     <div class="container mt-5">
         <h1 class="text-center">Select Your Seats</h1>
         <div id="seats-container" class="my-4">
             {% for seat in seats %}
-            <div class="seat {% if not seat.availability %}unavailable{% endif %}"
-                 data-id="{{ seat.id }}" title="{{ seat.seat_label }}">
+            <div class="seat {% if not seat.availability %}unavailable{% endif %}" data-id="{{ seat.id }}"
+                title="{{ seat.seat_label }}">
                 {{ seat.seat_label }}
             </div>
             {% endfor %}
@@ -53,9 +58,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
-        document.querySelectorAll('.seat').forEach(function(element) {
+        document.querySelectorAll('.seat').forEach(function (element) {
             if (!element.classList.contains('unavailable')) {
-                element.addEventListener('click', function() {
+                element.addEventListener('click', function () {
                     this.classList.toggle('selected');
                 });
             }
@@ -63,7 +68,7 @@
 
         function bookSeats() {
             var selectedSeats = [];
-            document.querySelectorAll('.seat.selected').forEach(function(element) {
+            document.querySelectorAll('.seat.selected').forEach(function (element) {
                 selectedSeats.push(element.getAttribute('data-id'));
             });
 
@@ -75,19 +80,18 @@
                 },
                 body: 'seats[]=' + selectedSeats.join('&seats[]=')
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.reload();
-                } else {
-                    alert('Failed to book seats.');
-                }
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        var cinemaHallId = '{{ cinema_hall.id }}';
+                        window.location.href = "/payment/" + cinemaHallId + "/";
+                        print(cinema_hall.id)
+                    } else {
+                        alert('Failed to book seats.');
+                    }
+                });
         }
     </script>
 </body>
+
 </html>
-
-
-
-

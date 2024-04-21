@@ -20,7 +20,7 @@
             </div>
             {% endfor %}
             {% endif %}
-            <form method="post" action="{% url 'payment' %}">
+            <form method="post" action="{% url 'payment' cinema_hall_id %}">
                 {% csrf_token %}
                
                 <div class="form-group">
@@ -69,19 +69,13 @@
                     <input type="text" class="form-control" id="Total" name="Total" required>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-block" onclick="redirectToPayment()">Proceed</button>
+                <button type="submit" class="btn btn-primary btn-block" >Proceed</button>
             </form>
         </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-
-    <script>
-        function redirectToPayment() {
-            window.location.href = "/succesfull/";
-        }
-    </script>
 </body>
 
 </html>

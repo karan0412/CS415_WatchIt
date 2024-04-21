@@ -104,10 +104,9 @@ def book_seats(request):
         return JsonResponse({'success': True})
     return JsonResponse({'success': False})
 
-
-def selectTickets(request):
+def selectTickets(request, cinema_hall_id):
     if request.method == 'POST':
-        # Assuming the form data contains the selected ticket quantities
+        
         adult_tickets = request.POST.get('adult_quantity', 0)
         child_tickets = request.POST.get('child_quantity', 0)
 
@@ -115,16 +114,19 @@ def selectTickets(request):
         if adult_tickets == '0' and child_tickets == '0':
             # If no tickets are selected, display a message
             message = "Please select at least one ticket before proceeding."
+            return render(request, 'selectTickets.html', {'message': message, 'cinema_hall_id': cinema_hall_id})
         else:
-            return redirect ('cinema')
+            # Redirect to the display_hall view with the provided cinema hall ID
+            return redirect('display_hall', cinema_hall_id=cinema_hall_id)
 
     # Render the template normally if tickets are selected or if it's a GET request
-    return render(request, 'selectTickets.html')
+    return render(request, 'selectTickets.html', {'cinema_hall_id': cinema_hall_id})
+    
 
 def successful (request):
     return redirect('succesfull')
 
-def payment(request):
+def payment(request, cinema_hall_id):
 
     range_month = range(1, 13)
     
@@ -133,11 +135,10 @@ def payment(request):
 
     if request.method == 'POST':
 
-        cardholder_Name= request.POST.get('cardholder_Name')
-        Total= request.POST.get('Total')
+        cardholder_Name = request.POST.get('cardholder_Name')
+        Total = request.POST.get('Total')
 
         Payment_detail.objects.create(payment_Name=cardholder_Name, payment_amount=Total)
-        return redirect('succesfull')  # Redirect to a success page
+        return redirect('successfull', cinema_hall_id=cinema_hall_id)  # Redirect to a success page
 
-    return render(request, 'payment.html', {'range_year': range_year,'range_month': range_month})
-
+    return render(request, 'payment.html', {'range_year': range_year, 'range_month': range_month, 'cinema_hall_id': cinema_hall_id})
