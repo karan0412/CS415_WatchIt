@@ -48,6 +48,8 @@ class Booking(models.Model):
     seats = models.ManyToManyField(Seat)
     booking_label = models.CharField(max_length=1000, unique=True, null=True, blank=True)
     booking_date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    movie_title = models.ForeignKey(Movies, related_name='moviepayments', on_delete=models.CASCADE, null=True, blank=True)
+    payment_amount = models.DecimalField(decimal_places=2, max_digits=20, null=True, blank=True)
 
     def delete(self, *args, **kwargs):
         with transaction.atomic():
@@ -57,16 +59,4 @@ class Booking(models.Model):
                 seat.availability = True
                 seat.save()
             super().delete(*args, **kwargs)
-
-class Payment_detail(models.Model):
-    cinema_hall = models.ForeignKey(CinemaHall, related_name='payments', on_delete=models.CASCADE, null=True, blank=True)
-    seats = models.ForeignKey(Seat, related_name='seatspayments', on_delete=models.CASCADE, null=True, blank=True)
-    movie_title = models.ForeignKey(Seat, related_name='moviepayments', on_delete=models.CASCADE, null=True, blank=True)
-    payment_Name = models.CharField(null=True, blank=True)
-    payment_amount = models.DecimalField(decimal_places=2, max_digits=20, null=True, blank=True)
-    payment_date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
- 
-    def __str__(self):
-        return str(self.id)
-
 
