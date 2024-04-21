@@ -29,27 +29,14 @@ class Seat(models.Model):
                 if seat_label not in existing_seats:
                     Seat.objects.create(cinema_hall=cinema_hall, seat_label=seat_label)
 
-class Movies(models.Model):
-    title = models.CharField(max_length=255)
-    description = models.TextField()
-    duration = models.IntegerField(help_text="Duration in minutes")
-    starring = models.TextField(help_text="Coma-separated list of main actors")
-    release_date = models.DateField()
-    language = models.CharField(max_length=100)
-    category = models.CharField(max_length=100)
-    ageRating = models.CharField(max_length=10)
-    image = models.ImageField(upload_to='movie_images/', blank=True, null=True)
-
-    def __str__(self):
-                return self.title
 
 class Movies(models.Model):
-    title = models.CharField(max_length=255)
-    description = models.TextField()
-    duration = models.IntegerField(help_text="Duration in minutes")
-    starring = models.TextField(help_text="Coma-separated list of main actors")
-    release_date = models.DateField()
-    language = models.CharField(max_length=100)
+    title = models.CharField(max_length=255, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    duration = models.IntegerField(help_text="Duration in minutes", null=True, blank=True)
+    starring = models.TextField(help_text="Coma-separated list of main actors", null=True, blank=True)
+    release_date = models.DateField(null=True, blank=True)
+    language = models.CharField(max_length=100, null=True, blank=True)
     category = models.CharField(max_length=100)
     ageRating = models.CharField(max_length=10)
     image = models.ImageField(upload_to='movie_images/', blank=True, null=True)
@@ -62,7 +49,6 @@ class Booking(models.Model):
     booking_label = models.CharField(max_length=1000, unique=True, null=True, blank=True)
     booking_date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     movie_title = models.ForeignKey(Movies, related_name='moviepayments', on_delete=models.CASCADE, null=True, blank=True)
-    payment_Name = models.CharField(null=True, blank=True)
     payment_amount = models.DecimalField(decimal_places=2, max_digits=20, null=True, blank=True)
 
     def delete(self, *args, **kwargs):
@@ -73,3 +59,4 @@ class Booking(models.Model):
                 seat.availability = True
                 seat.save()
             super().delete(*args, **kwargs)
+
