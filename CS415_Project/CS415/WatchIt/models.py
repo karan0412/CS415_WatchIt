@@ -43,10 +43,19 @@ class Movies(models.Model):
     def __str__(self):
                 return self.title
 
+class Movies(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    duration = models.IntegerField(help_text="Duration in minutes")
+    starring = models.TextField(help_text="Coma-separated list of main actors")
+    release_date = models.DateField()
+    language = models.CharField(max_length=100)
+    category = models.CharField(max_length=100)
+    ageRating = models.CharField(max_length=10)
+    image = models.ImageField(upload_to='movie_images/', blank=True, null=True)
 
-   
-
-
+    def __str__(self):
+                return self.title
 
 class Booking(models.Model):
     seats = models.ManyToManyField(Seat)
@@ -63,11 +72,13 @@ class Booking(models.Model):
             super().delete(*args, **kwargs)
 
 class Payment_detail(models.Model):
-    id= models.AutoField
+    cinema_hall = models.ForeignKey(CinemaHall, related_name='payments', on_delete=models.CASCADE)
+    seats = models.ForeignKey(Seat, related_name='seatspayments', on_delete=models.CASCADE)
+    movie_title = models.ForeignKey(Seat, related_name='moviepayments', on_delete=models.CASCADE)
     payment_Name = models.CharField(null=True)
     payment_amount = models.DecimalField(null=True, decimal_places=2, max_digits=20)
     payment_date = models.DateTimeField(auto_now_add=True)
-    
+ 
     def __str__(self):
         return str(self.id)
 
