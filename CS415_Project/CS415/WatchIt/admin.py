@@ -1,6 +1,8 @@
 from django.contrib import admin
 from .import models
 
+from .models import Movie
+from .models import Tag
 from .models import Payment_detail
 from .models import CinemaHall
 from .models import Seat
@@ -14,7 +16,8 @@ admin.site.register(Payment_detail)
 
 admin.site.register(models.CinemaHall)
 admin.site.register(models.Seat)
-admin.site.register(models.Movies)
+admin.site.register(models.Movie)
+admin.site.register(models.Tag)
 admin.site.register(models.Booking)
 
 

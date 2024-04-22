@@ -10,7 +10,7 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.http import require_http_methods
 import re
 from django.http import JsonResponse
-from .models import Seat, Booking, CinemaHall, Payment_detail, Movies
+from .models import Seat, Booking, CinemaHall, Payment_detail, Movie, Tag
 from django.http import JsonResponse
 
 # Create your views here.
@@ -92,13 +92,21 @@ def display_hall(request, cinema_hall_id):
     })
 
 def movie_list(request):
-    movies = Movies.objects.all()
-    now = datetime.now().strftime("%Y-%m-%d")
-    for movie in movies:
-        movie.release_date = movie.release_date.strftime("%Y-%m-%d") if movie.release_date else None
+    tags = Tag.objects.all()
+    selected_tag_name = request.GET.get("tag")
+    if selected_tag_name:
+        movies = Movie.objects.filter(tags__name=selected_tag_name).distinct()
+    else:
+        movies = Movie.objects.all()
     
-    return render(request, 'movie_list.html', {'movies':movies, 'now':now})
+    now = datetime.now().strftime("%Y-%m-%d")
 
+    return render(request, 'movie_list.html', {
+        'movies': movies,
+        'now': now,
+        'tags' : tags,
+        'selected_tag_name': selected_tag_name
+    })
 
 
 def book_seats(request):
