@@ -46,11 +46,31 @@ class Seat(models.Model):
 
 
 
+class Tag(models.Model):
+     name = models.CharField(max_length=100, unique=True)
+
+     def __str__(self):
+            return self.name
+
+
+class Movies(models.Model):
+    title = models.CharField(max_length=255, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    duration = models.IntegerField(help_text="Duration in minutes", null=True, blank=True)
+    starring = models.TextField(help_text="Coma-separated list of main actors", null=True, blank=True)
+    release_date = models.DateField(null=True, blank=True)
+    language = models.CharField(max_length=100, null=True, blank=True)
+    ageRating = models.CharField(max_length=10)
+    image = models.ImageField(upload_to='movie_images/', blank=True, null=True)
+    tags = models.ManyToManyField(Tag, related_name='movies')
+    
+    def __str__(self):
+                return self.title
+
 
 class Booking(models.Model):
     cinema_hall = models.ForeignKey(CinemaHall, related_name='bookings', on_delete=models.CASCADE, null=True, blank=True)
     seats = models.ManyToManyField(Seat)
-    booking_label = models.CharField(max_length=1000, unique=True, null=True, blank=True)
     booking_date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     movie_title = models.ForeignKey(Movies, related_name='moviepayments', on_delete=models.CASCADE, null=True, blank=True)
     payment_amount = models.DecimalField(decimal_places=2, max_digits=20, null=True, blank=True)
