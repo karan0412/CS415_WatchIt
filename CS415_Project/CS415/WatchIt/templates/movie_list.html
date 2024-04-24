@@ -70,6 +70,8 @@
                         <p class="card-text"><strong>Language:</strong> {{ movie.language }}</p>
                         <p class="card-text"><strong>Category: {% for tag in movie.tags.all %}{{ tag.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</strong></p>  
                         <p class="card-text"><strong>Age Rating:</strong> {{ movie.ageRating }}</p>
+                        <a href="{% url 'selectTickets' movie.id %}" class="btn btn-primary">Select Tickets</a>
+
                         {% if movie.release_date > now %} 
                             <p class="card-text"><strong>Coming Soon</strong></p>
                         {% else %}
