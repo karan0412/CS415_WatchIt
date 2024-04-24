@@ -6,13 +6,11 @@ from .models import User
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from .models import Seat, Booking, CinemaHall
 import re
 from django.http import JsonResponse
-from .models import Seat, Booking, CinemaHall, Movies
+from .models import Seat, Booking, CinemaHall, Payment_detail, Movie, Tag
 from django.http import JsonResponse
 from django.db import transaction
-from django.http import JsonResponse
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST
@@ -107,12 +105,22 @@ def display_hall(request, cinema_hall_id):
 
 
 def movie_list(request):
-    movies = Movies.objects.all()
-    now = datetime.now().strftime("%Y-%m-%d")
-    for movie in movies:
-        movie.release_date = movie.release_date.strftime("%Y-%m-%d") if movie.release_date else None
+    tags = Tag.objects.all()
+    selected_tag_name = request.GET.get("tag")
+    if selected_tag_name:
+        movies = Movie.objects.filter(tags__name=selected_tag_name).distinct()
+    else:
+        movies = Movie.objects.all()
     
-    return render(request, 'movie_list.html', {'movies':movies, 'now':now})
+    now = datetime.now().strftime("%Y-%m-%d")
+
+
+    return render(request, 'movie_list.html', {
+        'movies': movies,
+        'now': now,
+        'tags' : tags,
+        'selected_tag_name': selected_tag_name
+    })
 
 def redirect_to_payment(request, cinema_hall_id):
     selected_seat_ids = request.POST.getlist('seats[]')
@@ -145,6 +153,7 @@ def selectTickets(request, cinema_hall_id):
         child_tickets = int(request.POST.get('child_quantity', 0))
         adult_price = 7.50  # assuming $7.50 per adult ticket
         child_price = 2.50
+
 
         total_amount = (adult_tickets * adult_price) + (child_tickets * child_price)
 

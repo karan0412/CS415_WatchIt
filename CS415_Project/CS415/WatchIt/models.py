@@ -30,6 +30,13 @@ class Seat(models.Model):
                     Seat.objects.create(cinema_hall=cinema_hall, seat_label=seat_label)
 
 
+class Tag(models.Model):
+     name = models.CharField(max_length=100, unique=True)
+
+     def __str__(self):
+            return self.name
+
+
 class Movies(models.Model):
     title = models.CharField(max_length=255, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
@@ -40,7 +47,8 @@ class Movies(models.Model):
     category = models.CharField(max_length=100)
     ageRating = models.CharField(max_length=10)
     image = models.ImageField(upload_to='movie_images/', blank=True, null=True)
-
+    tags = models.ManyToManyField(Tag, related_name='movies')
+    
     def __str__(self):
                 return self.title
 
