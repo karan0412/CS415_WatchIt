@@ -11,10 +11,12 @@ urlpatterns = [
     path("LogoutUser/", views.LogoutUser, name="LogoutUser"),
     path('cinema/<int:cinema_hall_id>/', views.display_hall, name='display_hall'),
     path('movies/', views.movie_list, name='movie_list'),
-    path('book_seats/', views.book_seats, name='book_seats'),
-    path('selectTickets/<int:cinema_hall_id>/', views.selectTickets, name='select_tickets'),
+    #path('book_seats/', views.book_seats, name='book_seats'),
+    path('selectTickets/<int:cinema_hall_id>/', views.selectTickets, name='selectTickets'),
     path('payment/<int:cinema_hall_id>/', views.payment, name='payment'),
     path('successfull/<int:cinema_hall_id>/', views.successful, name="succesfull"),
+    path('redirect_to_payment/<int:cinema_hall_id>/', views.redirect_to_payment, name='redirect_to_payment'),
+    path('save_total_price_to_session/', views.save_total_price_to_session, name='save_total_price_to_session'),
 
 ]
 

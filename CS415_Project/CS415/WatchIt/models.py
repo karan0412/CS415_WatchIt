@@ -45,6 +45,7 @@ class Movies(models.Model):
                 return self.title
 
 class Booking(models.Model):
+    cinema_hall = models.ForeignKey(CinemaHall, related_name='bookings', on_delete=models.CASCADE, null=True, blank=True)
     seats = models.ManyToManyField(Seat)
     booking_label = models.CharField(max_length=1000, unique=True, null=True, blank=True)
     booking_date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
