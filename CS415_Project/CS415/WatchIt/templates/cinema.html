@@ -1,20 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <title>Select Seats</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-
     <style>
         #seats-container {
             display: grid;
-            grid-template-columns: repeat({{cinema_hall.num_cols }}, 40px);
+            grid-template-columns: repeat({{ cinema_hall.num_cols }}, 40px);
             grid-gap: 5px;
             justify-content: center;
         }
-
         .seat {
             width: 40px;
             height: 40px;
@@ -26,25 +23,23 @@
             color: white;
             font-weight: bold;
         }
-
         .selected {
             background-color: #FF5722;
         }
-
         .unavailable {
             background-color: #BDBDBD;
             cursor: not-allowed;
         }
     </style>
 </head>
-
 <body>
     <div class="container mt-5">
         <h1 class="text-center">Select Your Seats</h1>
         <div id="seats-container" class="my-4">
             {% for seat in seats %}
-            <div class="seat {% if not seat.availability %}unavailable{% endif %}" data-id="{{ seat.id }}"
-                title="{{ seat.seat_label }}">
+            <div class="seat {% if not seat.availability %}unavailable{% endif %}"
+                 data-id="{{ seat.id }}"
+                 title="{{ seat.seat_label }}">
                 {{ seat.seat_label }}
             </div>
             {% endfor %}
@@ -53,45 +48,42 @@
             <button class="btn btn-primary" onclick="bookSeats()">Confirm Selection</button>
         </div>
     </div>
-
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
-        document.querySelectorAll('.seat').forEach(function (element) {
-            if (!element.classList.contains('unavailable')) {
-                element.addEventListener('click', function () {
-                    this.classList.toggle('selected');
-                });
+        document.addEventListener('DOMContentLoaded', function () {
+    var totalTicketsAllowed = parseInt('{{ total_tickets }}'); // Ensure this variable is correctly parsed as an integer.
+    var selectedSeats = [];
+    const seats = document.querySelectorAll('.seat:not(.unavailable)');
+
+    console.log('Total Tickets Allowed:', totalTicketsAllowed); // For debugging
+
+    seats.forEach(function (seat) {
+        seat.addEventListener('click', function () {
+            if (this.classList.contains('selected')) {
+                this.classList.remove('selected');
+                selectedSeats = selectedSeats.filter(id => id !== this.getAttribute('data-id'));
+            } else if (selectedSeats.length < totalTicketsAllowed) {
+                this.classList.add('selected');
+                selectedSeats.push(this.getAttribute('data-id'));
             }
+            console.log('Currently Selected Seats:', selectedSeats); // For debugging
         });
+    });
 
-        function bookSeats() {
-            var selectedSeats = [];
-            document.querySelectorAll('.seat.selected').forEach(function (element) {
-                selectedSeats.push(element.getAttribute('data-id'));
-            });
-
-            fetch('/book_seats/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: 'seats[]=' + selectedSeats.join('&seats[]=')
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        var cinemaHallId = '{{ cinema_hall.id }}';
-                        window.location.href = "/payment/" + cinemaHallId + "/";
-                        print(cinema_hall.id)
-                    } else {
-                        alert('Failed to book seats.');
-                    }
-                });
+    window.bookSeats = function() {
+        console.log('Attempting to book:', selectedSeats.length, 'seats'); // For debugging
+        if (selectedSeats.length === totalTicketsAllowed) {
+            // Correctly redirecting to the payment page
+            window.location.href = `/payment/2/?seats=${selectedSeats.join(',')}`;
+        } else {
+            alert('Please select exactly ' + totalTicketsAllowed + ' seats.');
         }
-    </script>
-</body>
+    };
+});
 
+    </script>
+    
+</body>
 </html>

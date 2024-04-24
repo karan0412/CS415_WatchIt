@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <title>Select Tickets</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" rel="stylesheet">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
-
     {% load static %}
     <link rel="stylesheet" href="{% static 'SelectTickets.css' %}">
 </head>
@@ -20,182 +18,106 @@
                     <div class="row">
                         <div class="col">
                             <h4><b>Select Tickets</b></h4>
-
                             {% for message in messages %}
-                            <h3 id="error-message" style="color:red; margin-left: 16%; margin-top: 2%;" 
+                            <h3 id="error-message" style="color:red; margin-left: 16%; margin-top: 2%;"
                             {% if message.tags %} class="{{ message.tags }}" {% endif %}>
                                 {{ message }}
                             </h3>
                             {% endfor %}
-
                         </div>
                     </div>
                 </div>
-                <div class="col-2"><img class="img-fluid" src=""></div>
-                <div class="col">
-                    <div class="row text-muted">Movie Name</div>
-                    <div class="row">Date and Time</div>
-                </div>
-                <div class="row border-top border-bottom">
-                    <div class="row main align-items-center">
-
-                        <div class="row">
+                <form method="POST" action="{% url 'selectTickets' cinema_hall_id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="adult_quantity" id="adult_quantity_input" value="0">
+                    <input type="hidden" name="child_quantity" id="child_quantity_input" value="0">
+                    <div class="row border-top border-bottom">
+                        <div class="row main align-items-center">
                             <div class="col quantity">
                                 <div class="col ">Adult</div>
                                 <div class="col adult-price">$ 7.50</div>
-                                <a href="#" id="adult-minus">-</a><span id="adult-quantity" class="border">0</span>
+                                <a href="#" id="adult-minus">-</a>
+                                <span id="adult-quantity" class="border">0</span>
                                 <a href="#" id="adult-plus">+</a>
                                 <div class="col subtotal">Subtotal: $  <span class="adult-subtotal">0.00</span></div>
                             </div>
-                        </div>
-
-                        <div class="row">
                             <div class="col quantity">
                                 <div class="col ">Child</div>
                                 <div class="col child-price">$ 2.50</div>
-                                <a href="#" id="child-minus">-</a><span id="child-quantity" class="border">0</span>
+                                <a href="#" id="child-minus">-</a>
+                                <span id="child-quantity" class="border">0</span>
                                 <a href="#" id="child-plus">+</a>
-                                <div></div>
                                 <div class="col subtotal">Subtotal: $  <span class="child-subtotal">0.00</span></div>
                             </div>
                         </div>
                     </div>
-                </div>
+                    <div class="col-md-4 summary">
+                        <div>
+                            <h5><b>Summary</b></h5>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col">Adult Tickets : <span id="adult-quantity-summary" class="border">0</span></div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col">Child Tickets : <span id="child-quantity-summary" class="border">0</span></div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col total">TOTAL PRICE : $ <span id="total-price">0.00</span></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Select Seats</button>
+                    </div>
+                </form>
             </div>
-
-            <div class="col-md-4 summary">
-                <div>
-                    <h5><b>Summary</b></h5>
-                </div>
-                <hr>
-                <div class="row">
-                    <div class="col">Adult Tickets : <span id="adult-quantity-summary" class="border">0</span></div>
-                </div>
-                <hr>
-                <div class="row">
-                    <div class="col">Child Tickets : <span id="child-quantity-summary" class="border">0</span></div>
-                </div>
-                <hr>
-                <div class="row">
-                    <div class="col total">TOTAL PRICE : $ <span id="total-price"> 0.00</span></div>
-                </div>
-
-                <a href="{% url 'display_hall' cinema_hall_id %}" class="btn btn-primary btn-block">Select Seats</a>
-
-
-            </div>
-
-
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script>
-
         // JavaScript to display and hide the error message
         document.addEventListener('DOMContentLoaded', function () {
             var errorMessage = document.getElementById('error-message');
             if (errorMessage) {
                 errorMessage.style.display = 'block'; // Show the error message
-
-                // Hide the error message after 5 seconds (5000 milliseconds)
                 setTimeout(function () {
                     errorMessage.style.display = 'none';
-                }, 1500);
+                }, 5000); // Hide the error message after 5 seconds
             }
-        }),
+        });
 
-            $(document).ready(function () {
-                // Quantity buttons functionality
-                $('#adult-plus').click(function () {
-                    var quantity = parseInt($('#adult-quantity').text());
-                    if (quantity < 10) {
-                        $('#adult-quantity').text(quantity + 1);
-                        updateTotalPrice();
-                    }
-                });
-
-                $('#adult-minus').click(function () {
-                    var quantity = parseInt($('#adult-quantity').text());
-                    if (quantity > 0) {
-                        $('#adult-quantity').text(quantity - 1);
-                        updateTotalPrice();
-                    }
-                });
-
-                $('#child-plus').click(function () {
-                    var quantity = parseInt($('#child-quantity').text());
-                    if (quantity < 10) {
-                        $('#child-quantity').text(quantity + 1);
-                        updateTotalPrice();
-                    }
-                });
-
-                $('#child-minus').click(function () {
-                    var quantity = parseInt($('#child-quantity').text());
-                    if (quantity > 0) {
-                        $('#child-quantity').text(quantity - 1);
-                        updateTotalPrice();
-                    }
-                });
-
-                // Function to update adult ticket quantity in summary
-                function updateAdultQuantity(quantity) {
-                    document.getElementById("adult-quantity-summary").textContent = quantity;
+        $(document).ready(function () {
+            // Quantity buttons functionality
+            $('#adult-plus, #adult-minus, #child-plus, #child-minus').click(function (event) {
+                event.preventDefault();
+                var id = $(this).attr('id');
+                var isPlus = id.includes('plus');
+                var quantitySpan = $('#' + id.split('-')[0] + '-quantity');
+                var quantity = parseInt(quantitySpan.text());
+                if (isPlus && quantity < 10) {
+                    quantity++;
+                } else if (!isPlus && quantity > 0) {
+                    quantity--;
                 }
-                document.getElementById("adult-plus").addEventListener("click", function () {
-                    var currentQuantity = parseInt(document.getElementById("adult-quantity").textContent);
-                    updateAdultQuantity(currentQuantity);
-                });
-
-                document.getElementById("adult-minus").addEventListener("click", function () {
-                    var currentQuantity = parseInt(document.getElementById("adult-quantity").textContent);
-                    if (currentQuantity >= 0) {
-                        updateAdultQuantity(currentQuantity);
-                    }
-                });
-
-                // Function to update child ticket quantity in summary
-                function updateChildQuantity(quantity) {
-                    document.getElementById("child-quantity-summary").textContent = quantity;
-                }
-
-                // Event listener for increasing child ticket quantity
-                document.getElementById("child-plus").addEventListener("click", function () {
-                    var currentQuantity = parseInt(document.getElementById("child-quantity").textContent);
-                    updateChildQuantity(currentQuantity);
-                });
-
-                // Event listener for decreasing child ticket quantity
-                document.getElementById("child-minus").addEventListener("click", function () {
-                    var currentQuantity = parseInt(document.getElementById("child-quantity").textContent);
-                    if (currentQuantity >= 0) {
-                        updateChildQuantity(currentQuantity);
-                    }
-                });
-
-                // Function to update total price
-                function updateTotalPrice() {
-                    var adultPrice = parseFloat($('.adult-price').text().replace('$', ''));
-                    var adultQuantity = parseInt($('#adult-quantity').text());
-                    var childPrice = parseFloat($('.child-price').text().replace('$', ''));
-                    var childQuantity = parseInt($('#child-quantity').text());
-
-                    // Calculate subtotal for adult tickets and update the corresponding element
-                    var totalAdult = adultPrice * adultQuantity;
-                    $('.adult-subtotal').text(totalAdult.toFixed(2));
-
-                    // Calculate subtotal for child tickets and update the corresponding element
-                    var totalChild = childPrice * childQuantity;
-                    $('.child-subtotal').text(totalChild.toFixed(2));
-
-                    // Calculate total price by summing adult and child subtotals and update the total price element
-                    var totalPrice = totalAdult + totalChild;
-                    $('#total-price').text(totalPrice.toFixed(2));
-                }
-
+                quantitySpan.text(quantity);
+                $('#' + id.split('-')[0] + '_quantity_input').val(quantity);
+                updateTotalPrice();
             });
+
+            // Function to update total price
+            function updateTotalPrice() {
+                var adultPrice = parseFloat($('.adult-price').text().replace('$', ''));
+                var adultQuantity = parseInt($('#adult-quantity').text());
+                var childPrice = parseFloat($('.child-price').text().replace('$', ''));
+                var childQuantity = parseInt($('#child-quantity').text());
+                var totalAdult = adultPrice * adultQuantity;
+                var totalChild = childPrice * childQuantity;
+                var totalPrice = totalAdult + totalChild;
+                $('.adult-subtotal').text(totalAdult.toFixed(2));
+                $('.child-subtotal').text(totalChild.toFixed(2));
+                $('#total-price').text(totalPrice.toFixed(2));
+            }
+        });
     </script>
 </body>
-
 </html>
