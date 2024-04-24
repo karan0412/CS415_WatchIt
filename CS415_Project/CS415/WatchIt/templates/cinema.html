@@ -76,7 +76,7 @@
         console.log('Attempting to book:', selectedSeats.length, 'seats'); // For debugging
         if (selectedSeats.length === totalTicketsAllowed) {
             // Correctly redirecting to the payment page
-            window.location.href = `/payment/2/?seats=${selectedSeats.join(',')}`;
+            window.location.href = `/payment/1/?seats=${selectedSeats.join(',')}`;
         } else {
             alert('Please select exactly ' + totalTicketsAllowed + ' seats.');
         }

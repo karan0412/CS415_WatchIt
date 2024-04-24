@@ -53,6 +53,7 @@
                         <p class="card-text"><strong class="strong-gold">Language:</strong> {{ movie.language }}</p>
                         <p class="card-text"><strong class="strong-gold">Category:</strong> {{ movie.category }}</p>
                         <p class="card-text"><strong class="strong-gold">Age Rating:</strong> {{ movie.ageRating }}</p>
+                        <a href="{% url 'selectTickets' movie.id %}" class="btn btn-primary">Select Tickets</a>
                         {% if movie.release_date > now %} 
                             <p class="card-text"><strong class="strong-gold">Coming Soon</strong></p>
                         {% else %}
