@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 import re
 from django.http import JsonResponse
-from .models import Seat, Booking, CinemaHall, Payment_detail, Movie, Tag
+from .models import Seat, Booking, CinemaHall, Movie, Tag
 from django.http import JsonResponse
 from django.db import transaction
 from django.http import HttpResponseRedirect
@@ -114,7 +114,6 @@ def movie_list(request):
     
     now = datetime.now().strftime("%Y-%m-%d")
 
-
     return render(request, 'movie_list.html', {
         'movies': movies,
         'now': now,
@@ -148,6 +147,7 @@ def save_total_price_to_session(request):
      #   return HttpResponseNotAllowed(['POST'])
 
 def selectTickets(request, cinema_hall_id):
+
     if request.method == 'POST':
         adult_tickets = int(request.POST.get('adult_quantity', 0))
         child_tickets = int(request.POST.get('child_quantity', 0))
@@ -178,44 +178,30 @@ def successful (request):
     return redirect('succesfull')
 
 def payment(request, cinema_hall_id):
-    # Get selected seat ids and corresponding Seat objects
-    selected_seat_ids = request.GET.get('seats', '')
-    seat_ids = selected_seat_ids.split(',') if selected_seat_ids else []
-    seats = Seat.objects.filter(id__in=seat_ids)
-
     # Try to get the total price from the session, default to '0' if not found
     total_amount = request.session.get('total_price', '0')
-
+    print('amount', total_amount)
     range_month = range(1, 13)
     current_year = timezone.now().year
     range_year = range(current_year, current_year + 10)
 
-    if request.method == 'POST':
-        # This is where you would handle actual payment processing
-        # For example, integrate with Stripe, PayPal, etc.
-        # Here we'll assume the payment is successfully processed
+    if request.method == 'GET':
+        # Retrieve selected seat IDs from the form data
+        selected_seat_ids = request.GET.get('seats', '')
+        seat_ids = selected_seat_ids.split(',') if selected_seat_ids else []
+        seats = Seat.objects.filter(id__in=seat_ids)
 
-        # After payment is confirmed:
+        # Handle payment processing
         try:
             with transaction.atomic():
-                # Create booking label
-                seat_labels = ','.join(seat.seat_label for seat in seats)
-                booking_label = f"Booking #{request.user.id}-{seat_labels}-{timezone.now().strftime('%Y%m%d%H%M%S')}"
-                
                 # Create the Booking record
                 booking = Booking.objects.create(
                     cinema_hall=CinemaHall.objects.get(id=cinema_hall_id),
-                    booking_label=booking_label,
                     payment_amount=total_amount
                 )
                 
                 # Assign selected seats to the Booking
                 booking.seats.set(seats)
-                
-                # Optionally, save movie details to the booking
-                # movie_title_id = request.session.get('selected_movie')
-                # booking.movie_title = Movies.objects.get(pk=movie_title_id) if movie_title_id else None
-                # booking.save()
 
                 # Update seat availability
                 seats.update(availability=False)
@@ -241,6 +227,5 @@ def payment(request, cinema_hall_id):
         'range_year': list(range_year),
         'range_month': list(range_month),
         'cinema_hall_id': cinema_hall_id,
-        'seats': seats,
         'total_amount': total_amount,
     })
