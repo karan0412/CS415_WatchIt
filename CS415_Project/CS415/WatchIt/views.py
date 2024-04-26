@@ -15,6 +15,12 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.enums import TA_CENTER
+from django.http import HttpResponse
 
 # Create your views here.
 def Home(request):
@@ -229,3 +235,81 @@ def payment(request, cinema_hall_id):
         'cinema_hall_id': cinema_hall_id,
         'total_amount': total_amount,
     })
+
+
+def generate_purchase_history(request, booking_id):
+    # Get the booking instance
+    booking = get_object_or_404(Booking, id=booking_id)
+
+    # Prepare the HTTP response
+    response = HttpResponse(content_type='application/pdf')
+    filename = f"purchase_history_{booking.id}.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    # Set up the document template
+    doc = SimpleDocTemplate(response, pagesize=letter)
+    elements = []
+
+    # Get default styles and customize
+    styles = getSampleStyleSheet()
+    title_style = styles['Title']
+    title_style.alignment = TA_CENTER
+    title_style.fontSize = 24
+    title_style.textColor = colors.HexColor('#000080')  # Dark blue color for the title
+
+    # Add main title
+    title = Paragraph('WatchIt Cinemas', title_style)
+    elements.append(title)
+    elements.append(Spacer(1, 12))
+
+    # Add subtitle
+    subtitle_style = styles['Heading2']
+    subtitle_style.alignment = TA_CENTER
+    subtitle_style.fontSize = 18
+    subtitle_style.textColor = colors.HexColor('#666666')  # Dark gray color for the subtitle
+    subtitle = Paragraph('Purchase History', subtitle_style)
+    elements.append(subtitle)
+    elements.append(Spacer(1, 20))
+
+    # Define the table data
+    data = [
+        [
+            Paragraph('<b>Cinema Hall</b>', styles['BodyText']),
+            Paragraph('<b>Booking Date</b>', styles['BodyText']),
+            Paragraph('<b>Payment Amount</b>', styles['BodyText']),
+            Paragraph('<b>Seats</b>', styles['BodyText'])
+        ],
+        [
+            booking.cinema_hall.cinema_type if booking.cinema_hall else 'N/A',
+            booking.booking_date.strftime('%Y-%m-%d %H:%M:%S') if booking.booking_date else 'N/A',
+            '${:,.2f}'.format(booking.payment_amount) if booking.payment_amount else 'N/A',
+            ', '.join(seat.seat_label for seat in booking.seats.all()) or 'No seats'
+        ]
+    ]
+
+    # Create the table with styled cells
+    table_style = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#00A550')),  # Green color for the header
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('TOPPADDING', (0, 1), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 5),
+    ])
+    table = Table(data, colWidths=[doc.width/4.0]*4, style=table_style)
+    elements.append(table)
+
+    # Build the PDF
+    doc.build(elements)
+    return response
+
+
+
+def list_purchase_history(request):
+    # Fetch all bookings
+    purchase_histories = Booking.objects.all()
+    return render(request, 'purchase_history.html', {'purchase_histories': purchase_histories})

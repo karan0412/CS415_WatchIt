@@ -17,6 +17,8 @@ urlpatterns = [
     path('successfull/<int:cinema_hall_id>/', views.successful, name="succesfull"),
     path('redirect_to_payment/<int:cinema_hall_id>/', views.redirect_to_payment, name='redirect_to_payment'),
     path('save_total_price_to_session/', views.save_total_price_to_session, name='save_total_price_to_session'),
+    path('purchase-history/<int:booking_id>/pdf/', views.generate_purchase_history, name='generate_purchase_history'),
+    path('purchase_history/', views.list_purchase_history, name='list_purchase_histories'),
 
 ]
 

@@ -3,39 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Movie List</title>
+    <title>Minimalist Movie List</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #d3d3d3;
-            color: #000000;
+            background-color: #333333; /* Medium gray for a lighter dark theme */
+            color: #EDEDED; /* Off-white for text, providing higher readability */
+            font-family: 'Helvetica Neue', Arial, sans-serif; /* Maintains modern, clean font style */
         }
         h1 {
-            color: #FFD700;
+            color: #FF6347; /* Tomato red for the heading, adds warmth */
             text-align: center;
             margin-top: 20px;
+            margin-bottom: 40px;
         }
         .card {
-            border-color: #FFD700;
+            background-color: #424242; /* Slightly lighter gray than the body background */
+            border: none;
+            border-radius: 8px; /* Rounded corners for a modern appearance */
         }
-        .card-header {
-            background-color: #800000;
-            color: #FFFDD0;
+        .card-body {
+            padding: 20px;
         }
-        .card-img-top {
-            height: 200px;
-            object-fit: cover;
+        .card-title {
+            color: #FFFFFF; /* White for prominent titles */
+            font-weight: bold;
         }
-        .strong-gold {
-            color: #FFD700;
+        .card-text {
+            color: #D0D0D0; /* Light gray for text, for better contrast */
+            margin-bottom: 10px;
+        }
+        .btn-primary {
+            background-color: #4682B4; /* Steel blue for buttons, adds a cool tone */
+            border: none;
+        }
+        .form-select {
+            background-color: #383838; /* Dark gray for dropdown, distinguishing it from the card */
+            border: none;
+            color: #FFFFFF;
         }
     </style>
 </head>
 <body>
     <h1>Movies</h1>
-    <div class="container mt-3">
+    <div class="container">
         <form method="get" action="">
-            <div class="row mb-3">
+            <div class="row mb-5">
                 <div class="col">
                     <select name="tag" class="form-select">
                         <option value="">Filter by category</option>
@@ -52,40 +65,27 @@
             </div>
         </form>
         <div class="row">
-            {% comment %} {% now "Y-m-d" as now %} {% endcomment %}
-            <p>Current Date: {{ now }}</p>
             {% for movie in movies %}
             <div class="col-md-4">
-                <div class="card mb-3">
+                <div class="card mb-4">
                     {% if movie.image %}
-                    <img src="{{ movie.image.url }}" class="card-img-top" alt="{{ movie.title }}">
+                    <img src="{{ movie.image.url }}" class="card-img-top" alt="{{ movie.title }}" style="border-radius: 8px 8px 0 0;">
                     {% else %}
                     <div class="card-header">No Image Available</div>
                     {% endif %}
                     <div class="card-body">
-                        <h5 class="card-title">{{ movie.title }} ({{ movie.release_date }})</h5>
-                        <p class="card-text"><strong>Description:</strong> {{ movie.description }}</p>
-                        <p class="card-text"><strong>Duration:</strong> {{ movie.duration }} minutes</p>
-                        <p class="card-text"><strong>Starring:</strong> {{ movie.starring }}</p>
-                        <p class="card-text"><strong>Language:</strong> {{ movie.language }}</p>
-                        <p class="card-text"><strong>Category: {% for tag in movie.tags.all %}{{ tag.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</strong></p>  
-                        <p class="card-text"><strong>Age Rating:</strong> {{ movie.ageRating }}</p>
-                        
-                        <!-- Inside your for loop for movies -->
-                        Release Date: {{ movie.release_date }}<br>
-                        Current Date: {{ now }}
-
-
-                        {% if movie.release_date > now %} 
+                        <h5 class="card-title">{{ movie.title }}</h5>
+                        <p class="card-text">{{ movie.release_date }}</p>
+                        <p class="card-text">{{ movie.description | truncatewords:20 }}</p> <!-- Truncate description for minimalism -->
+                        {% if movie.release_date > now %}
                             <p class="card-text"><strong>Coming Soon</strong></p>
                         {% else %}
                             <p class="card-text"><strong>Now Showing</strong></p>
                         {% endif %}
-
                         {% for showtime in movie.showtimes.all %}
                             {% if showtime.is_future_showtime %}
-                                <a href="{% url 'selectTickets' cinema_hall_id=showtime.cinema_hall.id %}">
-                                    <button class="btn btn-primary">Book Now for {{ showtime.showtime|date:"DATE_FORMAT" }}</button>
+                                <a href="{% url 'selectTickets' cinema_hall_id=showtime.cinema_hall.id %}" class="btn btn-primary mb-2">
+                                    Book Now for {{ showtime.showtime|date:"DATE_FORMAT" }}
                                 </a>
                             {% else %}
                                 <p>Showtime passed</p>
