@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from string import ascii_uppercase
 from django.db import models
 from django.db import transaction
+from django.utils import timezone
+
 
 
 class Tag(models.Model):
@@ -10,21 +12,7 @@ class Tag(models.Model):
 
      def __str__(self):
             return self.name
-
-class Movie(models.Model):
-    title = models.CharField(max_length=255, null=True, blank=True)
-    description = models.TextField(null=True, blank=True)
-    duration = models.IntegerField(help_text="Duration in minutes", null=True, blank=True)
-    starring = models.TextField(help_text="Coma-separated list of main actors", null=True, blank=True)
-    release_date = models.DateField(null=True, blank=True)
-    language = models.CharField(max_length=100, null=True, blank=True)
-    ageRating = models.CharField(max_length=10, null=True, blank=True)
-    image = models.ImageField(upload_to='movie_images/', blank=True, null=True)
-    tags = models.ManyToManyField(Tag, related_name='tags')
     
-    def __str__(self):
-                return self.title
-
 class CinemaHall(models.Model):
     cinema_type = models.CharField(max_length=100, null=True, blank=True)
     num_rows = models.IntegerField(null=True, blank=True)
@@ -33,6 +21,36 @@ class CinemaHall(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         Seat.generate_seats(self)
+                   
+class Movie(models.Model):
+    title = models.CharField(max_length=255, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    duration = models.IntegerField(help_text="Duration in minutes", null=True, blank=True)
+    starring = models.TextField(help_text="Coma-separated list of main actors", null=True, blank=True)
+    release_date = models.DateField(null=True, blank=True)
+    language = models.CharField(max_length=100, null=True, blank=True)
+    ageRating = models.CharField(max_length=10, null=True, blank=True)
+    cinemaHall = models.ForeignKey(CinemaHall, on_delete=models.SET_NULL, null=True)
+    image = models.ImageField(upload_to='movie_images/', blank=True, null=True)
+    tags = models.ManyToManyField(Tag, related_name='tags')
+    
+    def __str__(self):
+                return self.title
+
+from django.db import models
+from django.utils import timezone
+
+class Showtime(models.Model):
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='showtimes')
+    cinema_hall = models.ForeignKey(CinemaHall, on_delete=models.CASCADE, related_name='showtimes')
+    showtime = models.DateTimeField()
+
+    @property
+    def is_future_showtime(self):
+        return self.showtime > timezone.now()
+
+    def __str__(self):
+        return f"{self.movie.title} in {self.cinema_hall.cinema_type} at {self.showtime}"
 
 
 class Seat(models.Model):
