@@ -52,7 +52,7 @@
             </div>
         </form>
         <div class="row">
-            {% now "Y-m-d" as now %}
+            {% comment %} {% now "Y-m-d" as now %} {% endcomment %}
             <p>Current Date: {{ now }}</p>
             {% for movie in movies %}
             <div class="col-md-4">
@@ -71,12 +71,26 @@
                         <p class="card-text"><strong>Category: {% for tag in movie.tags.all %}{{ tag.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</strong></p>  
                         <p class="card-text"><strong>Age Rating:</strong> {{ movie.ageRating }}</p>
                         
+                        <!-- Inside your for loop for movies -->
+                        Release Date: {{ movie.release_date }}<br>
+                        Current Date: {{ now }}
+
+
                         {% if movie.release_date > now %} 
                             <p class="card-text"><strong>Coming Soon</strong></p>
                         {% else %}
                             <p class="card-text"><strong>Now Showing</strong></p>
                         {% endif %}
 
+                        {% for showtime in movie.showtimes.all %}
+                            {% if showtime.is_future_showtime %}
+                                <a href="{% url 'selectTickets' cinema_hall_id=showtime.cinema_hall.id %}">
+                                    <button class="btn btn-primary">Book Now for {{ showtime.showtime|date:"DATE_FORMAT" }}</button>
+                                </a>
+                            {% else %}
+                                <p>Showtime passed</p>
+                            {% endif %}
+                        {% endfor %}
                     </div>
                 </div>
             </div>

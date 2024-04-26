@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 import re
 from django.http import JsonResponse
-from .models import Seat, Booking, CinemaHall, Movie, Tag
+from .models import Seat, Booking, CinemaHall, Movie, Tag, Showtime
 from django.http import JsonResponse
 from django.db import transaction
 from django.http import HttpResponseRedirect
@@ -112,7 +112,7 @@ def movie_list(request):
     else:
         movies = Movie.objects.all()
     
-    now = datetime.now().strftime("%Y-%m-%d")
+    now = timezone.now().date()
 
     return render(request, 'movie_list.html', {
         'movies': movies,
