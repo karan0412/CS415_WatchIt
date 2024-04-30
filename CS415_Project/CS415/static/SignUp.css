@@ -1,12 +1,7 @@
-body, html {
-    height: 100%;
-    margin: 0;
-    background-color: #343a40;
-    color: white;
-}
+
 
 .card-container {
-    min-height: 100vh;
+
     display: flex;
     justify-content: center;
     align-items: center;
@@ -24,26 +19,30 @@ body, html {
 .form-control {
     background-color: #495057;
     border: none;
-    color: white;
+    color: white; /* Ensure this is a contrasting color */
 }
 
 .form-control::placeholder {
-    color: #ced4da;
+    color: #ced4da; /* Lighter placeholder text for visibility */
 }
 
 .form-control:focus {
     background-color: #495057;
-    border-color: #007bff;
+    border-color: #28a745;
+    color: white; /* Maintain text color on focus */
+}
+.is-invalid,
+.is-valid {
     color: white;
 }
 
 .btn-primary {
-    background-color: #007bff;
+    background-color: #28a745;
     border: none;
 }
 
 .btn-primary:hover {
-    background-color: #0069d9;
+    background-color: #218838;
 }
 
 .form-group label {

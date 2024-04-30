@@ -1,10 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Select Seats</title>
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+{% extends 'index.html' %}
+
+{% block title %}
+<title>Select Seats</title>
+{% endblock %}  
+{% block content %}
     <style>
         body {
             background-color: #121212; /* Dark background for the whole page */
@@ -67,7 +66,7 @@
     </style>
 </head>
 <body>
-    <div class="container mt-5">
+    <div class="container mt-5 mb-5">
         <h1 class="text-center">Select Your Seats</h1>
         <div id="screen">SCREEN</div>
         <div id="seats-container" class="my-4">
@@ -118,5 +117,5 @@
             };
         });
     </script>
-</body>
-</html>
+
+    {% endblock %}

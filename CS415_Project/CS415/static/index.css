@@ -1,0 +1,29 @@
+.navbar-dark .navbar-nav .nav-link {
+    color: #ffffff; /* Navbar link color remains white for contrast */
+    
+}
+.navbar-dark .navbar-brand {
+    color: #ffffff; /* Brand color remains white */
+}
+.navbar-dark {
+ /* Dark gray background for the navbar */
+    padding-top: 1rem; /* Increase top padding */
+    padding-bottom: 1rem; /* Increase bottom padding */
+}
+
+.navbar {
+    position: relative; /* Needed to position the pseudo-element correctly */
+}
+
+.navbar::after {
+    content: ""; /* Required for pseudo-elements */
+    position: absolute;
+    bottom: 0; /* Align at the bottom of the navbar */
+    left: 50%; /* Start from the center */
+    width: 100%; /* Set the width of the 'border' */
+    border-bottom: 1px solid rgba(225, 225, 225, 0.19); /* Light grey border with reduced opacity */
+    transform: translateX(-50%); /* Center the pseudo-element */
+}
+.footer{
+    background-color: #DBA622;
+}

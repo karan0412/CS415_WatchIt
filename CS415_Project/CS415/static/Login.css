@@ -1,0 +1,46 @@
+.card-container {
+    margin-top: 5%; /* Full height of the viewport */
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+   
+}
+
+.card {
+    width: 100%;
+    max-width: 400px;
+    background: #424242; /* Dark gray background for the card */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    color: white; /* White text */
+}
+
+.form-control {
+    background-color: #495057;
+    border: none;
+    color: white;
+}
+
+.form-control::placeholder {
+    color: #ced4da;
+}
+
+.form-control:focus {
+    background-color: #495057;
+    border-color: #007bff;
+    color: white;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #0069d9;
+}
+
+.form-group label {
+    color: white;
+}

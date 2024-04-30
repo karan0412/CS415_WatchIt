@@ -1,19 +1,17 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Select Tickets</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+{% extends 'index.html' %}
+
+{% block title %}
+<title>Select Tickets</title>
+{% endblock %}
+    {% block css %}
     {% load static %}
     <link rel="stylesheet" href="{% static 'SelectTickets.css' %}">
-</head>
-
-<body>
-    <div class="card">
+    {% endblock %}
+  
+{% block content %}
+    <div class="card mt-5">
         <div class="row">
-            <div class="col-md-8 cart">
+            <div class="col-md-8 cart text-dark">
                 <div class="title">
                     <div class="row">
                         <div class="col">
@@ -74,7 +72,8 @@
             </div>
         </div>
     </div>
-
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script>
         // JavaScript to display and hide the error message
         document.addEventListener('DOMContentLoaded', function () {
@@ -120,5 +119,5 @@
             }
         });
     </script>
-</body>
-</html>
+
+{% endblock %}

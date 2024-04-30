@@ -1,15 +1,18 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Sign Up</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
+{% extends 'index.html' %}
+
+{% block title %}
+<title>Sign Up</title>
+{% endblock %}
+    {% block css %}
     {% load static %}
-    <link rel="stylesheet" href="{% static 'static/css/SignUp.css' %}">
-    
-</head>
-<body>
-    <div class="card-container">
-        <div class="card">
+    <link rel="stylesheet" href="{% static 'SignUp.css' %}">
+    {% endblock %}
+  
+{% block content %}
+
+   
+    <div class="card-container mt-5 mb-5">
+        <div class="card bg-dark">
             <h3 class="text-center mb-4">Sign Up</h3>
             {% if messages %}
         {% for message in messages %}
@@ -20,32 +23,31 @@
         {% endif %}
             <form method="post" action="{% url 'SignUp' %}">
                 {% csrf_token %}
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="user_fname">First Name:</label>
                     <input type="text" class="form-control" id="user_fname" name="user_fname" required>
                 </div>
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="user_lname">Last Name:</label>
                     <input type="text" class="form-control" id="user_lname" name="user_lname" required>
                 </div>
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="user_email">Email:</label>
                     <input type="email" class="form-control" id="user_email" name="user_email" required>
                 </div>
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="user_username">Username:</label>
                     <input type="text" class="form-control" id="user_username" name="user_username" required>
                 </div>
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="user_pwd">Password:</label>
                     <input type="password" class="form-control" id="user_pwd" name="user_pwd" required>
                 </div>
-                <button type="submit" class="btn btn-primary btn-block">Sign Up</button>
+                <button type="submit" class="btn btn-outline-light btn-block">Sign Up</button>
             </form>
         </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-</body>
-</html>
+    {% endblock %}
