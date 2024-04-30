@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 import re
 from django.http import JsonResponse
-from .models import Seat, Booking, CinemaHall, Movie, Tag, Showtime
+from .models import Seat, Booking, CinemaHall, Movie, Tag, Showtime, Deals
 from django.http import JsonResponse
 from django.db import transaction
 from django.http import HttpResponseRedirect
@@ -24,7 +24,11 @@ from django.http import HttpResponse
 
 # Create your views here.
 def Home(request):
-    return render(request, 'Home.html')
+    today = timezone.now().date()
+    movies = Movie.objects.filter(release_date__lte=today)  # Fetch movies with release_date today or in the past
+    deals = Deals.objects.all()
+    movies_chunks = [movies[i:i+3] for i in range(0, len(movies), 3)]
+    return render(request, 'Home.html', {'movies': movies, 'movies_chunks': movies_chunks, 'deals': deals, })
 
 def SignUp (request):
     if request.method =='POST':
@@ -46,7 +50,7 @@ def SignUp (request):
             user = User.objects.create_user(first_name=user_fname, last_name=user_lname, email=user_email, username=user_username, password=user_pwd)
             user.save()
             # Redirect to login page after successful registration
-            return redirect('login')
+            return redirect('Login')
             
     return render(request, 'SignUp.html')
 
@@ -217,7 +221,6 @@ def payment(request, cinema_hall_id):
                 request.session.pop('total_price', None)
 
                 # Display a success message to the user
-                messages.success(request, 'Your payment was successful. Your seats are booked.')
 
             # Redirect to the home page
             return redirect('Home')

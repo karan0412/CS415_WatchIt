@@ -14,5 +14,6 @@ admin.site.register(models.Movie)
 admin.site.register(models.Tag)
 admin.site.register(models.Booking)
 admin.site.register(models.Showtime)
+admin.site.register(models.Deals)
 
 

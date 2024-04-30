@@ -1,16 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Purchase History</title>
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+{% extends 'index.html' %}
+
+{% block title %}
+<title>Purchase History</title>
+{% endblock %}
+  
+{% block content %}
     <style>
-        body {
-            background-color: #2c2f33; /* Dark background for the entire page */
-            color: #c6c8ca; /* Soft gray for text */
-            font-family: 'Arial', sans-serif; /* Modern, readable font */
-        }
+      
         h1 {
             color: #fff; /* White color for headings */
             text-align: center;
@@ -54,10 +50,10 @@
         <tbody>
             {% for history in purchase_histories %}
             <tr>
-                <th scope="row">{{ forloop.counter }}</th>
-                <td>{{ history.booking_date|date:"Y-m-d H:i" }}</td>
-                <td>${{ history.payment_amount }}</td>
-                <td><a href="{% url 'generate_purchase_history' history.id %}">Download PDF</a></td>
+                <th class="text-light" scope="row">{{ forloop.counter }}</th>
+                <td class="text-light">{{ history.booking_date|date:"Y-m-d H:i" }}</td>
+                <td class="text-light">${{ history.payment_amount }}</td>
+                <td class="text-light"><a href="{% url 'generate_purchase_history' history.id %}">Download PDF</a></td>
             </tr>
             {% empty %}
             <tr><td colspan="4" class="text-light">No purchase history available.</td></tr>
@@ -65,5 +61,4 @@
         </tbody>
     </table>
 </div>
-</body>
-</html>
+{% endblock %}

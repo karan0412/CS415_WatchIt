@@ -4,6 +4,7 @@ from string import ascii_uppercase
 from django.db import models
 from django.db import transaction
 from django.utils import timezone
+from embed_video.fields import EmbedVideoField
 
 
 
@@ -21,6 +22,15 @@ class CinemaHall(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         Seat.generate_seats(self)
+
+class Deals (models.Model):
+    Meal = models.CharField(max_length=255, null=True, blank=True)
+    Price = models.FloatField(max_length=100, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    image = models.ImageField(upload_to='deals_images/', blank=True, null=True)
+    def __str__(self):
+                return self.Meal
+    
                    
 class Movie(models.Model):
     title = models.CharField(max_length=255, null=True, blank=True)
@@ -30,8 +40,8 @@ class Movie(models.Model):
     release_date = models.DateField(null=True, blank=True)
     language = models.CharField(max_length=100, null=True, blank=True)
     ageRating = models.CharField(max_length=10, null=True, blank=True)
-    cinemaHall = models.ForeignKey(CinemaHall, on_delete=models.SET_NULL, null=True)
     image = models.ImageField(upload_to='movie_images/', blank=True, null=True)
+    trailer = models.URLField(blank=True, null=True) 
     tags = models.ManyToManyField(Tag, related_name='tags')
     
     def __str__(self):
