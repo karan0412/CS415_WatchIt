@@ -91,6 +91,7 @@ class Seat(models.Model):
 
 
 class Booking(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     cinema_hall = models.ForeignKey(CinemaHall, related_name='bookings', on_delete=models.CASCADE, null=True, blank=True)
     seats = models.ManyToManyField(Seat, related_name='bookings')
     booking_date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
@@ -99,6 +100,9 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"Booking for {self.movie.title} on {self.booking_date}"
+    
+    def get_seat_labels(self):
+        return ", ".join([seat.seat_label for seat in self.seats.all()])
 
     def delete(self, *args, **kwargs):
         # Update seat availability before deleting booking
