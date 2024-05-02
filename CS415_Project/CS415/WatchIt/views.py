@@ -244,6 +244,8 @@ def process_payment(request):
                     movie=movie,
                     payment_amount=total_price
                 )
+                if request.user.is_authenticated:
+                    booking.user = request.user
                 booking.seats.set(seats)
                 booking.save()
 
@@ -263,7 +265,7 @@ def process_payment(request):
 def booking_success(request):
     return render(request, 'booking_success.html')
 
-
+@login_required
 def generate_purchase_history(request, booking_id):
     # Get the booking instance
     booking = get_object_or_404(Booking, id=booking_id)
@@ -302,12 +304,14 @@ def generate_purchase_history(request, booking_id):
     data = [
         [
             Paragraph('<b>Cinema Hall</b>', styles['BodyText']),
+            Paragraph('<b>Movie</b>', styles['BodyText']),  # New column position for movie
             Paragraph('<b>Booking Date</b>', styles['BodyText']),
             Paragraph('<b>Payment Amount</b>', styles['BodyText']),
             Paragraph('<b>Seats</b>', styles['BodyText'])
         ],
         [
             booking.cinema_hall.cinema_type if booking.cinema_hall else 'N/A',
+            booking.movie.title if booking.movie else 'N/A',  # Display movie title here
             booking.booking_date.strftime('%Y-%m-%d %H:%M:%S') if booking.booking_date else 'N/A',
             '${:,.2f}'.format(booking.payment_amount) if booking.payment_amount else 'N/A',
             ', '.join(seat.seat_label for seat in booking.seats.all()) or 'No seats'
@@ -327,7 +331,7 @@ def generate_purchase_history(request, booking_id):
         ('TOPPADDING', (0, 1), (-1, -1), 5),
         ('BOTTOMPADDING', (0, 1), (-1, -1), 5),
     ])
-    table = Table(data, colWidths=[doc.width/4.0]*4, style=table_style)
+    table = Table(data, colWidths=[doc.width/5.0]*5, style=table_style)
     elements.append(table)
 
     # Build the PDF
@@ -335,8 +339,8 @@ def generate_purchase_history(request, booking_id):
     return response
 
 
-
+@login_required
 def list_purchase_history(request):
     # Fetch all bookings
-    purchase_histories = Booking.objects.all()
+    purchase_histories = Booking.objects.filter(user=request.user)
     return render(request, 'purchase_history.html', {'purchase_histories': purchase_histories})

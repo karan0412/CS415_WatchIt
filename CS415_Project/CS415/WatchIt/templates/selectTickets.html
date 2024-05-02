@@ -103,22 +103,28 @@
                 }
                 quantitySpan.text(quantity);
                 $('#' + id.split('-')[0] + '_quantity_input').val(quantity);
-                updateTotalPrice();
-            });
+                $('#' + id.split('-')[0] + '-quantity-summary').text(quantity); 
 
+                updateTotalPrice(); // Call updateTotalPrice() here
+            });
+        
             // Function to update total price
             function updateTotalPrice() {
                 var adultPrice = parseFloat($('.adult-price').text().replace('$', ''));
                 var adultQuantity = parseInt($('#adult-quantity').text());
                 var childPrice = parseFloat($('.child-price').text().replace('$', ''));
                 var childQuantity = parseInt($('#child-quantity').text());
+                console.log(adultPrice, adultQuantity, childPrice, childQuantity); // Debug output
                 var totalAdult = adultPrice * adultQuantity;
                 var totalChild = childPrice * childQuantity;
                 var totalPrice = totalAdult + totalChild;
-                $('.adult-subtotal').text(totalAdult.toFixed(2));
-                $('.child-subtotal').text(totalChild.toFixed(2));
+                $('.adult-subtotal').text('$' + totalAdult.toFixed(2));
+                $('.child-subtotal').text('$' + totalChild.toFixed(2));
                 $('#total-price').text(totalPrice.toFixed(2));
             }
+        
+            // Call updateTotalPrice() on page load to initialize the subtotals
+            updateTotalPrice();
         });
     </script>
 
