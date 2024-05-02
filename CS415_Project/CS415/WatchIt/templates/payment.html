@@ -1,65 +1,92 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Finalize Payment</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-<div class="container mt-4">
-    <h2>Finalize Your Payment</h2>
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">Selected Seats and Payment</h5>
-            <p class="card-text">
-                <strong>Seats:</strong>
-                {% for seat in seats %}
-                    <span>{{ seat.seat_label }}</span>{% if not forloop.last %}, {% endif %}
-                {% endfor %}
-            </p>
-            <p class="card-text"><strong>Total Amount:</strong> ${{ total_amount }}</p>
-            
-            <form method="POST" action="{% url 'payment' cinema_hall_id %}">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="cardholder_Name">Cardholder Name:</label>
-                    <input type="text" class="form-control" id="cardholder_Name" name="cardholder_Name" required>
-                </div>
-                <div class="form-group">
-                    <label for="card_number">Card Number:</label>
-                    <input type="text" class="form-control" id="card_number" name="card_number" required>
-                </div>
-                <div class="form-row">
-                    <div class="col">
-                        <label for="expiry_month">Expiration Month:</label>
-                        <select class="form-control" id="expiry_month" name="expiry_month" required>
-                            <option value="">Select Month</option>
-                            {% for month in range_month %}
-                                <option value="{{ month }}">{{ month }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col">
-                        <label for="expiry_year">Expiration Year:</label>
-                        <select class="form-control" id="expiry_year" name="expiry_year" required>
-                            <option value="">Select Year</option>
-                            {% for year in range_year %}
-                                <option value="{{ year }}">{{ year }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="code">CVC Code:</label>
-                    <input type="text" class="form-control" id="code" name="code" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Proceed</button>
-            </form>
+{% extends 'index.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<style>
+    .payment-container {
+        background: gray;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        padding: 20px;
+        max-width: 600px;
+        margin: 40px auto;
+    }
+    .header {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+    .detail {
+        margin-bottom: 10px;
+        font-size: 16px;
+    }
+    .btn-confirm {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+    .btn-confirm:hover {
+        background-color: #45a049;
+    }
+</style>
+
+<div class="payment-container">
+    <div class="header">Finalize Your Payment</div>
+    <div class="detail"><strong>Cinema Type:</strong> {{ cinema_type }}</div>
+    <div class="detail"><strong>Movie Title:</strong> {{ movie_title }}</div>
+    <div class="detail"><strong>Movie Duration:</strong> {{ movie_duration }} minutes</div>
+    <div class="detail"><strong>Total Price:</strong> ${{ total_price }}</div>
+    <div class="detail"><strong>Selected Seats:</strong> 
+        <div id="seat-list">
+            {% for seat in selected_seats %}
+            <span class="seat-label" data-id="{{ seat.id }}">{{ seat.seat_label }}</span>{% if not forloop.last %}, {% endif %}
+            {% endfor %}
         </div>
     </div>
+    <button class="btn-confirm" onclick="confirmPayment()">Confirm Payment</button>
 </div>
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-</body>
-</html>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+    function confirmPayment() { 
+        var cinemaHallId = "{{ cinema_hall_id }}";
+        var movieId = "{{ movie_id }}";
+        var totalPrice = "{{ total_price }}";
+        var selectedSeats = [];
+        
+        $('#seat-list .seat-label').each(function() {
+            selectedSeats.push($(this).data('id'));
+        });
+
+        console.log(selectedSeats)
+    
+        console.log("Cinema Hall ID:", cinemaHallId);
+        console.log("Movie ID:", movieId);
+        console.log("Selected Seats:", selectedSeats.join(','));
+        console.log("Total Price:", totalPrice);
+    
+        $.post("/process-payment/", {
+            cinema_hall_id: cinemaHallId,
+            movie_id: movieId,
+            seats: selectedSeats,  // Send as an array, not a string
+            total_price: totalPrice,
+            csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val()
+        }, function(data) {
+            if (data.success) {
+                alert("Payment successful!");
+                window.location.href = "/booking-success/";
+            } else {
+                alert("Payment failed. " + (data.error ? data.error : "Please try again."));
+            }
+        }).fail(function(jqXHR, textStatus) {
+            alert("Request failed: " + textStatus);
+        });
+    }
+    
+    
+</script>
+{% endblock %}

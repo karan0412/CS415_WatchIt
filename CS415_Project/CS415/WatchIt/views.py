@@ -88,8 +88,9 @@ def LogoutUser(request):
     return redirect('Login')
 
 
-def display_hall(request, cinema_hall_id):
+def display_hall(request, cinema_hall_id, movie_id):
     cinema_hall = CinemaHall.objects.get(pk=cinema_hall_id)
+    movie = Movie.objects.get(id=movie_id)
     seats = list(cinema_hall.seats.all())
 
     # Custom alphanumeric sorting
@@ -110,6 +111,7 @@ def display_hall(request, cinema_hall_id):
     return render(request, 'cinema.html', {
         'cinema_hall': cinema_hall,
         'seats': seats,
+        'movie': movie,
         'total_tickets': total_tickets,
     })
 
@@ -156,7 +158,12 @@ def save_total_price_to_session(request):
     #else:
      #   return HttpResponseNotAllowed(['POST'])
 
-def selectTickets(request, cinema_hall_id):
+from django.shortcuts import get_object_or_404, render, redirect
+
+def selectTickets(request, cinema_hall_id, movie_id):
+    # Corrected parameter names and use these to fetch objects
+    cinema_hall = get_object_or_404(CinemaHall, id=cinema_hall_id)
+    movie = get_object_or_404(Movie, id=movie_id)
 
     if request.method == 'POST':
         adult_tickets = int(request.POST.get('adult_quantity', 0))
@@ -164,80 +171,103 @@ def selectTickets(request, cinema_hall_id):
         adult_price = 7.50  # assuming $7.50 per adult ticket
         child_price = 2.50
 
-
         total_amount = (adult_tickets * adult_price) + (child_tickets * child_price)
-
 
         # Check if any tickets are selected
         if adult_tickets == 0 and child_tickets == 0:
             # If no tickets are selected, display a message
             message = "Please select at least one ticket before proceeding."
-            return render(request, 'selectTickets.html', {'message': message, 'cinema_hall_id': cinema_hall_id})
+            return render(request, 'selectTickets.html', {
+                'message': message, 
+                'cinema_hall': cinema_hall,  # Pass objects, not IDs
+                'movie': movie
+            })
         else:
-            # Redirect to the display_hall view with the provided cinema hall ID and ticket counts
+            # Store ticket info in session and redirect
             request.session['adult_tickets'] = adult_tickets
             request.session['child_tickets'] = child_tickets
-            request.session['total_price'] = str(total_amount)
-            return redirect('display_hall', cinema_hall_id=cinema_hall_id)
+            request.session['total_price'] = total_amount
+            # Redirect should use correct URL pattern and parameter names
+            return redirect('display_hall', cinema_hall_id=cinema_hall_id, movie_id=movie_id)
 
-    return render(request, 'selectTickets.html', {'cinema_hall_id': cinema_hall_id})
+    # Render initial form view
+    return render(request, 'selectTickets.html', {
+        'cinema_hall': cinema_hall,
+        'movie': movie
+    })
 
-    
-
-def successful (request):
-    return redirect('succesfull')
 
 def payment(request, cinema_hall_id):
-    # Try to get the total price from the session, default to '0' if not found
-    total_amount = request.session.get('total_price', '0')
-    print('amount', total_amount)
-    range_month = range(1, 13)
-    current_year = timezone.now().year
-    range_year = range(current_year, current_year + 10)
+    movie_id = request.GET.get('movie_id')
+    selected_seat_ids = request.GET.get('seats', '').split(',')
+    total_tickets = int(request.GET.get('total_tickets', 0))
+    #total_price = int(request.GET.get('total_price', 0))
+    total_price = request.session.get('total_price', 0)
+    
+    cinema_hall = get_object_or_404(CinemaHall, id=cinema_hall_id)
+    movie = get_object_or_404(Movie, id=movie_id)
+    seats = Seat.objects.filter(id__in=selected_seat_ids)
 
-    if request.method == 'GET':
-        # Retrieve selected seat IDs from the form data
-        selected_seat_ids = request.GET.get('seats', '')
-        seat_ids = selected_seat_ids.split(',') if selected_seat_ids else []
-        seats = Seat.objects.filter(id__in=seat_ids)
 
-        # Handle payment processing
+    return render(request, 'payment.html', {
+        'cinema_type': cinema_hall.cinema_type,
+        'movie_title': movie.title,
+        'movie_id': movie_id,
+        'cinema_hall_id': cinema_hall_id,
+        'movie_duration': movie.duration,
+        'total_price': total_price,
+        'selected_seats': seats,
+    })
+
+@csrf_exempt
+@require_POST
+def process_payment(request):
+    # Get data from the request
+    print("POST data:", request.POST) 
+    cinema_hall_id = request.POST.get('cinema_hall_id')
+    movie_id = request.POST.get('movie_id')
+    selected_seat_ids = [int(id) for id in request.POST.getlist('seats[]')]
+    total_price = request.POST.get('total_price')
+
+    # Simulate payment processing
+    payment_successful = True  # You should integrate real payment processing logic here
+
+    if payment_successful:
         try:
             with transaction.atomic():
-                # Create the Booking record
+                # Fetch necessary objects
+                cinema_hall = CinemaHall.objects.get(id=cinema_hall_id)
+                movie = Movie.objects.get(id=movie_id)
+                seats = Seat.objects.filter(id__in=selected_seat_ids, availability=True)
+
+                # Check if the requested seats are still available
+                if seats.count() != len(selected_seat_ids):
+                    return JsonResponse({'success': False, 'error': 'One or more seats are no longer available.'})
+
+                # Create the booking
                 booking = Booking.objects.create(
-                    cinema_hall=CinemaHall.objects.get(id=cinema_hall_id),
-                    payment_amount=total_amount
+                    cinema_hall=cinema_hall,
+                    movie_title=movie,
+                    payment_amount=total_price
                 )
-                
-                # Assign selected seats to the Booking
                 booking.seats.set(seats)
+                booking.save()
 
                 # Update seat availability
                 seats.update(availability=False)
 
-                # Clear session data related to the booking process
-                request.session.pop('selected_seats', None)
-                request.session.pop('total_price', None)
-
-                # Display a success message to the user
-
-            # Redirect to the home page
-            return redirect('Home')
-
+                # Success response
+                return JsonResponse({'success': True})
         except Exception as e:
-            # Log the error
-            # logger.error(f"Payment processing failed: {e}")
-            # Display an error message to the user
-            messages.error(request, 'There was an error processing your payment. Please try again.')
+            # Log the exception here
+            return JsonResponse({'success': False, 'error': str(e)})
+    else:
+        # Payment failed
+        return JsonResponse({'success': False, 'error': 'Payment processing failed.'})
 
-    # For GET request, render the payment form with the context data
-    return render(request, 'payment.html', {
-        'range_year': list(range_year),
-        'range_month': list(range_month),
-        'cinema_hall_id': cinema_hall_id,
-        'total_amount': total_amount,
-    })
+
+def booking_success(request):
+    return render(request, 'booking_success.html')
 
 
 def generate_purchase_history(request, booking_id):
