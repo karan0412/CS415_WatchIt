@@ -68,6 +68,10 @@
 <body>
     <div class="container mt-5 mb-5">
         <h1 class="text-center">Select Your Seats</h1>
+        <div id="info">
+            <p>Cinema Hall ID: {{ cinema_hall.id }}</p>
+            <p>Movie ID: {{ movie.id }}</p>
+        </div>
         <div id="screen">SCREEN</div>
         <div id="seats-container" class="my-4">
             {% for seat in seats %}
@@ -87,12 +91,10 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            var totalTicketsAllowed = parseInt('{{ total_tickets }}'); // Ensure this variable is correctly parsed as an integer.
+            var totalTicketsAllowed = parseInt('{{ total_tickets }}');
             var selectedSeats = [];
             const seats = document.querySelectorAll('.seat:not(.unavailable)');
-
-            console.log('Total Tickets Allowed:', totalTicketsAllowed); // For debugging
-
+        
             seats.forEach(function (seat) {
                 seat.addEventListener('click', function () {
                     if (this.classList.contains('selected')) {
@@ -102,20 +104,22 @@
                         this.classList.add('selected');
                         selectedSeats.push(this.getAttribute('data-id'));
                     }
-                    console.log('Currently Selected Seats:', selectedSeats); // For debugging
                 });
             });
-
+        
             window.bookSeats = function() {
-                console.log('Attempting to book:', selectedSeats.length, 'seats'); // For debugging
                 if (selectedSeats.length === totalTicketsAllowed) {
-                    // Correctly redirecting to the payment page
-                    window.location.href = `/payment/1/?seats=${selectedSeats.join(',')}`;
+                    var cinemaHallId = '{{ cinema_hall_id }}';  // Ensure this variable is set correctly from Django context
+                    var movieId = '{{ movie.id }}';  // Similarly ensure movie_id is set correctly
+                    var redirectUrl = `/payment/1/?seats=${selectedSeats.join(',')}&movie_id=${movieId}&total_tickets=${totalTicketsAllowed}`;
+                    window.location.href = redirectUrl;
                 } else {
                     alert('Please select exactly ' + totalTicketsAllowed + ' seats.');
                 }
             };
         });
-    </script>
+        
+        </script>
+        
 
     {% endblock %}
