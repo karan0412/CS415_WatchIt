@@ -42,7 +42,9 @@
         <thead class="thead-light">
             <tr>
                 <th scope="col">#</th>
+                <th scope="col">Movie</th>
                 <th scope="col">Booking Date</th>
+                <th scope="col">Theatre</th>
                 <th scope="col">Payment Amount</th>
                 <th scope="col">Download</th>
             </tr>
@@ -51,7 +53,9 @@
             {% for history in purchase_histories %}
             <tr>
                 <th class="text-light" scope="row">{{ forloop.counter }}</th>
+                <td class="text-light">{{ history.movie }}</td>
                 <td class="text-light">{{ history.booking_date|date:"Y-m-d H:i" }}</td>
+                <td class="text-light">{{ history.cinema_hall }}</td>
                 <td class="text-light">${{ history.payment_amount }}</td>
                 <td class="text-light"><a href="{% url 'generate_purchase_history' history.id %}">Download PDF</a></td>
             </tr>

@@ -56,23 +56,16 @@ def SignUp (request):
 
 def Login(request):
     if request.method == 'POST':
-        username= request.POST.get('uname')
+        username = request.POST.get('uname')
         password = request.POST.get('pwd')
-        print({username})
-        print({password})
         user = authenticate(request, username=username, password=password)
-        print({user})
-      
-            #user = User.objects.filter(user_email=user_email)
-            
-            #if user_pwd == user_pwd:    
-        if user is not None:     
-            login(request, user)    
-            return redirect('Loggedin')  # Redirect to dashboard view
+
+        if user is not None:
+            login(request, user)
+            return redirect('Home')  # Redirect to the home page
         else:
             context = {'error': "Username or password did not match."}
             return render(request, 'Login.html', context)
-    
 
     return render(request, 'Login.html')
 
@@ -84,19 +77,18 @@ def Loggedin(request):
 
 def LogoutUser(request):
     logout(request)
-
-    return redirect('Login')
+    return redirect('Home') 
 
 
 def display_hall(request, cinema_hall_id, movie_id):
-    cinema_hall = CinemaHall.objects.get(pk=cinema_hall_id)
-    movie = Movie.objects.get(id=movie_id)
-    seats = list(cinema_hall.seats.all())
+    
+    showtime = get_object_or_404(Showtime, cinema_hall_id=cinema_hall_id, movie_id=movie_id)
 
+    seats = showtime.seats.all().order_by('id')
     # Custom alphanumeric sorting
     def alphanum_key(seat):
         return [int(text) if text.isdigit() else text.lower() for text in re.split('([0-9]+)', seat.seat_label)]
-    seats.sort(key=alphanum_key)
+    seats = sorted(seats, key=alphanum_key)
 
     # Retrieve ticket counts from session
     adult_tickets = request.session.get('adult_tickets', 0)
@@ -109,10 +101,11 @@ def display_hall(request, cinema_hall_id, movie_id):
 
 
     return render(request, 'cinema.html', {
-        'cinema_hall': cinema_hall,
+        'cinema_hall': showtime.cinema_hall,
+        'movie': showtime.movie,
         'seats': seats,
-        'movie': movie,
         'total_tickets': total_tickets,
+        'showtime': showtime,
     })
 
 
@@ -219,6 +212,7 @@ def payment(request, cinema_hall_id):
         'selected_seats': seats,
     })
 
+
 @csrf_exempt
 @require_POST
 def process_payment(request):
@@ -247,7 +241,7 @@ def process_payment(request):
                 # Create the booking
                 booking = Booking.objects.create(
                     cinema_hall=cinema_hall,
-                    movie_title=movie,
+                    movie=movie,
                     payment_amount=total_price
                 )
                 booking.seats.set(seats)
