@@ -4,7 +4,8 @@ from string import ascii_uppercase
 from django.db import models
 from django.db import transaction
 from django.utils import timezone
-from embed_video.fields import EmbedVideoField
+from django.core.exceptions import ValidationError
+from datetime import timedelta
 
 
 
@@ -62,7 +63,19 @@ class Showtime(models.Model):
     def __str__(self):
         return f"{self.movie.title} at {self.showtime}"
 
+    def clean(self):
+        # Check for overlapping showtimes in the same cinema hall
+        end_time = self.showtime + timedelta(minutes=self.movie.duration + 30)
+        overlapping_showtimes = Showtime.objects.filter(
+            cinema_hall=self.cinema_hall,
+            showtime__lt=end_time,
+            showtime__gt=self.showtime - timedelta(minutes=self.movie.duration + 30)
+        ).exclude(id=self.id)
+        if overlapping_showtimes.exists():
+            raise ValidationError("There is already a movie scheduled during this time.")
+
     def save(self, *args, **kwargs):
+        self.clean()  # Validating before saving
         creating = self._state.adding
         super().save(*args, **kwargs)
         if creating and not self.seats_generated:

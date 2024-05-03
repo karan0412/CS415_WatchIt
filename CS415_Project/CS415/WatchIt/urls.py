@@ -11,6 +11,7 @@ urlpatterns = [
     path("LogoutUser/", views.LogoutUser, name="LogoutUser"),
     path('cinema/<int:cinema_hall_id>/<int:movie_id>/', views.display_hall, name='display_hall'),
     path('movies/', views.movie_list, name='movie_list'),
+    path('movies/<int:movie_id>/', views.movie_detail, name='movie_detail'),
     #path('book_seats/', views.book_seats, name='book_seats'),
     path('selectTickets/<int:cinema_hall_id>/<int:movie_id>/', views.selectTickets, name='selectTickets'),
     path('payment/<int:cinema_hall_id>/', views.payment, name='payment'),

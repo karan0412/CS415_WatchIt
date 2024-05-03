@@ -1,0 +1,77 @@
+{% extends 'index.html' %}  <!-- Assuming there is a base.html that contains the site-wide layout -->
+
+{% block title %}
+<title>{{ movie.title }}</title>
+{% endblock %}
+
+{% block content %}
+<style>
+    .trailer-container {
+        width: 70%;
+        margin: auto; /* Centers the container */
+      }
+    .badge {
+        margin-right: 5px;
+    }
+    hr {
+        width: 80%;
+        margin: 20px auto; /* Center horizontally and add vertical space */
+    }
+    iframe {
+        width: 100%; /* iframe takes the width of its parent */
+        height: 100%; /* iframe takes the height of its parent */
+      }
+</style>
+<div class="container mt-5">
+    <!-- Trailer Section -->
+    <div class="row mb-4">
+        <div class="trailer-container">
+            <div class="d-flex justify-content-center align-items-center trailer" style="height: 500px;">
+              <!-- Using iframe to embed video -->
+              {% if movie.trailer %}
+              <iframe src="{{ movie.trailer }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+              {% else %}
+              <p class="text-center">Trailer not available</p>
+              {% endif %}
+            </div>
+          </div>
+    </div>
+
+    <!-- Movie Details Section -->
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="mb-3">{{ movie.title }}</h2>
+            <p><strong>Description:</strong> {{ movie.description|default:"No description available." }}</p>
+            <p><strong>Duration:</strong> {{ movie.duration }} minutes</p>
+            <p><strong>Starring:</strong> {{ movie.starring }}</p>
+            <p><strong>Release Date:</strong> {{ movie.release_date|date:"Y-m-d" }}</p>
+            <p><strong>Language:</strong> {{ movie.language }}</p>
+            <p><strong>Age Rating:</strong> {{ movie.ageRating }}</p>
+
+            <!-- Tags and Categories -->
+            <div><strong>Categories:</strong>
+                {% for tag in movie.tags.all %}
+                <span class="badge bg-secondary">{{ tag.name }}</span>
+                {% endfor %}
+            </div>
+            <hr class="my-5">
+            <!-- Showtimes and Booking Buttons -->
+            <div class="row mb-5">
+                {% for showtime in movie.showtimes.all %}
+                    {% if showtime.is_future_showtime %}
+                    <div class="col-md-6">
+                        <p><strong>Showtime:</strong> {{ showtime.showtime|date:"N j, Y g:i A" }}</p>
+                        <a href="{% url 'selectTickets' cinema_hall_id=showtime.cinema_hall.id movie_id=movie.id %}" class="btn btn-outline-light">
+                            Book Now
+                        </a>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+                {% if not movie.showtimes.all %}
+                <p class="text-center">No upcoming showtimes available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

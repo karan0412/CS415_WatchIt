@@ -3,22 +3,22 @@
 {% block title %}
 <title>Movies</title>
 {% endblock %}
-    
+
 {% block content %}
 <style>
     body {
-        background-color: black; /* Medium gray for a lighter dark theme */
+        background-color: black; /* Background color */
         color: #EDEDED; /* Off-white for text, providing higher readability */
-        font-family: 'Helvetica Neue', Arial, sans-serif; /* Maintains modern, clean font style */
+        font-family: 'Helvetica Neue', Arial, sans-serif; /* Clean font style */
     }
     h1 {
-        color: #FF6347; /* Tomato red for the heading, adds warmth */
+        color: #DBA622; /* Warm tomato red for the heading */
         text-align: center;
         margin-top: 20px;
         margin-bottom: 40px;
     }
     .card {
-        background-color: #000; /* Slightly lighter gray than the body background */
+        background-color: #000; /* Black background for cards */
         border: none;
         border-radius: 8px; /* Rounded corners for a modern appearance */
     }
@@ -30,79 +30,84 @@
         font-weight: bold;
     }
     .card-text {
-         /* Light gray for text, for better contrast */
+        color: #BBBBBB; /* Light gray text */
         margin-bottom: 10px;
     }
-
     .form-select {
-        background-color: black; /* Dark gray for dropdown, distinguishing it from the card */
+        background-color: black; /* Dark gray for dropdown */
         border: 1px solid white;
         color: #FFFFFF;
     }
-    .card-img-top{
+    .card-img-top {
         height: 38rem;
+    }
+    .nav-tabs .nav-link.active {
+        background-color: #DBA622; /* Tomato red for active tab */
+        color: white; /* White text for active tab */
     }
 </style>
 
+<h1>Movies</h1>
+<div class="container">
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link active text-light" data-bs-toggle="tab" href="#nowShowing">Now Showing</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-light" data-bs-toggle="tab" href="#comingSoon">Coming Soon</a>
+        </li>
+    </ul>
 
-    <h1>Movies</h1>
-    <div class="container">
-        <form method="get" action="">
-            <div class="row mb-5">
-                <div class="col">
-                    <select name="tag" class="form-select">
-                        <option value="">Filter by category</option>
-                        {% for tag in tags %}
-                        <option value="{{ tag.name }}" 
-                        {% if tag.name == selected_tag %}
-                        selected
-                        {% endif %}>
-                            {{ tag.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col">
-                    <button type="submit" class="btn btn-outline-light">Filter</button>
-                </div>
-            </div>
-        </form>
-        <div class="row justify-content-center">
-            {% for movie in movies %}
-            <div class="col-11"> <!-- This will make each movie take full width of its row -->
-                <div class="card mb-5 mt-5">
-                    {% if movie.image %}
-                    <img src="{{ movie.image.url }}" class="card-img-top" alt="{{ movie.title }}">
-                    {% else %}
-                    <div class="card-header">No Image Available</div>
-                    {% endif %}
-                    <div class="card-body">
-                        <h5 class="card-title">{{ movie.title }}</h5>
-                        <p class="card-text">{{ movie.release_date }}</p>
-                        {% if movie.release_date > now %}
-                        <p class="card-text"><strong>Coming Soon</strong></p>
+    <div class="tab-content">
+        <div id="nowShowing" class="tab-pane fade show active">
+            <div class="row justify-content-center">
+                {% for movie in movies %}
+                {% if movie.release_date <= now %}
+                <div class="col-11 mb-5 mt-5">
+                    <div class="card">
+                        {% if movie.image %}
+                        <img src="{{ movie.image.url }}" class="card-img-top" alt="{{ movie.title }}">
                         {% else %}
-                        <p class="card-text"><strong>Now Showing</strong></p>
+                        <div class="card-header">No Image Available</div>
                         {% endif %}
-                        {% for showtime in movie.showtimes.all %}
-                        {% if showtime.is_future_showtime %}
-
-                        <!-- Debugging print statements -->
-                        <p>Cinema Hall ID: {{ showtime.cinema_hall.id }}</p>
-                        <p>Movie ID: {{ movie.id }}</p>
-
-                        <a href="{% url 'selectTickets' cinema_hall_id=showtime.cinema_hall.id movie_id=movie.id%}" class="btn btn-primary mb-2">
-                            Book Now for {{ showtime.showtime|date:"DATE_FORMAT" }}
-                        </a>
-                        {% else %}
-                        <p>Showtime passed</p>
-                        {% endif %}
-                        {% endfor %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ movie.title }}</h5>
+                            <p class="card-text">{{ movie.release_date }}</p>
+                            <p class="card-text"><strong>Now Showing</strong></p>
+                            <a href="{% url 'movie_detail' movie.id %}" class="btn btn-outline-light">More Details</a>
+                        </div>
                     </div>
                 </div>
+                {% endif %}
+                {% endfor %}
             </div>
-            {% endfor %}
+        </div>
+        <div id="comingSoon" class="tab-pane fade">
+            <div class="row justify-content-center">
+                {% for movie in movies %}
+                {% if movie.release_date > now %}
+                <div class="col-11 mb-5 mt-5">
+                    <div class="card">
+                        {% if movie.image %}
+                        <img src="{{ movie.image.url }}" class="card-img-top" alt="{{ movie.title }}">
+                        {% else %}
+                        <div class="card-header">No Image Available</div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ movie.title }}</h5>
+                            <p class="card-text">{{ movie.release_date }}</p>
+                            <p class="card-text"><strong>Coming Soon</strong></p>
+                            <a href="{% url 'movie_detail' movie.id %}" class="btn btn-outline-light">More Details</a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    {% endblock %}
+    
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}
