@@ -8,16 +8,25 @@
 {% endblock %}
 
 {% load static %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'index.css' %}">
 {% block css %}
 
 {% endblock %}
+
 <style>
+
     html, body {
+        font-family: "Quicksand", sans-serif;
+        font-optical-sizing: auto;
+        font-style: normal;
         height: 100%; /* Full height for the html and body to enable flexbox sizing */
         margin: 0; /* Removes default margin */
     }
     body {
+        font-family: "Quicksand", sans-serif;
         display: flex; /* Enables flexbox */
         flex-direction: column; /* Stacks elements vertically */
   
@@ -26,7 +35,13 @@
         flex: 1; /* Takes up all available space */
         color: #EDEDED; /* Sets text color */
     }
-  
+    .logo{
+      height: 100%;
+      width: 100%;
+    }
+    .logo-link{
+      width: 5%;
+    }
     
 </style>
 
@@ -39,19 +54,40 @@
 <body style="background-color: black">
 <nav class="navbar pt-4 pb-4 navbar-expand-lg navbar-dark sticky-top" style="background-color: black">
   <div class="container-fluid">
-    <a class="navbar-brand ms-3" href="{% url 'Home' %}">WatchIt</a>
+    <a class="ms-3 logo-link" href="{% url 'Home' %}"><img class="logo" src="{% static 'logo.jpg' %}" alt="WatchIt Logo"></a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDarkDropdown" aria-controls="navbarNavDarkDropdown" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavDarkDropdown">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item">
+      <ul class="navbar-nav me-3">
+        <li class="nav-item mx-3">
           <a class="nav-link text-light" href="{% url 'movie_list' %}">Movies</a>
         </li>
+        <li class="nav-item mx-3">
+          <a class="nav-link text-light" href="#nowShowing">Now Showing</a>
+      </li>
+      <li class="nav-item mx-3">
+          <a class="nav-link text-light" href="#dealsSection">Our Deals</a>
+      </li>
+      <li class="nav-item mx-3">
+          <a class="nav-link text-light" href="#findUs">Find Us</a>
+      </li>
 
+      {% if request.user.is_authenticated %}
+          <li class="nav-item mx-3">
+            </li>
+        {% else %}
+        <li class="nav-item mx-3" id="signup-link">
+          <a class="nav-link text-light" href="{% url 'SignUp' %}">Sign Up Now</a>
+        </li>
+        
+        {% endif %}
+
+    </ul>
+    <ul class="navbar-nav ms-auto">
         {% if request.user.is_authenticated %}
-          <li class="nav-item">
-                <div class="nav-item dropdown  me-5">
+          <li class="nav-item mx-3 ">
+                <div class="nav-item dropdown me-5">
                     <a class="nav-link dropdown-toggle text-light" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Welcome, {{ request.user.username }}
                     </a>
@@ -60,14 +96,13 @@
                         <a class="dropdown-item" href="{% url 'LogoutUser' %}">Logout</a>
                     </div>
                 </div>
-              </li>
+              
         {% else %}
-        <li class="nav-item" id="login-link">
-          <a class="nav-item nav-link text-light" href="{% url 'Login' %}">Login</a>
+
+        
+          <a class="nav-item nav-link text-light me-5 btn btn-danger" href="{% url 'Login' %}">Login</a>
         </li>
-        <li class="nav-item" id="signup-link">
-          <a class="nav-link text-light" href="{% url 'SignUp' %}">Sign Up</a>
-        </li>
+        
         {% endif %}
       </ul>
     </div>

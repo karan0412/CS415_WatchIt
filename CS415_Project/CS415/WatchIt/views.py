@@ -28,7 +28,7 @@ def Home(request):
     movies = Movie.objects.filter(release_date__lte=today)  # Fetch movies with release_date today or in the past
     deals = Deals.objects.all()
     movies_chunks = [movies[i:i+3] for i in range(0, len(movies), 3)]
-    return render(request, 'Home.html', {'movies': movies, 'movies_chunks': movies_chunks, 'deals': deals, })
+    return render(request, 'Home.html', {'movies': movies, 'movies_chunks': movies_chunks, 'deals': deals,})
 
 def SignUp (request):
     if request.method =='POST':
@@ -125,6 +125,10 @@ def movie_list(request):
         'tags' : tags,
         'selected_tag_name': selected_tag_name
     })
+
+def movie_detail(request, movie_id):
+    movie = get_object_or_404(Movie, pk=movie_id)
+    return render(request, 'movie_detail.html', {'movie': movie})
 
 def redirect_to_payment(request, cinema_hall_id):
     selected_seat_ids = request.POST.getlist('seats[]')
