@@ -49,6 +49,26 @@
 
 <h1>Movies</h1>
 <div class="container">
+    <form method="get" action="" class="mt-5">
+        <div class="row mb-5">
+            <div class="col">
+                <select name="tag" class="form-select">
+                    <option value="">Filter by category</option>
+                    {% for tag in tags %}
+                    <option value="{{ tag.name }}" 
+                    {% if tag.name == selected_tag %}
+                    selected
+                    {% endif %}>
+                        {{ tag.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col">
+                <button type="submit" class="btn btn-outline-light">Filter</button>
+            </div>
+        </div>
+    </form>
     <ul class="nav nav-tabs">
         <li class="nav-item">
             <a class="nav-link active text-light" data-bs-toggle="tab" href="#nowShowing">Now Showing</a>
