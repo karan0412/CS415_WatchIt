@@ -3,51 +3,81 @@
 {% block title %}
 <title>Sign Up</title>
 {% endblock %}
-    {% block css %}
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'SignUp.css' %}">
-    {% endblock %}
-  
-{% block content %}
+{% block css %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'SignUp.css' %}">
+{% endblock %}
 
-   
-    <div class="card-container mt-5 mb-5">
-        <div class="card bg-dark">
-            <h3 class="text-center mb-4">Sign Up</h3>
-            {% if messages %}
+{% block content %}
+<div class="card-container mt-5 mb-5">
+    <div class="card bg-dark">
+        <h3 class="text-center mb-4">Sign Up</h3>
+        {% if messages %}
         {% for message in messages %}
         <div class="alert alert-{{ message.tags }}">
             {{ message }}
         </div>
         {% endfor %}
         {% endif %}
-            <form method="post" action="{% url 'SignUp' %}">
-                {% csrf_token %}
-                <div class="form-group mb-3">
-                    <label for="user_fname">First Name:</label>
-                    <input type="text" class="form-control" id="user_fname" name="user_fname" required>
-                </div>
-                <div class="form-group mb-3">
-                    <label for="user_lname">Last Name:</label>
-                    <input type="text" class="form-control" id="user_lname" name="user_lname" required>
-                </div>
-                <div class="form-group mb-3">
-                    <label for="user_email">Email:</label>
-                    <input type="email" class="form-control" id="user_email" name="user_email" required>
-                </div>
-                <div class="form-group mb-3">
-                    <label for="user_username">Username:</label>
-                    <input type="text" class="form-control" id="user_username" name="user_username" required>
-                </div>
-                <div class="form-group mb-3">
-                    <label for="user_pwd">Password:</label>
-                    <input type="password" class="form-control" id="user_pwd" name="user_pwd" required>
-                </div>
-                <button type="submit" class="btn btn-outline-light btn-block">Sign Up</button>
-            </form>
-        </div>
+        <form method="post" action="{% url 'SignUp' %}">
+            {% csrf_token %}
+            <div class="form-group mb-3">
+                <label for="user_fname">First Name:</label>
+                <input type="text" class="form-control" id="user_fname" name="user_fname" required pattern="[A-Za-z\s]+" title="First name must not contain numbers">
+            </div>
+            <div class="form-group mb-3">
+                <label for="user_lname">Last Name:</label>
+                <input type="text" class="form-control" id="user_lname" name="user_lname" required pattern="[A-Za-z\s]+" title="Last name must not contain numbers">
+            </div>
+            <div class="form-group mb-3">
+                <label for="user_email">Email:</label>
+                <input type="email" class="form-control" id="user_email" name="user_email" required pattern="^\S+@\S+\.\S+$" title="Please enter a valid email address">
+            </div>
+            <div class="form-group mb-3">
+                <label for="user_username">Username:</label>
+                <input type="text" class="form-control" id="user_username" name="user_username" required>
+            </div>
+            <div class="form-group mb-3">
+                <label for="user_pwd">Password:</label>
+                <input type="password" class="form-control" id="user_pwd" name="user_pwd" required pattern="(?=.*\d)(?=.*[a-z]).{8,}" title="Must contain at least one number and one lowercase letter, and at least 8 or more characters">
+            </div>
+            <button type="submit" class="btn btn-outline-light btn-block">Sign Up</button>
+        </form>
     </div>
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-    {% endblock %}
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var signupForm = document.querySelector('form');
+    signupForm.addEventListener('submit', function(event) {
+        var userFname = document.getElementById('user_fname');
+        var userLname = document.getElementById('user_lname');
+        var userPwd = document.getElementById('user_pwd');
+        var userEmail = document.getElementById('user_email');
+        var namePattern = /^[A-Za-z\s]+$/; // Pattern to ensure only letters and whitespace
+        var passwordPattern = /^(?=.*\d)(?=.*[a-z]).{8,}$/; // Ensure this regex matches the one in your HTML
+        var emailPattern = /^\S+@\S+\.\S+$/; // Simple email regex
+
+        // Check first name and last name for invalid characters
+        if (!namePattern.test(userFname.value) || !namePattern.test(userLname.value)) {
+            alert('Name fields must not contain numbers');
+            event.preventDefault(); // Stop form submission
+        }
+
+        // Check password against pattern
+        if (!passwordPattern.test(userPwd.value)) {
+            alert('Password must contain at least one number and one lowercase letter, and at least 8 or more characters');
+            event.preventDefault(); // Stop form submission
+        }
+
+        // Check email format
+        if (!emailPattern.test(userEmail.value)) {
+            alert('Please enter a valid email address');
+            event.preventDefault(); // Stop form submission
+        }
+    });
+});
+</script>
+{% endblock %}
