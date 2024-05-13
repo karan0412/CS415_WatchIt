@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, render, redirect
 from .models import User
 from django.utils import timezone
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 import re
@@ -19,8 +20,15 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.enums import TA_CENTER
 from django.http import HttpResponse
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
+from reportlab.platypus.flowables import HRFlowable
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+import os
+
 
 # Create your views here.
 def Home(request):
@@ -80,9 +88,9 @@ def LogoutUser(request):
     return redirect('Home') 
 
 
-def display_hall(request, cinema_hall_id, movie_id):
+def display_hall(request, cinema_hall_id, movie_id, showtime_id):
     
-    showtime = get_object_or_404(Showtime, cinema_hall_id=cinema_hall_id, movie_id=movie_id)
+    showtime = get_object_or_404(Showtime, cinema_hall_id=cinema_hall_id, movie_id=movie_id, id=showtime_id)
 
     seats = showtime.seats.all().order_by('id')
     # Custom alphanumeric sorting
@@ -143,24 +151,17 @@ def save_total_price_to_session(request):
     request.session['total_price'] = request.POST.get('total_price')
     return JsonResponse({'success': True})
 
-#def book_seats(request):
- #   if request.method == 'POST':
-  #      with transaction.atomic():
-   #         seat_ids = request.POST.getlist('seats[]')
-    #        seats = Seat.objects.filter(id__in=seat_ids)
-      #      booking = Booking.objects.create(booking_label="Booking #" + str(request.user.id))
-     #       booking.seats.set(seats)
-       #     seats.update(availability=False)
-        #return JsonResponse({'success': True})
-    #else:
-     #   return HttpResponseNotAllowed(['POST'])
 
 from django.shortcuts import get_object_or_404, render, redirect
 
-def selectTickets(request, cinema_hall_id, movie_id):
+def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
     # Corrected parameter names and use these to fetch objects
     cinema_hall = get_object_or_404(CinemaHall, id=cinema_hall_id)
     movie = get_object_or_404(Movie, id=movie_id)
+    show = get_object_or_404(Showtime, id=showtime_id)
+    print("Cinema Hall ID:", cinema_hall_id)
+    print("Movie ID:", movie_id)
+    print("Showtime ID:", show)
 
     if request.method == 'POST':
         adult_tickets = int(request.POST.get('adult_quantity', 0))
@@ -177,7 +178,8 @@ def selectTickets(request, cinema_hall_id, movie_id):
             return render(request, 'selectTickets.html', {
                 'message': message, 
                 'cinema_hall': cinema_hall,  # Pass objects, not IDs
-                'movie': movie
+                'movie': movie,
+                'show': show,
             })
         else:
             # Store ticket info in session and redirect
@@ -185,17 +187,19 @@ def selectTickets(request, cinema_hall_id, movie_id):
             request.session['child_tickets'] = child_tickets
             request.session['total_price'] = total_amount
             # Redirect should use correct URL pattern and parameter names
-            return redirect('display_hall', cinema_hall_id=cinema_hall_id, movie_id=movie_id)
+            return redirect('display_hall', cinema_hall_id=cinema_hall_id, movie_id=movie_id, showtime_id=showtime_id)
 
     # Render initial form view
     return render(request, 'selectTickets.html', {
         'cinema_hall': cinema_hall,
-        'movie': movie
+        'movie': movie,
+        'show': show,
     })
 
 
 def payment(request, cinema_hall_id):
     movie_id = request.GET.get('movie_id')
+    showtime_id = request.GET.get('showtime_id')
     selected_seat_ids = request.GET.get('seats', '').split(',')
     total_tickets = int(request.GET.get('total_tickets', 0))
     #total_price = int(request.GET.get('total_price', 0))
@@ -203,6 +207,7 @@ def payment(request, cinema_hall_id):
     
     cinema_hall = get_object_or_404(CinemaHall, id=cinema_hall_id)
     movie = get_object_or_404(Movie, id=movie_id)
+    show = get_object_or_404(Showtime, id=showtime_id)
     seats = Seat.objects.filter(id__in=selected_seat_ids)
 
 
@@ -214,6 +219,8 @@ def payment(request, cinema_hall_id):
         'movie_duration': movie.duration,
         'total_price': total_price,
         'selected_seats': seats,
+        'show': show,
+        'showtime_id': showtime_id,
     })
 
 
@@ -274,72 +281,157 @@ def generate_purchase_history(request, booking_id):
     # Get the booking instance
     booking = get_object_or_404(Booking, id=booking_id)
 
+    # Fetch the related showtime
+    showtime_instance = Showtime.objects.filter(movie=booking.movie, cinema_hall=booking.cinema_hall).first()
+    showtime = showtime_instance.showtime.strftime("%Y-%m-%d %H:%M:%S") if showtime_instance else "N/A"
+
     # Prepare the HTTP response
     response = HttpResponse(content_type='application/pdf')
     filename = f"purchase_history_{booking.id}.pdf"
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
     # Set up the document template
-    doc = SimpleDocTemplate(response, pagesize=letter)
+    doc = SimpleDocTemplate(response, pagesize=A4)
     elements = []
 
     # Get default styles and customize
     styles = getSampleStyleSheet()
-    title_style = styles['Title']
-    title_style.alignment = TA_CENTER
-    title_style.fontSize = 24
-    title_style.textColor = colors.HexColor('#000080')  # Dark blue color for the title
+    title_style = ParagraphStyle(
+        'Title',
+        parent=styles['Title'],
+        alignment=TA_CENTER,
+        fontSize=24,
+        textColor=colors.black  # Black color for the title
+    )
+    subtitle_style = ParagraphStyle(
+        'Heading2',
+        parent=styles['Heading2'],
+        alignment=TA_CENTER,
+        fontSize=18,
+        textColor=colors.black  # Black color for the subtitle
+    )
+    normal_style = ParagraphStyle(
+        'Normal',
+        parent=styles['BodyText'],
+        fontSize=10,
+        leading=12,
+        textColor=colors.black  # Black color for the text
+    )
+    payment_style = ParagraphStyle(
+        'Payment',
+        parent=styles['BodyText'],
+        fontSize=12,
+        leading=14,
+        textColor=colors.black,  # Black color for the payment text
+        fontName='Helvetica-Bold',  # Bold font
+        alignment=TA_RIGHT
+    )
+    movie_style = ParagraphStyle(
+        'Movie',
+        parent=styles['BodyText'],
+        fontSize=12,
+        leading=14,
+        textColor=colors.black,  # Black color for the movie text
+        fontName='Helvetica-Bold',  # Bold font
+        alignment=TA_CENTER
+    )
+    small_bold_style = ParagraphStyle(
+        'SmallBold',
+        parent=styles['BodyText'],
+        fontSize=10,
+        leading=12,
+        alignment=TA_CENTER,
+        textColor=colors.black  # Black color for the thank you message
+    )
+    terms_style = ParagraphStyle(
+        'Terms',
+        parent=styles['BodyText'],
+        fontSize=8,
+        leading=10,
+        textColor=colors.black  # Black color for terms text
+    )
 
-    # Add main title
-    title = Paragraph('WatchIt Cinemas', title_style)
-    elements.append(title)
-    elements.append(Spacer(1, 12))
+    # Base directory
+    base_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # Add subtitle
-    subtitle_style = styles['Heading2']
-    subtitle_style.alignment = TA_CENTER
-    subtitle_style.fontSize = 18
-    subtitle_style.textColor = colors.HexColor('#666666')  # Dark gray color for the subtitle
-    subtitle = Paragraph('Purchase History', subtitle_style)
-    elements.append(subtitle)
+    # Create a function to add a background and footer to each page
+    def add_background(canvas, doc):
+        canvas.saveState()
+        canvas.setFillColor(colors.white)  # White background
+        canvas.rect(0, 0, doc.pagesize[0], doc.pagesize[1], fill=1)
+
+        # Add footer note centered
+        footer_text = 'Thank you for your purchase!'
+        canvas.setFont('Helvetica-Bold', 10)
+        canvas.setFillColor(colors.black)
+        canvas.drawCentredString(doc.pagesize[0] / 2.0, 0.5 * inch, footer_text)  # Centering the footer text
+        canvas.restoreState()
+
+    # Add event image at the top-left corner
+    image_path = os.path.join(base_dir, 'movie_images', 'WIT.jpg')
+    event_image = Image(image_path, width=doc.width * 0.3, height=doc.width * 0.3)  # Adjust as needed
+    elements.append(event_image)
     elements.append(Spacer(1, 20))
 
-    # Define the table data
-    data = [
-        [
-            Paragraph('<b>Cinema Hall</b>', styles['BodyText']),
-            Paragraph('<b>Movie</b>', styles['BodyText']),  # New column position for movie
-            Paragraph('<b>Booking Date</b>', styles['BodyText']),
-            Paragraph('<b>Payment Amount</b>', styles['BodyText']),
-            Paragraph('<b>Seats</b>', styles['BodyText'])
-        ],
-        [
-            booking.cinema_hall.cinema_type if booking.cinema_hall else 'N/A',
-            booking.movie.title if booking.movie else 'N/A',  # Display movie title here
-            booking.booking_date.strftime('%Y-%m-%d %H:%M:%S') if booking.booking_date else 'N/A',
-            '${:,.2f}'.format(booking.payment_amount) if booking.payment_amount else 'N/A',
-            ', '.join(seat.seat_label for seat in booking.seats.all()) or 'No seats'
-        ]
+    # Add solid line
+    elements.append(HRFlowable(width="100%", color=colors.black, lineCap='butt'))
+
+    # Add the Movie detail centered and in bold
+    movie_detail = f'<b>Movie:</b> {booking.movie.title if booking.movie else "N/A"}'
+    movie_paragraph = Paragraph(movie_detail, movie_style)
+    elements.append(movie_paragraph)
+    elements.append(Spacer(1, 20))
+
+    # Add receipt details including user information
+    details = [
+        f'<b>User:</b> {booking.user.username if booking.user else "N/A"}',
+        f'<b>Cinema Hall:</b> {booking.cinema_hall.cinema_type if booking.cinema_hall else "N/A"}',
+        f'<b>Showtime:</b> {showtime}',
+        f'<b>Booking Date:</b> {booking.booking_date.strftime("%Y-%m-%d %H:%M:%S") if booking.booking_date else "N/A"}',
+        f'<b>Seats:</b> {", ".join(seat.seat_label for seat in booking.seats.all()) or "No seats"}'
     ]
 
-    # Create the table with styled cells
-    table_style = TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#00A550')),  # Green color for the header
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('TOPPADDING', (0, 1), (-1, -1), 5),
-        ('BOTTOMPADDING', (0, 1), (-1, -1), 5),
-    ])
-    table = Table(data, colWidths=[doc.width/5.0]*5, style=table_style)
-    elements.append(table)
+    for detail in details:
+        p = Paragraph(detail, normal_style)
+        elements.append(p)
+        elements.append(Spacer(1, 12))
+
+    # Add dotted line between seats and payment amount
+    elements.append(HRFlowable(width="100%", color=colors.black, dash=(1, 2)))
+
+    # Add payment amount in bold
+    payment_amount_text = f'Payment Amount: ${"{:,.2f}".format(booking.payment_amount) if booking.payment_amount else "N/A"}'
+    payment_amount = Paragraph(payment_amount_text, payment_style)
+    elements.append(payment_amount)
+    elements.append(Spacer(1, 20))
+
+    # Add solid line
+    elements.append(HRFlowable(width="100%", color=colors.black, lineCap='butt'))
+
+    # Add terms and conditions with only bottom dotted border
+    terms_text = """
+    <b>Terms and Conditions for Cinema Payment</b><br/>
+    <b>Acceptance of Terms</b><br/>
+    By purchasing a ticket, you agree to be bound by these terms and conditions.<br/><br/>
+    <b>Ticket Purchase</b><br/>
+    All ticket sales are final. Once purchased, tickets cannot be transferred or refunded.<br/>
+    Customers are responsible for checking the details of their booking (film, time, and date) before confirming the purchase.<br/><br/>
+    <b>Payment Methods</b><br/>
+    We accept major credit and debit cards, online payment platforms, and cash at the box office.<br/>
+    Payment must be made in full at the time of booking.<br/><br/>
+    <b>Pricing and Fees</b><br/>
+    Ticket prices are subject to change without notice.<br/>
+    Additional fees may apply for online bookings, premium seats, or special screenings.<br/><br/>
+    <b>Discounts and Offers</b><br/>
+    Discounts, vouchers, and promotional offers are subject to specific terms and conditions and may not be combined unless stated otherwise.<br/>
+    Proof of eligibility may be required for discounted tickets (e.g., student ID, senior citizen card).
+    """
+    terms = Paragraph(terms_text, terms_style)
+    elements.append(terms)
+    elements.append(HRFlowable(width="100%", color=colors.black, dash=(1, 2)))
 
     # Build the PDF
-    doc.build(elements)
+    doc.build(elements, onFirstPage=add_background, onLaterPages=add_background)
     return response
 
 

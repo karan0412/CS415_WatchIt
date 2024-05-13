@@ -27,7 +27,8 @@
                 </div>
                 <p>Debug Cinema Hall ID: {{ cinema_hall.id }}</p>
             <p>Debug Movie ID: {{ movie.id }}</p>
-                <form method="POST" action="{% url 'selectTickets' cinema_hall_id=cinema_hall.id movie_id=movie.id %}">
+            <p>Showtime ID: {{ show.id }}</p>
+                <form method="POST" action="{% url 'selectTickets' cinema_hall_id=cinema_hall.id movie_id=movie.id showtime_id=show.id %}">
                     {% csrf_token %}
                     <input type="hidden" name="adult_quantity" id="adult_quantity_input" value="0">
                     <input type="hidden" name="child_quantity" id="child_quantity_input" value="0">

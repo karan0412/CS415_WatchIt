@@ -71,6 +71,7 @@
         <div id="info">
             <p>Cinema Hall ID: {{ cinema_hall.id }}</p>
             <p>Movie ID: {{ movie.id }}</p>
+            <p>Movie ID: {{ showtime.id }}</p>
         </div>
         <div id="screen" class="mb-5">SCREEN</div>
         <div id="seats-container" class="my-5">
@@ -109,9 +110,10 @@
         
             window.bookSeats = function() {
                 if (selectedSeats.length === totalTicketsAllowed) {
-                    var cinemaHallId = '{{ cinema_hall_id }}';  // Ensure this variable is set correctly from Django context
+                    var cinemaHallId = '{{ cinema_hall.id }}';  // Ensure this variable is set correctly from Django context
                     var movieId = '{{ movie.id }}';  // Similarly ensure movie_id is set correctly
-                    var redirectUrl = `/payment/1/?seats=${selectedSeats.join(',')}&movie_id=${movieId}&total_tickets=${totalTicketsAllowed}`;
+                    var showtimeId = '{{ showtime.id }}';
+                    var redirectUrl = `/payment/${cinemaHallId}/?seats=${selectedSeats.join(',')}&movie_id=${movieId}&showtime_id=${showtimeId}&total_tickets=${totalTicketsAllowed}`;
                     window.location.href = redirectUrl;
                 } else {
                     alert('Please select exactly ' + totalTicketsAllowed + ' seats.');
