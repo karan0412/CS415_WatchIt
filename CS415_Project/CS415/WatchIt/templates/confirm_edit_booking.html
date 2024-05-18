@@ -1,0 +1,16 @@
+{% extends "dashboard.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Confirm Edit Booking</h1>
+    <p>Movie: {{ booking.movie.title }}</p>
+    <p>Cinema Hall: {{ showtime.cinema_hall.cinema_type }}</p>
+    <p>Showtime: {{ showtime.local_showtime }}</p>
+    <p>Seats: {% for seat in seats %}{{ seat.seat_label }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success">Confirm</button>
+        <a href="{% url 'your_bookings' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

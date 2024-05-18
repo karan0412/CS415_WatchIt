@@ -20,7 +20,15 @@ urlpatterns = [
     path('redirect_to_payment/<int:cinema_hall_id>/', views.redirect_to_payment, name='redirect_to_payment'),
     path('save_total_price_to_session/', views.save_total_price_to_session, name='save_total_price_to_session'),
     path('purchase-history/<int:booking_id>/pdf/', views.generate_purchase_history, name='generate_purchase_history'),
-    path('purchase_history/', views.list_purchase_history, name='list_purchase_histories'),
+    path('dashboard/', views.dashboard, name='dashboard'),
+    path('purchase_history/', views.list_purchase_history, name='purchase_history'),
+    path('your_bookings/', views.your_bookings, name='your_bookings'),
+
+    path('edit_booking/<int:booking_id>/', views.edit_booking, name='edit_booking'),
+    path('edit_showtime/<int:booking_id>/<int:movie_id>/<int:cinema_hall_id>/', views.edit_showtime, name='edit_showtime'),
+    path('edit_seats/<int:booking_id>/<int:showtime_id>/<int:cinema_hall_id>/', views.edit_seats, name='edit_seats'),
+    path('confirm_edit_booking/<int:booking_id>/<int:showtime_id>/<str:seats>/', views.confirm_edit_booking, name='confirm_edit_booking'),
+    
 
 ]
 

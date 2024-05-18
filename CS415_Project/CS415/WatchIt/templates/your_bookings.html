@@ -1,0 +1,32 @@
+{% extends "dashboard.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="my-4">Your Bookings</h1>
+    <div class="row">
+        {% if bookings_with_edit_permission %}
+            {% for booking, can_edit in bookings_with_edit_permission %}
+            <div class="col-md-4 mb-4">
+                <div class="card bg-dark text-white">
+                    <img src="{{ booking.movie.image.url }}" class="card-img-top" alt="{{ booking.movie.title }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ booking.movie.title }}</h5>
+                        <p class="card-text"><strong>Cinema Hall:</strong> {{ booking.cinema_hall.cinema_type }}</p>
+                        <p class="card-text"><strong>Showtime:</strong> {{ booking.showtime.showtime }}</p>
+                        <p class="card-text"><strong>Booking Date:</strong> {{ booking.booking_date }}</p>
+                        <p class="card-text"><strong>Seats:</strong> {{ booking.get_seat_labels }}</p>
+                        <p class="card-text"><strong>Payment Amount:</strong> ${{ booking.payment_amount }}</p>
+                        {% if can_edit %}
+                        <a href="{% url 'edit_booking' booking.id %}" class="btn btn-warning">Edit</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>No upcoming bookings found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,19 @@
+{% extends "dashboard.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Edit Booking - Select Showtime</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="showtime_id">Select a Showtime</label>
+            <select class="form-control" id="showtime_id" name="showtime_id">
+                {% for showtime in showtimes %}
+                <option value="{{ showtime.id }}">{{ showtime.local_showtime }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Next</button>
+    </form>
+</div>
+{% endblock %}
