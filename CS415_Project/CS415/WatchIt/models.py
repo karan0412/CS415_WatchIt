@@ -60,8 +60,12 @@ class Showtime(models.Model):
     def is_future_showtime(self):
         return self.showtime > timezone.now()
 
+    def local_showtime(self):
+        # Convert showtime to the local time
+        return timezone.localtime(self.showtime)
+
     def __str__(self):
-        return f"{self.movie.title} at {self.showtime}"
+        return f"{self.movie.title} at {self.local_showtime()}" 
 
     def clean(self):
         # Check for overlapping showtimes in the same cinema hall
@@ -109,7 +113,10 @@ class Booking(models.Model):
     seats = models.ManyToManyField(Seat, related_name='bookings')
     booking_date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     movie = models.ForeignKey(Movie, related_name='bookings', on_delete=models.CASCADE, null=True, blank=True)
+    showtime = models.ForeignKey(Showtime, related_name='bookings', on_delete=models.CASCADE, null=True, blank=True)
     payment_amount = models.DecimalField(decimal_places=2, max_digits=20, null=True, blank=True)
+    num_seats = models.PositiveIntegerField(default=1)
+    edited = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Booking for {self.movie.title} on {self.booking_date}"

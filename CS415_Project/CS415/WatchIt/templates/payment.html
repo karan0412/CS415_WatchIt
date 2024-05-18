@@ -57,6 +57,8 @@
         var cinemaHallId = "{{ cinema_hall_id }}";
         var movieId = "{{ movie_id }}";
         var totalPrice = "{{ total_price }}";
+        var showtime = "{{ showtime_id }}";
+        var totalTickets = "{{ total_tickets }}";
         var selectedSeats = [];
         
         $('#seat-list .seat-label').each(function() {
@@ -69,12 +71,15 @@
         console.log("Movie ID:", movieId);
         console.log("Selected Seats:", selectedSeats.join(','));
         console.log("Total Price:", totalPrice);
+        console.log("Show Time:", showtime);
     
         $.post("/process-payment/", {
             cinema_hall_id: cinemaHallId,
             movie_id: movieId,
             seats: selectedSeats,  // Send as an array, not a string
             total_price: totalPrice,
+            showtime_id: showtime,
+            total_tickets: totalTickets,
             csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val()
         }, function(data) {
             if (data.success) {

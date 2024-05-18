@@ -28,6 +28,9 @@ from reportlab.platypus.flowables import HRFlowable
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 import os
+from datetime import timedelta
+from django.core.exceptions import PermissionDenied
+#from .forms import BookingForm
 
 
 # Create your views here.
@@ -170,6 +173,7 @@ def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
         child_price = 2.50
 
         total_amount = (adult_tickets * adult_price) + (child_tickets * child_price)
+        total_tickets = adult_tickets + child_tickets
 
         # Check if any tickets are selected
         if adult_tickets == 0 and child_tickets == 0:
@@ -186,6 +190,7 @@ def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
             request.session['adult_tickets'] = adult_tickets
             request.session['child_tickets'] = child_tickets
             request.session['total_price'] = total_amount
+            request.session['total_tickets'] = total_tickets
             # Redirect should use correct URL pattern and parameter names
             return redirect('display_hall', cinema_hall_id=cinema_hall_id, movie_id=movie_id, showtime_id=showtime_id)
 
@@ -201,9 +206,8 @@ def payment(request, cinema_hall_id):
     movie_id = request.GET.get('movie_id')
     showtime_id = request.GET.get('showtime_id')
     selected_seat_ids = request.GET.get('seats', '').split(',')
-    total_tickets = int(request.GET.get('total_tickets', 0))
-    #total_price = int(request.GET.get('total_price', 0))
     total_price = request.session.get('total_price', 0)
+    total_tickets = int(request.GET.get('total_tickets', 0))
     
     cinema_hall = get_object_or_404(CinemaHall, id=cinema_hall_id)
     movie = get_object_or_404(Movie, id=movie_id)
@@ -218,6 +222,7 @@ def payment(request, cinema_hall_id):
         'cinema_hall_id': cinema_hall_id,
         'movie_duration': movie.duration,
         'total_price': total_price,
+        'total_tickets': total_tickets,
         'selected_seats': seats,
         'show': show,
         'showtime_id': showtime_id,
@@ -231,9 +236,12 @@ def process_payment(request):
     print("POST data:", request.POST) 
     cinema_hall_id = request.POST.get('cinema_hall_id')
     movie_id = request.POST.get('movie_id')
+    showtime_id = request.POST.get('showtime_id')
     selected_seat_ids = [int(id) for id in request.POST.getlist('seats[]')]
     total_price = request.POST.get('total_price')
+    total_tickets = request.POST.get('total_tickets')
 
+    print("Showtime ID:", showtime_id)
     # Simulate payment processing
     payment_successful = True  # You should integrate real payment processing logic here
 
@@ -243,6 +251,7 @@ def process_payment(request):
                 # Fetch necessary objects
                 cinema_hall = CinemaHall.objects.get(id=cinema_hall_id)
                 movie = Movie.objects.get(id=movie_id)
+                showtime = Showtime.objects.get(id=showtime_id)
                 seats = Seat.objects.filter(id__in=selected_seat_ids, availability=True)
 
                 # Check if the requested seats are still available
@@ -253,7 +262,9 @@ def process_payment(request):
                 booking = Booking.objects.create(
                     cinema_hall=cinema_hall,
                     movie=movie,
-                    payment_amount=total_price
+                    payment_amount=total_price,
+                    showtime=showtime,
+                    num_seats=total_tickets,
                 )
                 if request.user.is_authenticated:
                     booking.user = request.user
@@ -434,9 +445,125 @@ def generate_purchase_history(request, booking_id):
     doc.build(elements, onFirstPage=add_background, onLaterPages=add_background)
     return response
 
+@login_required
+def dashboard(request):
+    return render(request, 'dashboard.html')
+
+@login_required
+def your_bookings(request):
+    current_time = timezone.localtime(timezone.now())
+    your_bookings = Booking.objects.filter(user=request.user, showtime__showtime__gt=current_time).select_related('movie', 'cinema_hall', 'showtime')
+
+    bookings_with_edit_permission = []
+    for booking in your_bookings:
+        can_edit = not booking.edited and current_time <= booking.showtime.showtime - timedelta(hours=2)
+        bookings_with_edit_permission.append((booking, can_edit))
+
+    return render(request, 'your_bookings.html', {'bookings_with_edit_permission': bookings_with_edit_permission})
 
 @login_required
 def list_purchase_history(request):
-    # Fetch all bookings
-    purchase_histories = Booking.objects.filter(user=request.user)
+    # Fetch bookings where showtime is in the past
+    current_time = timezone.localtime(timezone.now())
+    purchase_histories = Booking.objects.filter(user=request.user, showtime__showtime__lte=current_time).select_related('movie', 'cinema_hall', 'showtime')
     return render(request, 'purchase_history.html', {'purchase_histories': purchase_histories})
+
+
+@login_required
+def edit_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+
+    if booking.edited or timezone.now() > booking.showtime.showtime - timedelta(hours=2):
+        return redirect('your_bookings')
+
+    movies = Movie.objects.all()
+
+    if request.method == 'POST':
+        selected_movie_id = request.POST.get('movie_id')
+        return redirect('edit_showtime', booking_id=booking.id, movie_id=selected_movie_id, cinema_hall_id=booking.cinema_hall.id)
+
+    return render(request, 'edit_booking.html', {
+        'booking': booking,
+        'movies': movies,
+    })
+
+@login_required
+def edit_showtime(request, booking_id, movie_id, cinema_hall_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+
+    if booking.edited or timezone.now() > booking.showtime.showtime - timedelta(hours=2):
+        return redirect('your_bookings')
+
+    movie = get_object_or_404(Movie, id=movie_id)
+    cinema_hall = get_object_or_404(CinemaHall, id=cinema_hall_id)
+    showtimes = Showtime.objects.filter(movie=movie, cinema_hall=cinema_hall, showtime__gt=timezone.now())
+
+    if request.method == 'POST':
+        selected_showtime_id = request.POST.get('showtime_id')
+        return redirect('edit_seats', booking_id=booking_id, showtime_id=selected_showtime_id, cinema_hall_id=cinema_hall_id)
+
+    return render(request, 'edit_showtime.html', {
+        'movie': movie,
+        'showtimes': showtimes,
+        'cinema_hall': cinema_hall,
+    })
+
+@login_required
+def edit_seats(request, booking_id, showtime_id, cinema_hall_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+
+    if booking.edited or timezone.now() > booking.showtime.showtime - timedelta(hours=2):
+        return redirect('your_bookings')
+
+    showtime = get_object_or_404(Showtime, id=showtime_id, cinema_hall_id=cinema_hall_id)
+    seats = showtime.seats.all().order_by('id')
+
+    if request.method == 'POST':
+        selected_seat_ids = request.POST.getlist('seats[]')
+        if len(selected_seat_ids) != booking.num_seats:
+            message = f"You must select exactly {booking.num_seats} seats."
+            return render(request, 'edit_seats.html', {
+                'showtime': showtime,
+                'seats': seats,
+                'message': message,
+                'num_seats': booking.num_seats
+            })
+        return redirect('confirm_edit_booking', booking_id=booking_id, showtime_id=showtime_id, seats=','.join(selected_seat_ids))
+
+    return render(request, 'edit_seats.html', {
+        'showtime': showtime,
+        'seats': seats,
+        'num_seats': booking.num_seats
+    })
+
+@login_required
+def confirm_edit_booking(request, booking_id, showtime_id, seats):
+    booking = get_object_or_404(Booking, id=booking_id)
+
+    if booking.edited or timezone.now() > booking.showtime.showtime - timedelta(hours=2):
+        return redirect('your_bookings')
+
+    showtime = get_object_or_404(Showtime, id=showtime_id, cinema_hall_id=booking.cinema_hall.id)
+    seat_ids = seats.split(',')
+    selected_seats = Seat.objects.filter(id__in=seat_ids)
+
+    if len(selected_seats) != booking.num_seats:
+        return redirect('edit_seats', booking_id=booking_id, showtime_id=showtime_id, cinema_hall_id=booking.cinema_hall.id)
+
+    if request.method == 'POST':
+        with transaction.atomic():
+            previous_seats = booking.seats.all()
+            previous_seats.update(availability=True)
+            booking.showtime = showtime
+            booking.seats.set(selected_seats)
+            booking.edited = True  # Mark the booking as edited
+            booking.save()
+            selected_seats.update(availability=False)
+
+        return redirect('your_bookings')
+
+    return render(request, 'confirm_edit_booking.html', {
+        'booking': booking,
+        'showtime': showtime,
+        'seats': selected_seats,
+    })

@@ -1,0 +1,19 @@
+{% extends "dashboard.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Edit Booking - Select Movie</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="movie_id">Select a Movie</label>
+            <select class="form-control" id="movie_id" name="movie_id">
+                {% for movie in movies %}
+                <option value="{{ movie.id }}">{{ movie.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Next</button>
+    </form>
+</div>
+{% endblock %}
