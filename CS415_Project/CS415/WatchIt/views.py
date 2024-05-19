@@ -29,7 +29,8 @@ from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 import os
 from datetime import timedelta
-from django.core.exceptions import PermissionDenied
+
+from .recommend import get_recommendations
 #from .forms import BookingForm
 
 
@@ -450,6 +451,13 @@ def dashboard(request):
     return render(request, 'dashboard.html')
 
 @login_required
+def movie_recommendations(request):
+    recommended_movies = get_recommendations(request.user)
+    return render(request, 'recommendations.html', {
+        'recommended_movies': recommended_movies,
+    })
+
+@login_required
 def your_bookings(request):
     current_time = timezone.localtime(timezone.now())
     your_bookings = Booking.objects.filter(user=request.user, showtime__showtime__gt=current_time).select_related('movie', 'cinema_hall', 'showtime')
@@ -567,3 +575,5 @@ def confirm_edit_booking(request, booking_id, showtime_id, seats):
         'showtime': showtime,
         'seats': selected_seats,
     })
+
+

@@ -10,7 +10,7 @@ from datetime import timedelta
 
 
 class Tag(models.Model):
-     name = models.CharField(max_length=100, unique=True)
+     name = models.CharField(max_length=100)
 
      def __str__(self):
             return self.name
@@ -37,12 +37,13 @@ class Movie(models.Model):
     description = models.TextField(null=True, blank=True)
     duration = models.IntegerField(help_text="Duration in minutes", null=True, blank=True)
     starring = models.TextField(help_text="Comma-separated list of main actors", null=True, blank=True)
+    director = models.TextField(null=True, blank=True)
     release_date = models.DateField(null=True, blank=True)
     language = models.CharField(max_length=100, null=True, blank=True)
     ageRating = models.CharField(max_length=10, null=True, blank=True)
     image = models.ImageField(upload_to='movie_images/', null=True, blank=True)
     trailer = models.URLField(null=True, blank=True) 
-    tags = models.ManyToManyField('Tag', related_name='movies')
+    tags = models.ManyToManyField(Tag, related_name='movies')
 
     def __str__(self):
         return self.title

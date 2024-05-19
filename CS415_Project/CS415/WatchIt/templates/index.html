@@ -19,14 +19,11 @@
 <style>
 
     html, body {
-        font-family: "Quicksand", sans-serif;
-        font-optical-sizing: auto;
-        font-style: normal;
+        
         height: 100%; /* Full height for the html and body to enable flexbox sizing */
         margin: 0; /* Removes default margin */
     }
     body {
-        font-family: "Quicksand", sans-serif;
         display: flex; /* Enables flexbox */
         flex-direction: column; /* Stacks elements vertically */
   
@@ -34,6 +31,11 @@
     main {
         flex: 1; /* Takes up all available space */
         color: #EDEDED; /* Sets text color */
+    }
+    .custom-font{
+        font-family: "Quicksand", sans-serif;
+        font-optical-sizing: auto;
+        font-style: normal;
     }
     .logo{
       height: 100%;
@@ -51,7 +53,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </head>
-<body style="background-color: black">
+<body style="background-color: black" class="custom-font">
 <nav class="navbar pt-4 pb-4 navbar-expand-lg navbar-dark sticky-top" style="background-color: black">
   <div class="container-fluid">
     <a class="ms-3 logo-link" href="{% url 'Home' %}"><img class="logo" src="{% static 'logo.jpg' %}" alt="WatchIt Logo"></a>
