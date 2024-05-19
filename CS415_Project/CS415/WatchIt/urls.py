@@ -15,12 +15,14 @@ urlpatterns = [
     #path('book_seats/', views.book_seats, name='book_seats'),
     path('selectTickets/<int:cinema_hall_id>/<int:movie_id>/<int:showtime_id>/', views.selectTickets, name='selectTickets'),
     path('payment/<int:cinema_hall_id>/', views.payment, name='payment'),
-    path('process-payment/', views.process_payment, name='process-payment'),
-    path('booking-success/', views.booking_success, name='booking-success'),
+    path('process_payment/', views.process_payment, name='process_payment'),
+    path('booking_success/', views.booking_success, name='booking_success'),
     path('redirect_to_payment/<int:cinema_hall_id>/', views.redirect_to_payment, name='redirect_to_payment'),
     path('save_total_price_to_session/', views.save_total_price_to_session, name='save_total_price_to_session'),
-    path('purchase-history/<int:booking_id>/pdf/', views.generate_purchase_history, name='generate_purchase_history'),
+    path('purchase_history/<int:booking_id>/pdf/', views.generate_purchase_history, name='generate_purchase_history'),
     path('purchase_history/', views.list_purchase_history, name='list_purchase_histories'),
+    path('create_payment_intent/', views.create_payment_intent, name='create_payment_intent'),
+
 
 ]
 
