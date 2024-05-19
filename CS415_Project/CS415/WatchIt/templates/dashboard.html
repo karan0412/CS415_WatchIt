@@ -4,12 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+    
     <style>
         body {
             background-color: #121212;
             color: #ffffff;
             font-family: 'Arial', sans-serif;
+        }
+        .custom-font{
+            font-family: "Quicksand", sans-serif;
+            font-optical-sizing: auto;
+            font-style: normal;
         }
         .sidebar {
             width: 250px;
@@ -36,15 +46,72 @@
             margin-left: 250px;
             padding: 20px;
         }
+        .carousel-caption {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            text-align: left; /* Align all text to the left */
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .carousel-caption h5 {
+            text-align: center; /* Center the movie title */
+            width: 100%;
+        }
+        .movie-image {
+            height: 500px; /* Fixed height for all images */
+            object-fit: cover; /* Ensures the image covers the container without distortion */
+        }
+        .carousel-control-prev, .carousel-control-next {
+            z-index: 20; /* Ensure controls are above the caption */
+        }
+        .carousel-caption .text-center input[type="radio"] {
+            margin-top: 10px; /* Add some margin to the radio button */
+        }
+        .overlay {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+        }
+        .movie-title {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 0.5em;
+        }
+        .showtime-card {
+
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .showtime-title {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        .btn-outline-light {
+            border-color: #ffffff;
+            color: #ffffff;
+        }
+        .btn-outline-light:hover {
+            background-color: #ffffff;
+            color: #343a40;
+        }
     </style>
 </head>
-<body>
+<body class="custom-font">
     <div class="sidebar">
         <h2>Dashboard</h2>
         <a href="{% url 'Home' %}">Home</a>
         <a href="{% url 'your_bookings' %}">Your Bookings</a>
         <a href="{% url 'purchase_history' %}">Purchase History</a>
-        <a href="#">Movie Recommendations</a>
+        <a href="{% url 'movie_recommendations' %}">Movie Recommendations</a>
         <a href="#">More</a>
     </div>
     <div class="main-content">

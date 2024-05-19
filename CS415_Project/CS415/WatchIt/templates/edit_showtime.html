@@ -1,19 +1,33 @@
 {% extends "dashboard.html" %}
 
+
 {% block content %}
-<div class="container">
-    <h1>Edit Booking - Select Showtime</h1>
-    <form method="post">
-        {% csrf_token %}
-        <div class="form-group">
-            <label for="showtime_id">Select a Showtime</label>
-            <select class="form-control" id="showtime_id" name="showtime_id">
-                {% for showtime in showtimes %}
-                <option value="{{ showtime.id }}">{{ showtime.local_showtime }}</option>
-                {% endfor %}
-            </select>
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Edit Booking - Select Showtime</h1>
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            <div class="position-relative">
+                <img src="{{ movie.image.url }}" class="w-100 movie-image" alt="{{ movie.title }}">
+                <div class="overlay bg-overlay text-white p-3">
+                    <h2 class="movie-title">{{ movie.title }}</h2>
+                    <p><strong>Duration:</strong> {{ movie.duration }} minutes</p>
+                    <div class="row">
+                        {% for showtime in showtimes %}
+                        <div class="col-md-4 mb-2">
+                            <div class="showtime-card text-center p-2">
+                                <h5 class="showtime-title">Showtime: {{ showtime.local_showtime }}</h5>
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="showtime_id" value="{{ showtime.id }}">
+                                    <button type="submit" class="btn btn-outline-light">Book Now</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary">Next</button>
-    </form>
+    </div>
 </div>
 {% endblock %}
