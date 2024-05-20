@@ -1,4 +1,6 @@
 from datetime import datetime
+import json
+from django.conf import settings
 from django.shortcuts import render
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, render, redirect
@@ -32,6 +34,9 @@ from datetime import timedelta
 
 from .recommend import get_recommendations
 #from .forms import BookingForm
+import stripe
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 # Create your views here.
@@ -203,6 +208,32 @@ def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
     })
 
 
+# def payment(request, cinema_hall_id):
+#     movie_id = request.GET.get('movie_id')
+#     showtime_id = request.GET.get('showtime_id')
+#     selected_seat_ids = request.GET.get('seats', '').split(',')
+#     total_price = request.session.get('total_price', 0)
+#     total_tickets = int(request.GET.get('total_tickets', 0))
+    
+#     cinema_hall = get_object_or_404(CinemaHall, id=cinema_hall_id)
+#     movie = get_object_or_404(Movie, id=movie_id)
+#     show = get_object_or_404(Showtime, id=showtime_id)
+#     seats = Seat.objects.filter(id__in=selected_seat_ids)
+
+
+#     return render(request, 'payment.html', {
+#         'cinema_type': cinema_hall.cinema_type,
+#         'movie_title': movie.title,
+#         'movie_id': movie_id,
+#         'cinema_hall_id': cinema_hall_id,
+#         'movie_duration': movie.duration,
+#         'total_price': total_price,
+#         'total_tickets': total_tickets,
+#         'selected_seats': seats,
+#         'show': show,
+#         'showtime_id': showtime_id,
+#     })
+
 def payment(request, cinema_hall_id):
     movie_id = request.GET.get('movie_id')
     showtime_id = request.GET.get('showtime_id')
@@ -215,6 +246,8 @@ def payment(request, cinema_hall_id):
     show = get_object_or_404(Showtime, id=showtime_id)
     seats = Seat.objects.filter(id__in=selected_seat_ids)
 
+    # Add a print statement to debug if the stripe public key is being passed
+    print(f"Stripe Public Key: {settings.STRIPE_PUBLIC_KEY}")
 
     return render(request, 'payment.html', {
         'cinema_type': cinema_hall.cinema_type,
@@ -227,62 +260,141 @@ def payment(request, cinema_hall_id):
         'selected_seats': seats,
         'show': show,
         'showtime_id': showtime_id,
+        'stripe_public_key': settings.STRIPE_PUBLIC_KEY,  # Pass the Stripe public key to the template
     })
 
+# @csrf_exempt
+# @require_POST
+# def process_payment(request):
+#     # Get data from the request
+#     print("POST data:", request.POST) 
+#     cinema_hall_id = request.POST.get('cinema_hall_id')
+#     movie_id = request.POST.get('movie_id')
+#     showtime_id = request.POST.get('showtime_id')
+#     selected_seat_ids = [int(id) for id in request.POST.getlist('seats[]')]
+#     total_price = request.POST.get('total_price')
+#     total_tickets = request.POST.get('total_tickets')
 
+#     print("Showtime ID:", showtime_id)
+#     # Simulate payment processing
+#     payment_successful = True  # You should integrate real payment processing logic here
+
+#     if payment_successful:
+#         try:
+#             with transaction.atomic():
+#                 # Fetch necessary objects
+#                 cinema_hall = CinemaHall.objects.get(id=cinema_hall_id)
+#                 movie = Movie.objects.get(id=movie_id)
+#                 showtime = Showtime.objects.get(id=showtime_id)
+#                 seats = Seat.objects.filter(id__in=selected_seat_ids, availability=True)
+
+#                 # Check if the requested seats are still available
+#                 if seats.count() != len(selected_seat_ids):
+#                     return JsonResponse({'success': False, 'error': 'One or more seats are no longer available.'})
+
+#                 # Create the booking
+#                 booking = Booking.objects.create(
+#                     cinema_hall=cinema_hall,
+#                     movie=movie,
+#                     payment_amount=total_price,
+#                     showtime=showtime,
+#                     num_seats=total_tickets,
+#                 )
+#                 if request.user.is_authenticated:
+#                     booking.user = request.user
+#                 booking.seats.set(seats)
+#                 booking.save()
+
+#                 # Update seat availability
+#                 seats.update(availability=False)
+
+#                 # Success response
+#                 return JsonResponse({'success': True})
+#         except Exception as e:
+#             # Log the exception here
+#             return JsonResponse({'success': False, 'error': str(e)})
+#     else:
+#         # Payment failed
+#         return JsonResponse({'success': False, 'error': 'Payment processing failed.'})
+
+# views.py
 @csrf_exempt
-@require_POST
+@login_required
 def process_payment(request):
-    # Get data from the request
-    print("POST data:", request.POST) 
-    cinema_hall_id = request.POST.get('cinema_hall_id')
-    movie_id = request.POST.get('movie_id')
-    showtime_id = request.POST.get('showtime_id')
-    selected_seat_ids = [int(id) for id in request.POST.getlist('seats[]')]
-    total_price = request.POST.get('total_price')
-    total_tickets = request.POST.get('total_tickets')
-
-    print("Showtime ID:", showtime_id)
-    # Simulate payment processing
-    payment_successful = True  # You should integrate real payment processing logic here
-
-    if payment_successful:
+    if request.method == 'POST':
         try:
+            data = json.loads(request.body)
+            print("Data received in process_payment:", data)
+
+            payment_method_id = data.get('payment_method_id')
+            cinema_hall_id = data.get('cinema_hall_id')
+            movie_id = data.get('movie_id')
+            showtime_id = data.get('showtime_id')
+            total_price = data.get('total_price')
+            total_tickets = data.get('total_tickets')
+            selected_seat_ids = data.get('seats', [])
+
+            print(f"Payment Method ID: {payment_method_id}")
+            print(f"Cinema Hall ID: {cinema_hall_id}")
+            print(f"Movie ID: {movie_id}")
+            print(f"Showtime ID: {showtime_id}")
+            print(f"Total Price: {total_price}")
+            print(f"Total Tickets: {total_tickets}")
+            print(f"Selected Seat IDs: {selected_seat_ids}")
+
+            total_price_cents = int(float(total_price) * 100)
+
+            # Step 1: Create the PaymentIntent without the confirmation_method parameter
+            payment_intent = stripe.PaymentIntent.create(
+                amount=total_price_cents,
+                currency='usd',
+                payment_method=payment_method_id,
+                automatic_payment_methods={
+                    'enabled': True,
+                    'allow_redirects': 'never'
+                }
+            )
+
+            # Step 2: Manually confirm the PaymentIntent
+            stripe.PaymentIntent.confirm(
+                payment_intent.id,
+                payment_method=payment_method_id
+            )
+
             with transaction.atomic():
-                # Fetch necessary objects
                 cinema_hall = CinemaHall.objects.get(id=cinema_hall_id)
                 movie = Movie.objects.get(id=movie_id)
                 showtime = Showtime.objects.get(id=showtime_id)
                 seats = Seat.objects.filter(id__in=selected_seat_ids, availability=True)
 
-                # Check if the requested seats are still available
                 if seats.count() != len(selected_seat_ids):
+                    print("Seat availability error")
                     return JsonResponse({'success': False, 'error': 'One or more seats are no longer available.'})
 
-                # Create the booking
                 booking = Booking.objects.create(
                     cinema_hall=cinema_hall,
                     movie=movie,
                     payment_amount=total_price,
                     showtime=showtime,
                     num_seats=total_tickets,
+                    charge_id=payment_intent.id  # Store the PaymentIntent ID
                 )
                 if request.user.is_authenticated:
                     booking.user = request.user
                 booking.seats.set(seats)
                 booking.save()
-
-                # Update seat availability
                 seats.update(availability=False)
 
-                # Success response
                 return JsonResponse({'success': True})
+        except stripe.error.CardError as e:
+            print(f"Stripe error: {str(e.user_message)}")
+            return JsonResponse({'success': False, 'error': str(e.user_message)})
         except Exception as e:
-            # Log the exception here
+            print(f"Error: {str(e)}")
             return JsonResponse({'success': False, 'error': str(e)})
-    else:
-        # Payment failed
-        return JsonResponse({'success': False, 'error': 'Payment processing failed.'})
+    print("Invalid request method")
+    return JsonResponse({'error': 'Invalid request method'})
+
 
 
 def booking_success(request):
