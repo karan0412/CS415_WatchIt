@@ -10,7 +10,7 @@ from datetime import timedelta
 
 
 class Tag(models.Model):
-     name = models.CharField(max_length=100, unique=True)
+     name = models.CharField(max_length=100)
 
      def __str__(self):
             return self.name
@@ -37,12 +37,13 @@ class Movie(models.Model):
     description = models.TextField(null=True, blank=True)
     duration = models.IntegerField(help_text="Duration in minutes", null=True, blank=True)
     starring = models.TextField(help_text="Comma-separated list of main actors", null=True, blank=True)
+    director = models.TextField(null=True, blank=True)
     release_date = models.DateField(null=True, blank=True)
     language = models.CharField(max_length=100, null=True, blank=True)
     ageRating = models.CharField(max_length=10, null=True, blank=True)
     image = models.ImageField(upload_to='movie_images/', null=True, blank=True)
     trailer = models.URLField(null=True, blank=True) 
-    tags = models.ManyToManyField('Tag', related_name='movies')
+    tags = models.ManyToManyField(Tag, related_name='movies')
 
     def __str__(self):
         return self.title
@@ -60,8 +61,12 @@ class Showtime(models.Model):
     def is_future_showtime(self):
         return self.showtime > timezone.now()
 
+    def local_showtime(self):
+        # Convert showtime to the local time
+        return timezone.localtime(self.showtime)
+
     def __str__(self):
-        return f"{self.movie.title} at {self.showtime}"
+        return f"{self.movie.title} at {self.local_showtime()}" 
 
     def clean(self):
         # Check for overlapping showtimes in the same cinema hall
@@ -109,7 +114,10 @@ class Booking(models.Model):
     seats = models.ManyToManyField(Seat, related_name='bookings')
     booking_date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     movie = models.ForeignKey(Movie, related_name='bookings', on_delete=models.CASCADE, null=True, blank=True)
+    showtime = models.ForeignKey(Showtime, related_name='bookings', on_delete=models.CASCADE, null=True, blank=True)
     payment_amount = models.DecimalField(decimal_places=2, max_digits=20, null=True, blank=True)
+    num_seats = models.PositiveIntegerField(default=1)
+    edited = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Booking for {self.movie.title} on {self.booking_date}"

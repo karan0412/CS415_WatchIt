@@ -32,26 +32,6 @@
     .btn-confirm:hover {
         background-color: #45a049;
     }
-    /* Styling for the Stripe Elements */
-    .StripeElement {
-        box-sizing: border-box;
-        height: 40px;
-        padding: 10px 12px;
-        border: 1px solid transparent;
-        border-radius: 4px;
-        background-color: white;
-        box-shadow: 0 1px 3px 0 #e6ebf1;
-        transition: box-shadow 150ms ease;
-    }
-    .StripeElement--focus {
-        box-shadow: 0 1px 3px 0 #cfd7df;
-    }
-    .StripeElement--invalid {
-        border-color: #fa755a;
-    }
-    .StripeElement--webkit-autofill {
-        background-color: #fefde5 !important;
-    }
 </style>
 
 <div class="payment-container">
@@ -68,100 +48,51 @@
             {% endfor %}
         </div>
     </div>
-    <!-- Stripe Elements will be inserted into this div -->
-    <div id="card-element">
-      <!-- A Stripe Element will be inserted here. -->
-    </div>
-
-    <!-- We'll put the error messages in this element -->
-    <div id="card-errors" role="alert"></div>
-
-    <button class="btn-confirm" id="submit-button">Confirm Payment</button>
+    <button class="btn-confirm" onclick="confirmPayment()">Confirm Payment</button>
 </div>
 
-<script src="https://js.stripe.com/v3/"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script>
-var stripe = Stripe('{{ STRIPE_PUBLIC_KEY }}');  // Use your Stripe public key
-var elements = stripe.elements();
+    function confirmPayment() { 
+        var cinemaHallId = "{{ cinema_hall_id }}";
+        var movieId = "{{ movie_id }}";
+        var totalPrice = "{{ total_price }}";
+        var showtime = "{{ showtime_id }}";
+        var totalTickets = "{{ total_tickets }}";
+        var selectedSeats = [];
+        
+        $('#seat-list .seat-label').each(function() {
+            selectedSeats.push($(this).data('id'));
+        });
 
-// Custom styling can be passed to options when creating an Element.
-var style = {
-  base: {
-    color: "#32325d",
-    fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
-    fontSmoothing: "antialiased",
-    fontSize: "16px",
-    "::placeholder": {
-      color: "#aab7c4"
+        console.log(selectedSeats)
+    
+        console.log("Cinema Hall ID:", cinemaHallId);
+        console.log("Movie ID:", movieId);
+        console.log("Selected Seats:", selectedSeats.join(','));
+        console.log("Total Price:", totalPrice);
+        console.log("Show Time:", showtime);
+    
+        $.post("/process-payment/", {
+            cinema_hall_id: cinemaHallId,
+            movie_id: movieId,
+            seats: selectedSeats,  // Send as an array, not a string
+            total_price: totalPrice,
+            showtime_id: showtime,
+            total_tickets: totalTickets,
+            csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val()
+        }, function(data) {
+            if (data.success) {
+                alert("Payment successful!");
+                window.location.href = "/booking-success/";
+            } else {
+                alert("Payment failed. " + (data.error ? data.error : "Please try again."));
+            }
+        }).fail(function(jqXHR, textStatus) {
+            alert("Request failed: " + textStatus);
+        });
     }
-  },
-  invalid: {
-    color: "#fa755a",
-    iconColor: "#fa755a"
-  }
-};
-
-// Create an instance of the card Element.
-var card = elements.create('card', {style: style});
-
-// Add an instance of the card Element into the `card-element` div.
-card.mount('#card-element');
-
-// Handle real-time validation errors from the card Element.
-card.addEventListener('change', function(event) {
-  var displayError = document.getElementById('card-errors');
-  if (event.error) {
-    displayError.textContent = event.error.message;
-  } else {
-    displayError.textContent = '';
-  }
-});
-
-// Handle form submission.
-var form = document.getElementById('submit-button');
-form.addEventListener('click', function(event) {
-  event.preventDefault();
-
-  fetch('/create_payment_intent/', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': '{{ csrf_token }}'
-    },
-    body: JSON.stringify({total_price: {{ total_price }}})
-  })
-  .then(function(result) {
-    return result.json();
-  })
-  .then(function(data) {
-    if (data.clientSecret) {
-      stripe.confirmCardPayment(data.clientSecret, {
-        payment_method: {
-          card: card,
-          billing_details: {
-            name: '{{ user.username }}'  // Use dynamic username
-          }
-        }
-      }).then(function(result) {
-        if (result.error) {
-          // Show error to your customer (e.g., insufficient funds)
-          var displayError = document.getElementById('card-errors');
-          displayError.textContent = result.error.message;
-        } else {
-          // The payment has been processed!
-          if (result.paymentIntent.status === 'succeeded') {
-            // Show a success message to your customer
-            window.location.href = "/booking-success/";
-          }
-        }
-      });
-    } else {
-      alert("Payment initiation failed: " + data.error);
-    }
-  }).catch(function(error) {
-    console.error("Error:", error);
-  });
-});
+    
+    
 </script>
-
 {% endblock %}

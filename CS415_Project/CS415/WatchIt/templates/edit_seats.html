@@ -1,0 +1,42 @@
+{% extends "dashboard.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Edit Booking - Select Seats</h1>
+    {% if message %}
+    <div class="alert alert-danger" role="alert">
+        {{ message }}
+    </div>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>Select Seats (You need to select exactly {{ num_seats }} seats)</label>
+            {% for seat in seats %}
+            <div class="form-check">
+                <input class="form-check-input seat-checkbox" type="checkbox" name="seats[]" value="{{ seat.id }}" id="seat{{ seat.id }}" {% if not seat.availability %}disabled{% endif %}>
+                <label class="form-check-label" for="seat{{ seat.id }}">{{ seat.seat_label }}</label>
+            </div>
+            {% endfor %}
+        </div>
+        <button type="submit" class="btn btn-primary">Next</button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const seatCheckboxes = document.querySelectorAll('.seat-checkbox');
+        const requiredSeats = {{ num_seats }};
+        
+        seatCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function () {
+                const checkedCount = document.querySelectorAll('.seat-checkbox:checked').length;
+                if (checkedCount > requiredSeats) {
+                    this.checked = false;
+                    alert('You can only select up to ' + requiredSeats + ' seats.');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,70 +1,27 @@
-{% extends 'index.html' %}
+{% extends "dashboard.html" %}
 
-{% block title %}
-<title>Purchase History</title>
-{% endblock %}
-  
 {% block content %}
-    <style>
-      
-        h1 {
-            color: #fff; /* White color for headings */
-            text-align: center;
-            margin-top: 20px;
-            margin-bottom: 40px;
-        }
-        .table {
-            background-color: #23272a; /* Darker shade for table */
-            border-radius: 8px; /* Rounded corners for the table */
-            overflow: hidden; /* Ensures the rounded corners include child elements */
-        }
-        .table th, .table td {
-            border-color: #343a40; /* Slightly lighter border color for contrast */
-        }
-        .table-hover tbody tr:hover {
-            background-color: #2e3338; /* Lighter for hover effects */
-        }
-        thead {
-            color: #ffffff; /* White color for header text in the table */
-        }
-        a {
-            color: #7289da; /* A gentle blue for links */
-        }
-        a:hover {
-            color: #99aab5; /* Lighter blue for link hover effect */
-        }
-    </style>
-</head>
-<body>
 <div class="container">
-    <h1>Purchase History</h1>
-    <table class="table table-hover">
-        <thead class="thead-light">
-            <tr>
-                <th scope="col">#</th>
-                <th scope="col">Movie</th>
-                <th scope="col">Booking Date</th>
-                <th scope="col">Theatre</th>
-                <th scope="col">Seats</th>
-                <th scope="col">Payment Amount</th>
-                <th scope="col">Download</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for history in purchase_histories %}
-            <tr>
-                <th class="text-light" scope="row">{{ forloop.counter }}</th>
-                <td class="text-light">{{ history.movie }}</td>
-                <td class="text-light">{{ history.booking_date|date:"Y-m-d H:i" }}</td>
-                <td class="text-light">{{ history.cinema_hall }}</td>
-                <td class="text-light">{{ history.get_seat_labels }}</td>
-                <td class="text-light">${{ history.payment_amount }}</td>
-                <td class="text-light"><a href="{% url 'generate_purchase_history' history.id %}">Download PDF</a></td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="4" class="text-light">No purchase history available.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <h1 class="my-4">Your Purchases History</h1>
+    <div class="row">
+        {% for booking in purchase_histories %}
+        <div class="col-md-4 mb-4">
+            <div class="card bg-dark text-white">
+ 
+                <img src="{{ booking.movie.image.url }}" class="card-img-top" alt="{{ booking.movie.title }}">
+               
+                <div class="card-body">
+                    <h5 class="card-title">{{ booking.movie.title }}</h5>
+                    <p class="card-text"><strong>Cinema Hall:</strong> {{ booking.cinema_hall.cinema_type }}</p>
+                    <p class="card-text"><strong>Showtime:</strong> {{ booking.showtime.showtime }}</p>
+                    <p class="card-text"><strong>Booking Date:</strong> {{ booking.booking_date }}</p>
+                    <p class="card-text"><strong>Seats:</strong> {{ booking.get_seat_labels }}</p>
+                    <p class="card-text"><strong>Payment Amount:</strong> ${{ booking.payment_amount }}</p>
+                    <p class="text-light"><a href="{% url 'generate_purchase_history' booking.id %}">Download PDF</a></p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}
