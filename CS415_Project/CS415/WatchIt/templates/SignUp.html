@@ -1,4 +1,4 @@
-{% extends 'index.html' %}
+#signup.html{% extends 'index.html' %}
 
 {% block title %}
 <title>Sign Up</title>
@@ -6,19 +6,19 @@
 {% block css %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'SignUp.css' %}">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/alertify.min.css"/>
+<link rel="stylesheet" href="{% static 'css/alertify.css' %}">
 {% endblock %}
 
 {% block content %}
 <div class="card-container mt-5 mb-5">
     <div class="card bg-dark">
         <h3 class="text-center mb-4">Sign Up</h3>
-        {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">
-            {{ message }}
-        </div>
-        {% endfor %}
-        {% endif %}
+        
+        <!--Display Error Messages-->
+        
+
         <form method="post" action="{% url 'SignUp' %}">
             {% csrf_token %}
             <div class="form-group mb-3">
@@ -79,5 +79,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+</script>
+<script src="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/alertify.min.js"></script>
+
+<script>
+    
+{% for message in messages %}
+    {% if message.tags == 'warning' %}
+        alertify.set('notifier', 'position', 'top-right');
+        alertify.warning('{{ message|safe }}');
+    {% elif message.tags == 'success' %}
+        alertify.set('notifier', 'position', 'top-right');
+        alertify.success('{{ message|safe }}');
+    {% endif %}
+{% endfor %}
+
+
+
 </script>
 {% endblock %}

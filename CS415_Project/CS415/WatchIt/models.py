@@ -6,8 +6,29 @@ from django.db import transaction
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from datetime import timedelta
+from string import ascii_uppercase
+from django.conf import settings
+from django.db import transaction
+from django.utils import timezone
+from django.core.exceptions import ValidationError
+from datetime import timedelta
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+from string import ascii_uppercase
+from django.conf import settings
+from django.db import transaction
+from django.utils import timezone
+from django.core.exceptions import ValidationError
+from datetime import timedelta
+from django.contrib.auth.models import AbstractUser
+from django.db import models
 
-
+class User(AbstractUser):
+    is_email_verified = models.BooleanField(default=False)
+    secret_key = models.CharField(max_length=50, null=True, blank=True)
+    
+    def __str__(self):
+        return self.email
 
 class Tag(models.Model):
      name = models.CharField(max_length=100)
@@ -112,7 +133,7 @@ class Seat(models.Model):
 
 
 class Booking(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     cinema_hall = models.ForeignKey(CinemaHall, related_name='bookings', on_delete=models.CASCADE, null=True, blank=True)
     seats = models.ManyToManyField(Seat, related_name='bookings')
     booking_date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
@@ -136,3 +157,15 @@ class Booking(models.Model):
         seats.update(availability=True)
         super().delete(*args, **kwargs)
 
+
+#models.py
+
+
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    token = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    used = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.token
