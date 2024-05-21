@@ -527,8 +527,8 @@ def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
     if request.method == 'POST':
         adult_tickets = int(request.POST.get('adult_quantity', 0))
         child_tickets = int(request.POST.get('child_quantity', 0))
-        adult_price = 7.50  # assuming $7.50 per adult ticket
-        child_price = 2.50
+        adult_price = cinema_hall.adult_price
+        child_price = cinema_hall.child_price
 
         total_amount = (adult_tickets * adult_price) + (child_tickets * child_price)
         total_tickets = adult_tickets + child_tickets
@@ -547,7 +547,7 @@ def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
             # Store ticket info in session and redirect
             request.session['adult_tickets'] = adult_tickets
             request.session['child_tickets'] = child_tickets
-            request.session['total_price'] = total_amount
+            request.session['total_price'] = float(total_amount)
             request.session['total_tickets'] = total_tickets
             # Redirect should use correct URL pattern and parameter names
             return redirect('display_hall', cinema_hall_id=cinema_hall_id, movie_id=movie_id, showtime_id=showtime_id)
