@@ -1,98 +1,161 @@
-{% extends 'index.html' %}
-
-{% block content %}
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-<style>
-    .payment-container {
-        background: gray;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        padding: 20px;
-        max-width: 600px;
-        margin: 40px auto;
-    }
-    .header {
-        font-size: 24px;
-        font-weight: bold;
-        margin-bottom: 20px;
-    }
-    .detail {
-        margin-bottom: 10px;
-        font-size: 16px;
-    }
-    .btn-confirm {
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 16px;
-    }
-    .btn-confirm:hover {
-        background-color: #45a049;
-    }
-</style>
-
-<div class="payment-container">
-    <div class="header">Finalize Your Payment</div>
-    <div class="detail"><strong>Cinema Type:</strong> {{ cinema_type }}</div>
-    <div class="detail"><strong>Movie Title:</strong> {{ movie_title }}</div>
-    <div class="detail"><strong>Show:</strong> {{ show }}</div>
-    <div class="detail"><strong>Movie Duration:</strong> {{ movie_duration }} minutes</div>
-    <div class="detail"><strong>Total Price:</strong> ${{ total_price }}</div>
-    <div class="detail"><strong>Selected Seats:</strong> 
-        <div id="seat-list">
-            {% for seat in selected_seats %}
-            <span class="seat-label" data-id="{{ seat.id }}">{{ seat.seat_label }}</span>{% if not forloop.last %}, {% endif %}
-            {% endfor %}
+<!-- templates/payment.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Finalize Your Payment</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .payment-container {
+            background: gray;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            max-width: 600px;
+            margin: 40px auto;
+        }
+        .header {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .detail {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .btn-confirm {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn-confirm:hover {
+            background-color: #45a049;
+        }
+        .StripeElement {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            background-color: white;
+            box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+            transition: box-shadow 0.15s ease-in-out, border-color 0.15s ease-in-out;
+        }
+        .StripeElement--focus {
+            border-color: #4CAF50;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+        }
+        .StripeElement--invalid {
+            border-color: #e3342f;
+            box-shadow: 0 0 8px rgba(227, 52, 47, 0.6);
+        }
+        .StripeElement--webkit-autofill {
+            background-color: #fefde5 !important;
+        }
+        #card-errors {
+            color: #e3342f;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <div class="header">Finalize Your Payment</div>
+        <div class="detail"><strong>Cinema Type:</strong> {{ cinema_type }}</div>
+        <div class="detail"><strong>Movie Title:</strong> {{ movie_title }}</div>
+        <div class="detail"><strong>Show:</strong> {{ show }}</div>
+        <div class="detail"><strong>Movie Duration:</strong> {{ movie_duration }} minutes</div>
+        <div class="detail"><strong>Total Price:</strong> ${{ total_price }}</div>
+        <div class="detail"><strong>Selected Seats:</strong>
+            <div id="seat-list">
+                {% for seat in selected_seats %}
+                    <span class="seat-label" data-id="{{ seat.id }}">{{ seat.seat_label }}</span>{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </div>
         </div>
+
+        <form id="payment-form">
+            <div class="form-group">
+                <label for="card-element">Credit or debit card</label>
+                <div id="card-element" class="StripeElement"></div>
+                <div id="card-errors" role="alert"></div>
+            </div>
+            <button type="button" class="btn-confirm" onclick="submitPayment()">Submit Payment</button>
+        </form>
+        <div id="form-response" style="margin-top: 10px; font-size: 14px; color: red;"></div>
     </div>
-    <button class="btn-confirm" onclick="confirmPayment()">Confirm Payment</button>
-</div>
 
-<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-<script>
-    function confirmPayment() { 
-        var cinemaHallId = "{{ cinema_hall_id }}";
-        var movieId = "{{ movie_id }}";
-        var totalPrice = "{{ total_price }}";
-        var showtime = "{{ showtime_id }}";
-        var totalTickets = "{{ total_tickets }}";
-        var selectedSeats = [];
-        
-        $('#seat-list .seat-label').each(function() {
-            selectedSeats.push($(this).data('id'));
-        });
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        var stripePublicKey = '{{ stripe_public_key }}';
+        console.log("Stripe Public Key from template:", stripePublicKey);
 
-        console.log(selectedSeats)
-    
-        console.log("Cinema Hall ID:", cinemaHallId);
-        console.log("Movie ID:", movieId);
-        console.log("Selected Seats:", selectedSeats.join(','));
-        console.log("Total Price:", totalPrice);
-        console.log("Show Time:", showtime);
-    
-        $.post("/process-payment/", {
-            cinema_hall_id: cinemaHallId,
-            movie_id: movieId,
-            seats: selectedSeats,  // Send as an array, not a string
-            total_price: totalPrice,
-            showtime_id: showtime,
-            total_tickets: totalTickets,
-            csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val()
-        }, function(data) {
-            if (data.success) {
-                alert("Payment successful!");
-                window.location.href = "/booking-success/";
+        var stripe = Stripe(stripePublicKey);
+        var elements = stripe.elements();
+        var card = elements.create('card');
+        card.mount('#card-element');
+
+        card.addEventListener('change', function(event) {
+            var displayError = document.getElementById('card-errors');
+            if (event.error) {
+                displayError.textContent = event.error.message;
             } else {
-                alert("Payment failed. " + (data.error ? data.error : "Please try again."));
+                displayError.textContent = '';
             }
-        }).fail(function(jqXHR, textStatus) {
-            alert("Request failed: " + textStatus);
         });
-    }
-    
-    
-</script>
-{% endblock %}
+
+        function submitPayment() {
+            stripe.createPaymentMethod({
+                type: 'card',
+                card: card,
+            }).then(function(result) {
+                if (result.error) {
+                    var errorElement = document.getElementById('card-errors');
+                    errorElement.textContent = result.error.message;
+                } else {
+                    var paymentMethodId = result.paymentMethod.id;
+                    var data = {
+                        payment_method_id: paymentMethodId,
+                        cinema_hall_id: "{{ cinema_hall_id }}",
+                        movie_id: "{{ movie_id }}",
+                        total_price: "{{ total_price }}",
+                        showtime_id: "{{ showtime_id }}",
+                        total_tickets: "{{ total_tickets }}",
+                        seats: []
+                    };
+
+                    $('#seat-list .seat-label').each(function() {
+                        data.seats.push($(this).data('id'));
+                    });
+
+                    console.log("Data to be sent to server:", data);
+
+                    $.ajax({
+                        url: "/process-payment/",
+                        method: "POST",
+                        data: JSON.stringify(data),
+                        contentType: "application/json",
+                        success: function(response) {
+                            console.log("Server response:", response);
+                            if (response.success) {
+                                window.location.href = "/booking-success/";
+                            } else {
+                                $('#form-response').text(response.error);
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.log("AJAX error:", error);
+                            $('#form-response').text('An error occurred while processing the payment. Please try again.');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>

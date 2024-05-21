@@ -1,4 +1,6 @@
 from datetime import datetime
+import json
+from django.conf import settings
 from django.shortcuts import render
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, render, redirect
@@ -24,14 +26,369 @@ from django.http import HttpResponse
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
-from reportlab.platypus.flowables import HRFlowable
+from reportlab.platypus.flowables import HRFlowable, KeepTogether
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 import os
 from datetime import timedelta
+from reportlab.lib.pagesizes import landscape, A4
+
 
 from .recommend import get_recommendations
 #from .forms import BookingForm
+import stripe
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+@login_required
+def transaction_report(request):
+    # Get filter criteria from GET parameters
+    movie_id = request.GET.get('movie_id')
+    genre_id = request.GET.get('genre_id')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    # Initialize query
+    bookings = Booking.objects.filter(user=request.user).order_by('-booking_date')
+
+    # Apply filters
+    if movie_id:
+        bookings = bookings.filter(movie_id=movie_id)
+    if genre_id:
+        bookings = bookings.filter(movie__tags__id=genre_id)
+    if start_date:
+        bookings = bookings.filter(booking_date__gte=datetime.strptime(start_date, '%Y-%m-%d'))
+    if end_date:
+        bookings = bookings.filter(booking_date__lte=datetime.strptime(end_date, '%Y-%m-%d'))
+
+    # Get all movies and genres for the filter form
+    movies = Movie.objects.all()
+    genres = Tag.objects.all()
+
+    context = {
+        'bookings_with_edit_permission': [(booking, booking.can_edit()) for booking in bookings],
+        'movies': movies,
+        'genres': genres,
+    }
+
+    return render(request, 'your_bookings.html', context)
+
+
+# views.py
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from django.http import HttpResponse
+from datetime import datetime
+
+
+# @login_required
+# def transaction_report_pdf(request):
+#     movie_id = request.GET.get('movie_id')
+#     genre_id = request.GET.get('genre_id')
+#     start_date = request.GET.get('start_date')
+#     end_date = request.GET.get('end_date')
+
+#     bookings = Booking.objects.filter(user=request.user).order_by('-booking_date')
+
+#     if movie_id:
+#         bookings = bookings.filter(movie_id=movie_id)
+#     if genre_id:
+#         bookings = bookings.filter(movie__tags__id=genre_id)
+#     if start_date:
+#         bookings = bookings.filter(booking_date__gte=datetime.strptime(start_date, '%Y-%m-%d'))
+#     if end_date:
+#         bookings = bookings.filter(booking_date__lte=datetime.strptime(end_date, '%Y-%m-%d'))
+
+#     response = HttpResponse(content_type='application/pdf')
+#     response['Content-Disposition'] = 'attachment; filename="transaction_report.pdf"'
+
+#     doc = SimpleDocTemplate(response, pagesize=landscape(A4))
+#     elements = []
+
+#     styles = getSampleStyleSheet()
+#     title_style = ParagraphStyle(
+#         'Title',
+#         parent=styles['Title'],
+#         alignment=TA_CENTER,
+#         fontSize=24,
+#         textColor=colors.black
+#     )
+#     subtitle_style = ParagraphStyle(
+#         'Heading2',
+#         parent=styles['Heading2'],
+#         alignment=TA_CENTER,
+#         fontSize=18,
+#         textColor=colors.black
+#     )
+#     normal_style = ParagraphStyle(
+#         'Normal',
+#         parent=styles['BodyText'],
+#         fontSize=10,
+#         leading=12,
+#         textColor=colors.black
+#     )
+#     payment_style = ParagraphStyle(
+#         'Payment',
+#         parent=styles['BodyText'],
+#         fontSize=12,
+#         leading=14,
+#         textColor=colors.black,
+#         fontName='Helvetica-Bold',
+#         alignment=TA_RIGHT
+#     )
+#     movie_style = ParagraphStyle(
+#         'Movie',
+#         parent=styles['BodyText'],
+#         fontSize=12,
+#         leading=14,
+#         textColor=colors.black,
+#         fontName='Helvetica-Bold',
+#         alignment=TA_CENTER
+#     )
+#     small_bold_style = ParagraphStyle(
+#         'SmallBold',
+#         parent=styles['BodyText'],
+#         fontSize=10,
+#         leading=12,
+#         alignment=TA_CENTER,
+#         textColor=colors.black
+#     )
+#     terms_style = ParagraphStyle(
+#         'Terms',
+#         parent=styles['BodyText'],
+#         fontSize=8,
+#         leading=10,
+#         textColor=colors.black
+#     )
+
+#     def add_background(canvas, doc):
+#         canvas.saveState()
+#         canvas.setFillColor(colors.white)
+#         canvas.rect(0, 0, doc.pagesize[0], doc.pagesize[1], fill=1)
+#         footer_text = 'Thank you for your purchase!'
+#         canvas.setFont('Helvetica-Bold', 10)
+#         canvas.setFillColor(colors.black)
+#         canvas.drawCentredString(doc.pagesize[0] / 2.0, 0.5 * inch, footer_text)
+#         canvas.restoreState()
+
+#     try:
+#         logo_path = 'logo.jpg'
+#         if os.path.exists(logo_path):
+#             logo = Image(logo_path, width=1.5 * inch, height=1.5 * inch)
+#             logo.hAlign = 'CENTER'
+#             elements.append(logo)
+#             elements.append(Spacer(1, 12))
+#         else:
+#             elements.append(Paragraph("Logo not found.", normal_style))
+#     except Exception as e:
+#         elements.append(Paragraph("Logo could not be loaded.", normal_style))
+
+#     elements.append(Paragraph('Transaction Report', title_style))
+#     elements.append(Spacer(1, 12))
+
+#     # Booking details at the top
+#     for booking in bookings:
+#         user = booking.user.username if booking.user else 'N/A'
+#         elements.append(Paragraph(f'Booking ID: {booking.id}', subtitle_style))
+#         elements.append(Paragraph(f'User: {user}', subtitle_style))
+#         elements.append(Spacer(1, 12))
+#         break  # Only show the first booking details
+
+#     data = [['ID', 'Cinema Hall', 'Movie', 'Showtime', 'Seats', 'Payment Amount', 'Booking Date', 'Card Details']]
+#     total_amount = 0
+
+#     for booking in bookings:
+#         seat_labels = ', '.join(seat.seat_label for seat in booking.seats.all())
+#         showtime = booking.showtime.showtime if booking.showtime else 'N/A'
+#         card_details = f"**** **** **** {booking.card_last4}" if booking.card_last4 else 'N/A'
+#         total_amount += booking.payment_amount
+#         data.append([
+#             booking.id,
+#             booking.cinema_hall.cinema_type if booking.cinema_hall else 'N/A',
+#             booking.movie.title if booking.movie else 'N/A',
+#             showtime,
+#             seat_labels,
+#             f"${booking.payment_amount}",
+#             booking.booking_date.strftime('%Y-%m-%d %H:%M:%S') if booking.booking_date else 'N/A',
+#             card_details
+#         ])
+
+#     elements.append(Paragraph(f'Total Amount: ${total_amount:.2f}', payment_style))
+#     elements.append(Spacer(1, 12))
+
+#     table = Table(data)
+#     table.setStyle(TableStyle([
+#         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FFD700')),
+#         ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+#         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+#         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+#         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+#         ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+#         ('GRID', (0, 0), (-1, -1), 1, colors.black),
+#         ('FONTSIZE', (0, 0), (-1, -1), 10),
+#     ]))
+
+#     elements.append(KeepTogether([table]))
+#     doc.build(elements, onFirstPage=add_background, onLaterPages=add_background)
+#     return response
+
+@login_required
+def transaction_report_pdf(request):
+    movie_id = request.GET.get('movie_id')
+    genre_id = request.GET.get('genre_id')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    bookings = Booking.objects.filter(user=request.user).order_by('-booking_date')
+
+    if movie_id:
+        bookings = bookings.filter(movie_id=movie_id)
+    if genre_id:
+        bookings = bookings.filter(movie__tags__id=genre_id)
+    if start_date:
+        bookings = bookings.filter(booking_date__gte=datetime.strptime(start_date, '%Y-%m-%d'))
+    if end_date:
+        bookings = bookings.filter(booking_date__lte=datetime.strptime(end_date, '%Y-%m-%d'))
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="transaction_report.pdf"'
+
+    doc = SimpleDocTemplate(response, pagesize=landscape(A4))
+    elements = []
+
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'Title',
+        parent=styles['Title'],
+        alignment=TA_CENTER,
+        fontSize=24,
+        textColor=colors.black
+    )
+    subtitle_style = ParagraphStyle(
+        'Heading2',
+        parent=styles['Heading2'],
+        alignment=TA_CENTER,
+        fontSize=18,
+        textColor=colors.black
+    )
+    normal_style = ParagraphStyle(
+        'Normal',
+        parent=styles['BodyText'],
+        fontSize=10,
+        leading=12,
+        textColor=colors.black
+    )
+    payment_style = ParagraphStyle(
+        'Payment',
+        parent=styles['BodyText'],
+        fontSize=12,
+        leading=14,
+        textColor=colors.black,
+        fontName='Helvetica-Bold',
+        alignment=TA_RIGHT
+    )
+    movie_style = ParagraphStyle(
+        'Movie',
+        parent=styles['BodyText'],
+        fontSize=12,
+        leading=14,
+        textColor=colors.black,
+        fontName='Helvetica-Bold',
+        alignment=TA_CENTER
+    )
+    small_bold_style = ParagraphStyle(
+        'SmallBold',
+        parent=styles['BodyText'],
+        fontSize=10,
+        leading=12,
+        alignment=TA_CENTER,
+        textColor=colors.black
+    )
+    terms_style = ParagraphStyle(
+        'Terms',
+        parent=styles['BodyText'],
+        fontSize=8,
+        leading=10,
+        textColor=colors.black
+    )
+
+    def add_background(canvas, doc):
+        canvas.saveState()
+        canvas.setFillColor(colors.white)
+        canvas.rect(0, 0, doc.pagesize[0], doc.pagesize[1], fill=1)
+        footer_text = 'Thank you for your purchase!'
+        canvas.setFont('Helvetica-Bold', 10)
+        canvas.setFillColor(colors.black)
+        canvas.drawCentredString(doc.pagesize[0] / 2.0, 0.5 * inch, footer_text)
+        canvas.restoreState()
+
+    try:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        logo_path = os.path.join(base_dir, 'static', 'logo.jpg')  # Update this path to your logo
+        print(f"Checking logo at path: {logo_path}")  # Debug print
+
+        if os.path.exists(logo_path):
+            print("Logo found at path")  # Debug print
+            logo = Image(logo_path, width=1.5 * inch, height=1.5 * inch)
+            logo.hAlign = 'CENTER'
+            elements.append(logo)
+            elements.append(Spacer(1, 12))
+        else:
+            print("Logo not found at path")  # Debug print
+            elements.append(Paragraph("Logo not found.", normal_style))
+    except Exception as e:
+        print(f"Error loading logo: {e}")  # Debug print
+        elements.append(Paragraph("Logo could not be loaded.", normal_style))
+
+    elements.append(Paragraph('Transaction Report', title_style))
+    elements.append(Spacer(1, 12))
+
+    # Booking details at the top
+    for booking in bookings:
+        user = booking.user.username if booking.user else 'N/A'
+        elements.append(Paragraph(f'Booking ID: {booking.id}', subtitle_style))
+        elements.append(Paragraph(f'User: {user}', subtitle_style))
+        elements.append(Spacer(1, 12))
+        break  # Only show the first booking details
+
+    data = [['ID', 'Cinema Hall', 'Movie', 'Showtime', 'Seats', 'Payment Amount', 'Booking Date', 'Card Details']]
+    total_amount = 0
+
+    for booking in bookings:
+        seat_labels = ', '.join(seat.seat_label for seat in booking.seats.all())
+        showtime = booking.showtime.showtime if booking.showtime else 'N/A'
+        card_details = f"**** **** **** {booking.card_last4}" if booking.card_last4 else 'N/A'
+        total_amount += booking.payment_amount
+        data.append([
+            booking.id,
+            booking.cinema_hall.cinema_type if booking.cinema_hall else 'N/A',
+            booking.movie.title if booking.movie else 'N/A',
+            showtime,
+            seat_labels,
+            f"${booking.payment_amount}",
+            booking.booking_date.strftime('%Y-%m-%d %H:%M:%S') if booking.booking_date else 'N/A',
+            card_details
+        ])
+
+    elements.append(Paragraph(f'Total Amount: ${total_amount:.2f}', payment_style))
+    elements.append(Spacer(1, 12))
+
+    table = Table(data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FFD700')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+    ]))
+
+    elements.append(KeepTogether([table]))
+    doc.build(elements, onFirstPage=add_background, onLaterPages=add_background)
+    return response
 
 
 # Create your views here.
@@ -203,6 +560,32 @@ def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
     })
 
 
+# def payment(request, cinema_hall_id):
+#     movie_id = request.GET.get('movie_id')
+#     showtime_id = request.GET.get('showtime_id')
+#     selected_seat_ids = request.GET.get('seats', '').split(',')
+#     total_price = request.session.get('total_price', 0)
+#     total_tickets = int(request.GET.get('total_tickets', 0))
+    
+#     cinema_hall = get_object_or_404(CinemaHall, id=cinema_hall_id)
+#     movie = get_object_or_404(Movie, id=movie_id)
+#     show = get_object_or_404(Showtime, id=showtime_id)
+#     seats = Seat.objects.filter(id__in=selected_seat_ids)
+
+
+#     return render(request, 'payment.html', {
+#         'cinema_type': cinema_hall.cinema_type,
+#         'movie_title': movie.title,
+#         'movie_id': movie_id,
+#         'cinema_hall_id': cinema_hall_id,
+#         'movie_duration': movie.duration,
+#         'total_price': total_price,
+#         'total_tickets': total_tickets,
+#         'selected_seats': seats,
+#         'show': show,
+#         'showtime_id': showtime_id,
+#     })
+
 def payment(request, cinema_hall_id):
     movie_id = request.GET.get('movie_id')
     showtime_id = request.GET.get('showtime_id')
@@ -215,6 +598,8 @@ def payment(request, cinema_hall_id):
     show = get_object_or_404(Showtime, id=showtime_id)
     seats = Seat.objects.filter(id__in=selected_seat_ids)
 
+    # Add a print statement to debug if the stripe public key is being passed
+    print(f"Stripe Public Key: {settings.STRIPE_PUBLIC_KEY}")
 
     return render(request, 'payment.html', {
         'cinema_type': cinema_hall.cinema_type,
@@ -227,62 +612,147 @@ def payment(request, cinema_hall_id):
         'selected_seats': seats,
         'show': show,
         'showtime_id': showtime_id,
+        'stripe_public_key': settings.STRIPE_PUBLIC_KEY,  # Pass the Stripe public key to the template
     })
 
+# @csrf_exempt
+# @require_POST
+# def process_payment(request):
+#     # Get data from the request
+#     print("POST data:", request.POST) 
+#     cinema_hall_id = request.POST.get('cinema_hall_id')
+#     movie_id = request.POST.get('movie_id')
+#     showtime_id = request.POST.get('showtime_id')
+#     selected_seat_ids = [int(id) for id in request.POST.getlist('seats[]')]
+#     total_price = request.POST.get('total_price')
+#     total_tickets = request.POST.get('total_tickets')
 
+#     print("Showtime ID:", showtime_id)
+#     # Simulate payment processing
+#     payment_successful = True  # You should integrate real payment processing logic here
+
+#     if payment_successful:
+#         try:
+#             with transaction.atomic():
+#                 # Fetch necessary objects
+#                 cinema_hall = CinemaHall.objects.get(id=cinema_hall_id)
+#                 movie = Movie.objects.get(id=movie_id)
+#                 showtime = Showtime.objects.get(id=showtime_id)
+#                 seats = Seat.objects.filter(id__in=selected_seat_ids, availability=True)
+
+#                 # Check if the requested seats are still available
+#                 if seats.count() != len(selected_seat_ids):
+#                     return JsonResponse({'success': False, 'error': 'One or more seats are no longer available.'})
+
+#                 # Create the booking
+#                 booking = Booking.objects.create(
+#                     cinema_hall=cinema_hall,
+#                     movie=movie,
+#                     payment_amount=total_price,
+#                     showtime=showtime,
+#                     num_seats=total_tickets,
+#                 )
+#                 if request.user.is_authenticated:
+#                     booking.user = request.user
+#                 booking.seats.set(seats)
+#                 booking.save()
+
+#                 # Update seat availability
+#                 seats.update(availability=False)
+
+#                 # Success response
+#                 return JsonResponse({'success': True})
+#         except Exception as e:
+#             # Log the exception here
+#             return JsonResponse({'success': False, 'error': str(e)})
+#     else:
+#         # Payment failed
+#         return JsonResponse({'success': False, 'error': 'Payment processing failed.'})
+
+# views.py
 @csrf_exempt
-@require_POST
+@login_required
 def process_payment(request):
-    # Get data from the request
-    print("POST data:", request.POST) 
-    cinema_hall_id = request.POST.get('cinema_hall_id')
-    movie_id = request.POST.get('movie_id')
-    showtime_id = request.POST.get('showtime_id')
-    selected_seat_ids = [int(id) for id in request.POST.getlist('seats[]')]
-    total_price = request.POST.get('total_price')
-    total_tickets = request.POST.get('total_tickets')
-
-    print("Showtime ID:", showtime_id)
-    # Simulate payment processing
-    payment_successful = True  # You should integrate real payment processing logic here
-
-    if payment_successful:
+    if request.method == 'POST':
         try:
+            data = json.loads(request.body)
+            print("Data received in process_payment:", data)
+
+            payment_method_id = data.get('payment_method_id')
+            cinema_hall_id = data.get('cinema_hall_id')
+            movie_id = data.get('movie_id')
+            showtime_id = data.get('showtime_id')
+            total_price = data.get('total_price')
+            total_tickets = data.get('total_tickets')
+            selected_seat_ids = data.get('seats', [])
+
+            print(f"Payment Method ID: {payment_method_id}")
+            print(f"Cinema Hall ID: {cinema_hall_id}")
+            print(f"Movie ID: {movie_id}")
+            print(f"Showtime ID: {showtime_id}")
+            print(f"Total Price: {total_price}")
+            print(f"Total Tickets: {total_tickets}")
+            print(f"Selected Seat IDs: {selected_seat_ids}")
+
+            total_price_cents = int(float(total_price) * 100)
+
+            # Step 1: Create the PaymentIntent without the confirmation_method parameter
+            payment_intent = stripe.PaymentIntent.create(
+                amount=total_price_cents,
+                currency='usd',
+                payment_method=payment_method_id,
+                automatic_payment_methods={
+                    'enabled': True,
+                    'allow_redirects': 'never'
+                }
+            )
+
+            # Step 2: Manually confirm the PaymentIntent
+            stripe.PaymentIntent.confirm(
+                payment_intent.id,
+                payment_method=payment_method_id
+            )
+
+             # Retrieve card details
+            payment_method = stripe.PaymentMethod.retrieve(payment_method_id)
+            card_last4 = payment_method.card.last4 if payment_method and payment_method.card else ''
+
+
             with transaction.atomic():
-                # Fetch necessary objects
                 cinema_hall = CinemaHall.objects.get(id=cinema_hall_id)
                 movie = Movie.objects.get(id=movie_id)
                 showtime = Showtime.objects.get(id=showtime_id)
                 seats = Seat.objects.filter(id__in=selected_seat_ids, availability=True)
 
-                # Check if the requested seats are still available
                 if seats.count() != len(selected_seat_ids):
+                    print("Seat availability error")
                     return JsonResponse({'success': False, 'error': 'One or more seats are no longer available.'})
 
-                # Create the booking
                 booking = Booking.objects.create(
                     cinema_hall=cinema_hall,
                     movie=movie,
                     payment_amount=total_price,
                     showtime=showtime,
                     num_seats=total_tickets,
+                    charge_id=payment_intent.id,  # Store the PaymentIntent ID
+                    card_last4=card_last4
                 )
                 if request.user.is_authenticated:
                     booking.user = request.user
                 booking.seats.set(seats)
                 booking.save()
-
-                # Update seat availability
                 seats.update(availability=False)
 
-                # Success response
                 return JsonResponse({'success': True})
+        except stripe.error.CardError as e:
+            print(f"Stripe error: {str(e.user_message)}")
+            return JsonResponse({'success': False, 'error': str(e.user_message)})
         except Exception as e:
-            # Log the exception here
+            print(f"Error: {str(e)}")
             return JsonResponse({'success': False, 'error': str(e)})
-    else:
-        # Payment failed
-        return JsonResponse({'success': False, 'error': 'Payment processing failed.'})
+    print("Invalid request method")
+    return JsonResponse({'error': 'Invalid request method'})
+
 
 
 def booking_success(request):

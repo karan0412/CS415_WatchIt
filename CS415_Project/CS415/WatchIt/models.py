@@ -118,6 +118,8 @@ class Booking(models.Model):
     payment_amount = models.DecimalField(decimal_places=2, max_digits=20, null=True, blank=True)
     num_seats = models.PositiveIntegerField(default=1)
     edited = models.BooleanField(default=False)
+    charge_id = models.CharField(max_length=255, blank=True, null=True)  # Add this line
+    card_last4 = models.CharField(max_length=4, blank=True, null=True)
 
     def __str__(self):
         return f"Booking for {self.movie.title} on {self.booking_date}"
