@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os.path
+import sys                           
+
+TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,6 +33,8 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -42,7 +47,8 @@ INSTALLED_APPS = [
     'WatchIt',
 
 ]
-
+AUTH_USER_MODEL = "WatchIt.User" 
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -145,3 +151,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 STRIPE_PUBLIC_KEY = 'pk_test_51PGTzgDGr86VR9McfOmvWQcbkUF5BF7SFwj7nL2r5WfvCR7jq1z8oi4kcJumvpDkdXbXyDhckyQD1lztDl2vljV300dYWxZbAq'
 STRIPE_SECRET_KEY = 'sk_test_51PGTzgDGr86VR9McJQWPN7Gson2pC84pbSRrYTuWnOCVXKmMrAm6e4o6Yl0bOMxkWLGaVnV8QiLUvF4pVtU28Vsi005vdSFcTP'
+
+
+EMAIL_FROM_USER = 'watchitmoviess@gmail.com'
+EMAIL_HOST_PASSWORD = 'vadhshijhnwpvfle '
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'watchitmoviess@gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587

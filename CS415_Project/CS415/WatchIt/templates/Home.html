@@ -3,6 +3,11 @@
 {% block title %}
 <title>WatchIt - Home</title>
 {% endblock %}
+{% block css %}
+{% load static %}
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/alertify.min.css"/>
+<link rel="stylesheet" href="{% static 'css/alertify.css' %}">
+{% endblock %}
 
 {% block content %}
 <style>
@@ -56,9 +61,9 @@
   width: 100%;
   text-align: center;
   padding: 5% 0; /* Padding to give some space inside the box */
-}
-
+} 
 </style>
+
 <!-- Carousel placeholder for latest movies slideshow -->
 <div id="latestMoviesCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
   <div class="carousel-inner">
@@ -217,5 +222,20 @@
         }
     });
 </script>
+
+<script src="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/alertify.min.js"></script>
+
+
+<script>
+  {% for message in messages %}
+      {% if message.tags == 'error' %}
+          alertify.set('notifier', 'position', 'top-right');
+          alertify.error('{{ message|safe }}');
+      {% elif message.tags == 'success' %}
+          alertify.set('notifier', 'position', 'top-right');
+          alertify.success('{{ message|safe }}');
+      {% endif %}
+  {% endfor %}
+  </script>
 
 {% endblock %}
