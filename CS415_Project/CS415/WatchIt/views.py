@@ -399,44 +399,6 @@ def Home(request):
     movies_chunks = [movies[i:i+3] for i in range(0, len(movies), 3)]
     return render(request, 'Home.html', {'movies': movies, 'movies_chunks': movies_chunks, 'deals': deals,})
 
-def SignUp (request):
-    if request.method =='POST':
-        user_fname = request.POST.get('user_fname')
-        user_lname = request.POST.get('user_lname')
-        user_email = request.POST.get('user_email')
-        user_username = request.POST.get('user_username')
-        user_pwd = request.POST.get('user_pwd')
-
-        if User.objects.filter(username=user_username).exists():
-            messages.error(request, "Username already exists! Please try a different username.")
-            return render(request, 'SignUp.html')
-
-        elif User.objects.filter(email=user_email).exists():
-            messages.error(request, "Email already exists! Please try a different email or login.")
-            return render(request, 'SignUp.html')
-        
-        else:
-            user = User.objects.create_user(first_name=user_fname, last_name=user_lname, email=user_email, username=user_username, password=user_pwd)
-            user.save()
-            # Redirect to login page after successful registration
-            return redirect('Login')
-            
-    return render(request, 'SignUp.html')
-
-def Login(request):
-    if request.method == 'POST':
-        username = request.POST.get('uname')
-        password = request.POST.get('pwd')
-        user = authenticate(request, username=username, password=password)
-
-        if user is not None:
-            login(request, user)
-            return redirect('Home')  # Redirect to the home page
-        else:
-            context = {'error': "Username or password did not match."}
-            return render(request, 'Login.html', context)
-
-    return render(request, 'Login.html')
 
 @login_required
 def Loggedin(request):
@@ -527,8 +489,8 @@ def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
     if request.method == 'POST':
         adult_tickets = int(request.POST.get('adult_quantity', 0))
         child_tickets = int(request.POST.get('child_quantity', 0))
-        adult_price = 7.50  # assuming $7.50 per adult ticket
-        child_price = 2.50
+        adult_price = cinema_hall.adult_price
+        child_price = cinema_hall.child_price
 
         total_amount = (adult_tickets * adult_price) + (child_tickets * child_price)
         total_tickets = adult_tickets + child_tickets
@@ -547,7 +509,7 @@ def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
             # Store ticket info in session and redirect
             request.session['adult_tickets'] = adult_tickets
             request.session['child_tickets'] = child_tickets
-            request.session['total_price'] = total_amount
+            request.session['total_price'] = float(total_amount)
             request.session['total_tickets'] = total_tickets
             # Redirect should use correct URL pattern and parameter names
             return redirect('display_hall', cinema_hall_id=cinema_hall_id, movie_id=movie_id, showtime_id=showtime_id)
@@ -1047,3 +1009,421 @@ def confirm_edit_booking(request, booking_id, showtime_id, seats):
     })
 
 
+
+import secrets
+import qrcode
+import random
+from io import BytesIO
+import pytz
+import base64
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, render, redirect
+from .models import Deals, Movie, Showtime, User, Seat
+from validate_email import validate_email
+from django.utils import timezone
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from .models import Seat, Booking, CinemaHall
+from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods
+import re
+from django.http import JsonResponse
+from .models import Seat, Booking, CinemaHall, Movie
+from django.http import JsonResponse
+
+from django.db import transaction
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate,Paragraph, Spacer
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
+from reportlab.platypus.flowables import HRFlowable
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+import os
+from django.utils.safestring import mark_safe
+from datetime import datetime, timedelta
+#from .forms import BookingForm
+from helpers.decorators import auth_user_should_not_access
+from django.contrib.sites.shortcuts import get_current_site
+from django.template.loader import render_to_string
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from .utils import generate_token
+from django.core.mail import EmailMessage
+from django.conf import settings
+import threading
+from urllib.parse import urlencode
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from .models import PasswordResetToken
+from django.db import models
+token_generator = PasswordResetTokenGenerator()
+
+
+# Create your views here.
+
+class EmailThread(threading.Thread):
+
+    def __init__(self, email):
+        self.email = email
+        threading.Thread.__init__(self)
+
+    def run(self):
+        self.email.send()
+
+def send_activation_email(user, request):
+
+    current_site = get_current_site(request)
+    email_subject = 'Activate your account'
+    email_body = render_to_string('activate.html', {
+        'user': user,
+        'domain': current_site,
+        'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+        'token': generate_token.make_token(user),
+    })
+    
+    email = EmailMessage(subject=email_subject, body=email_body,
+                         from_email=settings.EMAIL_FROM_USER,
+                         to=[user.email]
+                         )
+
+    if not settings.TESTING:
+        EmailThread(email).start()
+
+def send_otp(request, user):
+    current_site = get_current_site(request)
+    email_subject = 'One-Time Password'
+    
+    # Generate a random 6-digit OTP
+    otp = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+    
+    email_body = render_to_string('otp_email.html', {
+        'user': user,
+        'domain': current_site.domain,
+        'otp': otp,
+    })
+    
+    email = EmailMessage(subject=email_subject, body=email_body,
+                         from_email=settings.EMAIL_FROM_USER,
+                         to=[user.email])
+
+    if not settings.TESTING:
+        EmailThread(email).start()
+    
+    # Store OTP and user ID in session for verification
+    request.session['otp'] = otp
+    request.session['pre_otp_user_id'] = user.id
+
+def enter_otp(request):
+
+    if not request.session.get('otp') or not request.session.get('pre_otp_user_id'):
+        messages.error(request, 'You need to log in first to receive an OTP.')
+        return redirect('Login')
+    
+    context = {'has_error': False, 'data': request.POST}
+    if request.method == 'POST':
+        # Get OTP entered by the user from individual input boxes
+        entered_otp = ''.join([
+            request.POST.get('otp1'),
+            request.POST.get('otp2'),
+            request.POST.get('otp3'),
+            request.POST.get('otp4'),
+            request.POST.get('otp5'),
+            request.POST.get('otp6'),
+        ])
+        
+        # Retrieve OTP from session
+        stored_otp = request.session.get('otp')
+        user_id = request.session.get('pre_otp_user_id')
+        user = User.objects.get(id=user_id)
+        
+        if entered_otp == stored_otp:
+            login(request, user)
+            return redirect('Home')
+        else:
+            messages.error(request, 'OTP is Invalid. Please try Again')
+            return render(request, 'otp_enter.html')
+    
+    return render(request, 'otp_enter.html')
+
+def resend_otp(request):
+    print("blabla")
+    user_id = request.session.get('pre_otp_user_id')
+    user = User.objects.get(id=user_id)
+
+    send_otp(request, user)
+    messages.success(request, 'New OTP sent successfully!')
+    return redirect('enter_otp')
+    
+
+
+def Home(request):
+    today = timezone.now().date()
+    movies = Movie.objects.filter(release_date__lte=today)  # Fetch movies with release_date today or in the past
+    deals = Deals.objects.all()
+    movies_chunks = [movies[i:i+3] for i in range(0, len(movies), 3)]
+
+    # Check if the user is authenticated
+    if request.user.is_authenticated:
+        # Check if the welcome message has been displayed for this session
+        if 'welcome_message_displayed' not in request.session:
+            messages.success(request, f'Welcome {request.user.username}!')
+            # Set a session variable to indicate that the message has been displayed
+            request.session['welcome_message_displayed'] = True
+
+    return render(request, 'Home.html', {'movies': movies, 'movies_chunks': movies_chunks, 'deals': deals})
+
+  
+@auth_user_should_not_access
+def SignUp (request):
+    if request.method =='POST':
+        
+        context = {'has_error': False, 'data': request.POST}
+        user_fname = request.POST.get('user_fname')
+        user_lname = request.POST.get('user_lname')
+        user_email = request.POST.get('user_email')
+        user_username = request.POST.get('user_username')
+        user_pwd = request.POST.get('user_pwd')
+
+        if len(user_pwd) < 6:
+            styled_warning_message = mark_safe('<span style="color: black; font-weight:bold">WARNING</span><br>Password should be at least 6 characters')
+            messages.warning(request, styled_warning_message)
+            context['has_error'] = True
+
+        if not validate_email(user_email):
+            styled_warning_message = mark_safe('<span style="color: black; font-weight:bold">WARNING</span><br>Enter a valid E-mail Address')
+            messages.warning(request, styled_warning_message)
+            context['has_error'] = True
+
+        if not user_username:
+            styled_warning_message = mark_safe('<span style="color: black; font-weight:bold">WARNING</span><br>UserName is Required')
+            messages.warning(request, styled_warning_message)
+            context['has_error'] = True
+
+        if User.objects.filter(username=user_username).exists():
+            styled_warning_message = mark_safe('<span style="color: black; font-weight:bold">WARNING</span><br>Username is taken, choose another one')
+            messages.warning(request, styled_warning_message)
+            context['has_error'] = True
+
+            return render(request, 'SignUp.html', context, status=409)
+
+        if User.objects.filter(email=user_email).exists():
+            styled_warning_message = mark_safe('<span style="color: black; font-weight:bold">WARNING</span><br>E-mail is taken, choose another one')
+            messages.warning(request, styled_warning_message)
+            context['has_error'] = True
+
+            return render(request, 'SignUp.html', context, status=409)
+
+        if context['has_error']:
+            return render(request, 'SignUp.html', context)
+        
+            # Redirect to login page after successful registration
+
+        user = User.objects.create_user(first_name=user_fname, last_name=user_lname,username=user_username, email= user_email,password=user_pwd)
+        user.save()
+
+        if not context['has_error']:
+
+            send_activation_email(user, request)
+
+            styled_message = mark_safe('<span style="color: black; font-weight:bold">VERIFY</span><br>We sent you an email to verify your account')
+            messages.success(request, styled_message)
+            return redirect('Login')
+
+            
+    return render(request, 'SignUp.html')
+
+@auth_user_should_not_access
+def Login(request):
+    if request.method == 'POST':
+        context = {'has_error': False, 'data': request.POST}
+        username = request.POST.get('uname')
+        password = request.POST.get('pwd')
+        
+        # Print the username and password for debugging purposes
+        print(f'Username: {username}')
+        print(f'Password: {password}')
+        
+        # Check if the user exists
+        if not User.objects.filter(username=username).exists():
+            messages.error(request, "User not found.")
+            context['has_error'] = True
+            return render(request, 'Login.html', context)
+        
+        # Authenticate the user
+        user = authenticate(request, username=username, password=password)
+        print(f'Authenticated User: {user}')
+        
+        if user is None:
+            messages.error(request, "Username or password did not match.")
+            context['has_error'] = True
+            return render(request, 'Login.html', context)
+
+        if not user.is_email_verified:
+            messages.error(request, 'Email is not verified, please check your email inbox')
+            context['has_error'] = True
+            return render(request, 'Login.html', context)
+        
+        # Send OTP and redirect to enter_otp view if user is authenticated and email is verified
+        send_otp(request, user)
+        messages.success(request, 'OTP has been sent to your registered email')
+        return redirect('enter_otp')
+
+    return render(request, 'Login.html')
+
+def activate_user(request, uidb64, token):
+
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+
+        user = User.objects.get(pk=uid)
+
+    except Exception as e:
+        user = None
+
+    if user and generate_token.check_token(user, token):
+        user.is_email_verified = True
+        user.save()
+
+        messages.success(request, 'Email verified, you can now login')
+        return redirect(reverse('Login'))
+    messages.error(request, 'Your activation link is not valid.')
+    return render(request,'Login.html')
+
+def send_resetpassword_email(user, request):
+
+    token = secrets.token_urlsafe(16)  # Generate a unique token
+    # Store the token in the user's profile or any other suitable place
+    reset_token = PasswordResetToken.objects.create(user=user, token=token)
+
+    current_site = get_current_site(request)
+    email_subject = 'Reset your Password'  # Corrected subject
+    email_body = render_to_string('reset_pwd.html', {
+        'user': user,
+        'domain': current_site.domain,
+        'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+        'token': token,
+    })
+
+    email = EmailMessage(subject=email_subject, body=email_body,
+                         from_email=settings.EMAIL_FROM_USER,
+                         to=[user.email])
+
+    if not settings.TESTING:
+        EmailThread(email).start()
+
+def forget_password(request):
+    if request.method == 'POST':
+        username = request.POST.get('uname')
+
+        try:
+            user = User.objects.get(username=username)
+
+            if not user.is_email_verified:
+                messages.warning(request, 'Email is not verified')
+                return redirect('forget_password')
+
+            send_resetpassword_email(user, request)
+            messages.success(request, 'Password reset link has been sent to your email')
+            return redirect('Login')
+
+        except User.DoesNotExist:
+            messages.warning(request, 'Username does not exist')
+            return redirect('forget_password')
+
+        except Exception as e:
+            print(e)
+            messages.error(request, 'An error occurred. Please try again.')
+            return redirect('forget_password')
+
+    return render(request, 'forget_password.html')
+
+def reset_password(request, uidb64, token):
+    # Validate token
+    try:
+        user_id = urlsafe_base64_decode(uidb64).decode()
+        user = User.objects.get(pk=user_id)
+        reset_token = PasswordResetToken.objects.get(user=user, token=token, used=False)
+
+        # Check if the reset token has expired
+        if reset_token.created_at < timezone.now() - timedelta(minutes=1):
+            reset_token.delete()  # Delete expired token
+            messages.error(request, 'Your password reset link has expired.')
+            return redirect('Login')
+        
+    except (User.DoesNotExist, ValueError, TypeError, PasswordResetToken.DoesNotExist):
+        messages.error(request, 'Your Password reset link may have already been used.')
+        return redirect('Login')
+
+    # Handle password reset form submission
+    if request.method == "POST":
+        new_password = request.POST.get("pwd")
+        confirm_password = request.POST.get("pwd1")
+        if new_password and confirm_password and new_password == confirm_password:
+                password_pattern = re.compile(
+                r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$'
+                )
+                if not password_pattern.match(new_password):
+                    messages.warning(request, 'Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.')
+                    return redirect('reset_password', uidb64=uidb64, token=token)
+
+                user.set_password(new_password)
+                user.save()
+                reset_token.used = True
+                reset_token.save()
+                messages.success(request, 'Your password has been reset. You can now log in.')
+                return redirect('Login')
+        else:
+                messages.warning(request, 'Passwords do not match. Please try again.')
+                return redirect('reset_password', uidb64=uidb64, token=token)
+    else:
+        return render(request, "reset_password_confirm.html")
+
+
+@login_required
+def QRcode(request):
+    # Generate or retrieve the secret key for the current user
+    user = request.user
+    secret_key = user.secret_key
+    
+    # Use the user's email address as the account name
+    account_name = user.email
+    
+    # Optional issuer information
+    issuer = "WatchIt"  # Customize the issuer as needed
+    
+    # Prepare the data for the QR code
+    data = {
+        'issuer': issuer,
+        'secret': secret_key,
+        'algorithm': 'SHA1',  # Or use the appropriate algorithm
+        'digits': 6,  # Or use the appropriate number of digits
+    }
+    qr_data = urlencode(data)
+
+    # Generate QR code
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(f'otpauth://totp/{account_name}?{qr_data}')
+    qr.make(fit=True)
+    
+    # Create a BytesIO object to hold the image data
+    img_buffer = BytesIO()
+    qr.make_image(fill_color="black", back_color="white").save(img_buffer, format='PNG')
+    
+    # Encode the image data as a base64 string
+    img_str = base64.b64encode(img_buffer.getvalue()).decode()
+
+    # Pass the base64-encoded image string to the template
+    return render(request, 'security.html', {'qr_img': img_str})
