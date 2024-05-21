@@ -3,6 +3,47 @@
 {% block content %}
 <div class="container">
     <h1 class="my-4">Your Bookings</h1>
+
+    <!-- Filter Form -->
+    <form method="GET" action="{% url 'transaction_report' %}" class="form-inline mb-4">
+        <div class="form-group mr-2">
+            <label for="movie_id" class="mr-2">Movie:</label>
+            <select name="movie_id" id="movie_id" class="form-control">
+                <option value="">All</option>
+                {% for movie in movies %}
+                    <option value="{{ movie.id }}" {% if request.GET.movie_id == movie.id|stringformat:"s" %}selected{% endif %}>{{ movie.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group mr-2">
+            <label for="genre_id" class="mr-2">Genre:</label>
+            <select name="genre_id" id="genre_id" class="form-control">
+                <option value="">All</option>
+                {% for genre in genres %}
+                    <option value="{{ genre.id }}" {% if request.GET.genre_id == genre.id|stringformat:"s" %}selected{% endif %}>{{ genre.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group mr-2">
+            <label for="start_date" class="mr-2">Start Date:</label>
+            <input type="date" name="start_date" id="start_date" class="form-control" value="{{ request.GET.start_date }}">
+        </div>
+        <div class="form-group mr-2">
+            <label for="end_date" class="mr-2">End Date:</label>
+            <input type="date" name="end_date" id="end_date" class="form-control" value="{{ request.GET.end_date }}">
+        </div>
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </form>
+
+    <!-- Generate Report Button -->
+    <form method="GET" action="{% url 'transaction_report_pdf' %}" class="mb-4">
+        <input type="hidden" name="movie_id" value="{{ request.GET.movie_id }}">
+        <input type="hidden" name="genre_id" value="{{ request.GET.genre_id }}">
+        <input type="hidden" name="start_date" value="{{ request.GET.start_date }}">
+        <input type="hidden" name="end_date" value="{{ request.GET.end_date }}">
+        <button type="submit" class="btn btn-secondary">Generate Report</button>
+    </form>
+
     <div class="row">
         {% if bookings_with_edit_permission %}
             {% for booking, can_edit in bookings_with_edit_permission %}
@@ -16,9 +57,7 @@
                         <p class="card-text"><strong>Booking Date:</strong> {{ booking.booking_date }}</p>
                         <p class="card-text"><strong>Seats:</strong> {{ booking.get_seat_labels }}</p>
                         <p class="card-text"><strong>Payment Amount:</strong> ${{ booking.payment_amount }}</p>
-                        {% if can_edit %}
-                        <a href="{% url 'edit_booking' booking.id %}" class="btn btn-warning">Edit</a>
-                        {% endif %}
+                        <p class="card-text"><strong>Card Details:</strong> **** **** **** {{ booking.card_last4 }}</p>
                     </div>
                 </div>
             </div>
@@ -29,4 +68,3 @@
     </div>
 </div>
 {% endblock %}
-

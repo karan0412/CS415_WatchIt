@@ -26,17 +26,369 @@ from django.http import HttpResponse
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
-from reportlab.platypus.flowables import HRFlowable
+from reportlab.platypus.flowables import HRFlowable, KeepTogether
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 import os
 from datetime import timedelta
+from reportlab.lib.pagesizes import landscape, A4
+
 
 from .recommend import get_recommendations
 #from .forms import BookingForm
 import stripe
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+@login_required
+def transaction_report(request):
+    # Get filter criteria from GET parameters
+    movie_id = request.GET.get('movie_id')
+    genre_id = request.GET.get('genre_id')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    # Initialize query
+    bookings = Booking.objects.filter(user=request.user).order_by('-booking_date')
+
+    # Apply filters
+    if movie_id:
+        bookings = bookings.filter(movie_id=movie_id)
+    if genre_id:
+        bookings = bookings.filter(movie__tags__id=genre_id)
+    if start_date:
+        bookings = bookings.filter(booking_date__gte=datetime.strptime(start_date, '%Y-%m-%d'))
+    if end_date:
+        bookings = bookings.filter(booking_date__lte=datetime.strptime(end_date, '%Y-%m-%d'))
+
+    # Get all movies and genres for the filter form
+    movies = Movie.objects.all()
+    genres = Tag.objects.all()
+
+    context = {
+        'bookings_with_edit_permission': [(booking, booking.can_edit()) for booking in bookings],
+        'movies': movies,
+        'genres': genres,
+    }
+
+    return render(request, 'your_bookings.html', context)
+
+
+# views.py
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from django.http import HttpResponse
+from datetime import datetime
+
+
+# @login_required
+# def transaction_report_pdf(request):
+#     movie_id = request.GET.get('movie_id')
+#     genre_id = request.GET.get('genre_id')
+#     start_date = request.GET.get('start_date')
+#     end_date = request.GET.get('end_date')
+
+#     bookings = Booking.objects.filter(user=request.user).order_by('-booking_date')
+
+#     if movie_id:
+#         bookings = bookings.filter(movie_id=movie_id)
+#     if genre_id:
+#         bookings = bookings.filter(movie__tags__id=genre_id)
+#     if start_date:
+#         bookings = bookings.filter(booking_date__gte=datetime.strptime(start_date, '%Y-%m-%d'))
+#     if end_date:
+#         bookings = bookings.filter(booking_date__lte=datetime.strptime(end_date, '%Y-%m-%d'))
+
+#     response = HttpResponse(content_type='application/pdf')
+#     response['Content-Disposition'] = 'attachment; filename="transaction_report.pdf"'
+
+#     doc = SimpleDocTemplate(response, pagesize=landscape(A4))
+#     elements = []
+
+#     styles = getSampleStyleSheet()
+#     title_style = ParagraphStyle(
+#         'Title',
+#         parent=styles['Title'],
+#         alignment=TA_CENTER,
+#         fontSize=24,
+#         textColor=colors.black
+#     )
+#     subtitle_style = ParagraphStyle(
+#         'Heading2',
+#         parent=styles['Heading2'],
+#         alignment=TA_CENTER,
+#         fontSize=18,
+#         textColor=colors.black
+#     )
+#     normal_style = ParagraphStyle(
+#         'Normal',
+#         parent=styles['BodyText'],
+#         fontSize=10,
+#         leading=12,
+#         textColor=colors.black
+#     )
+#     payment_style = ParagraphStyle(
+#         'Payment',
+#         parent=styles['BodyText'],
+#         fontSize=12,
+#         leading=14,
+#         textColor=colors.black,
+#         fontName='Helvetica-Bold',
+#         alignment=TA_RIGHT
+#     )
+#     movie_style = ParagraphStyle(
+#         'Movie',
+#         parent=styles['BodyText'],
+#         fontSize=12,
+#         leading=14,
+#         textColor=colors.black,
+#         fontName='Helvetica-Bold',
+#         alignment=TA_CENTER
+#     )
+#     small_bold_style = ParagraphStyle(
+#         'SmallBold',
+#         parent=styles['BodyText'],
+#         fontSize=10,
+#         leading=12,
+#         alignment=TA_CENTER,
+#         textColor=colors.black
+#     )
+#     terms_style = ParagraphStyle(
+#         'Terms',
+#         parent=styles['BodyText'],
+#         fontSize=8,
+#         leading=10,
+#         textColor=colors.black
+#     )
+
+#     def add_background(canvas, doc):
+#         canvas.saveState()
+#         canvas.setFillColor(colors.white)
+#         canvas.rect(0, 0, doc.pagesize[0], doc.pagesize[1], fill=1)
+#         footer_text = 'Thank you for your purchase!'
+#         canvas.setFont('Helvetica-Bold', 10)
+#         canvas.setFillColor(colors.black)
+#         canvas.drawCentredString(doc.pagesize[0] / 2.0, 0.5 * inch, footer_text)
+#         canvas.restoreState()
+
+#     try:
+#         logo_path = 'logo.jpg'
+#         if os.path.exists(logo_path):
+#             logo = Image(logo_path, width=1.5 * inch, height=1.5 * inch)
+#             logo.hAlign = 'CENTER'
+#             elements.append(logo)
+#             elements.append(Spacer(1, 12))
+#         else:
+#             elements.append(Paragraph("Logo not found.", normal_style))
+#     except Exception as e:
+#         elements.append(Paragraph("Logo could not be loaded.", normal_style))
+
+#     elements.append(Paragraph('Transaction Report', title_style))
+#     elements.append(Spacer(1, 12))
+
+#     # Booking details at the top
+#     for booking in bookings:
+#         user = booking.user.username if booking.user else 'N/A'
+#         elements.append(Paragraph(f'Booking ID: {booking.id}', subtitle_style))
+#         elements.append(Paragraph(f'User: {user}', subtitle_style))
+#         elements.append(Spacer(1, 12))
+#         break  # Only show the first booking details
+
+#     data = [['ID', 'Cinema Hall', 'Movie', 'Showtime', 'Seats', 'Payment Amount', 'Booking Date', 'Card Details']]
+#     total_amount = 0
+
+#     for booking in bookings:
+#         seat_labels = ', '.join(seat.seat_label for seat in booking.seats.all())
+#         showtime = booking.showtime.showtime if booking.showtime else 'N/A'
+#         card_details = f"**** **** **** {booking.card_last4}" if booking.card_last4 else 'N/A'
+#         total_amount += booking.payment_amount
+#         data.append([
+#             booking.id,
+#             booking.cinema_hall.cinema_type if booking.cinema_hall else 'N/A',
+#             booking.movie.title if booking.movie else 'N/A',
+#             showtime,
+#             seat_labels,
+#             f"${booking.payment_amount}",
+#             booking.booking_date.strftime('%Y-%m-%d %H:%M:%S') if booking.booking_date else 'N/A',
+#             card_details
+#         ])
+
+#     elements.append(Paragraph(f'Total Amount: ${total_amount:.2f}', payment_style))
+#     elements.append(Spacer(1, 12))
+
+#     table = Table(data)
+#     table.setStyle(TableStyle([
+#         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FFD700')),
+#         ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+#         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+#         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+#         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+#         ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+#         ('GRID', (0, 0), (-1, -1), 1, colors.black),
+#         ('FONTSIZE', (0, 0), (-1, -1), 10),
+#     ]))
+
+#     elements.append(KeepTogether([table]))
+#     doc.build(elements, onFirstPage=add_background, onLaterPages=add_background)
+#     return response
+
+@login_required
+def transaction_report_pdf(request):
+    movie_id = request.GET.get('movie_id')
+    genre_id = request.GET.get('genre_id')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    bookings = Booking.objects.filter(user=request.user).order_by('-booking_date')
+
+    if movie_id:
+        bookings = bookings.filter(movie_id=movie_id)
+    if genre_id:
+        bookings = bookings.filter(movie__tags__id=genre_id)
+    if start_date:
+        bookings = bookings.filter(booking_date__gte=datetime.strptime(start_date, '%Y-%m-%d'))
+    if end_date:
+        bookings = bookings.filter(booking_date__lte=datetime.strptime(end_date, '%Y-%m-%d'))
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="transaction_report.pdf"'
+
+    doc = SimpleDocTemplate(response, pagesize=landscape(A4))
+    elements = []
+
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'Title',
+        parent=styles['Title'],
+        alignment=TA_CENTER,
+        fontSize=24,
+        textColor=colors.black
+    )
+    subtitle_style = ParagraphStyle(
+        'Heading2',
+        parent=styles['Heading2'],
+        alignment=TA_CENTER,
+        fontSize=18,
+        textColor=colors.black
+    )
+    normal_style = ParagraphStyle(
+        'Normal',
+        parent=styles['BodyText'],
+        fontSize=10,
+        leading=12,
+        textColor=colors.black
+    )
+    payment_style = ParagraphStyle(
+        'Payment',
+        parent=styles['BodyText'],
+        fontSize=12,
+        leading=14,
+        textColor=colors.black,
+        fontName='Helvetica-Bold',
+        alignment=TA_RIGHT
+    )
+    movie_style = ParagraphStyle(
+        'Movie',
+        parent=styles['BodyText'],
+        fontSize=12,
+        leading=14,
+        textColor=colors.black,
+        fontName='Helvetica-Bold',
+        alignment=TA_CENTER
+    )
+    small_bold_style = ParagraphStyle(
+        'SmallBold',
+        parent=styles['BodyText'],
+        fontSize=10,
+        leading=12,
+        alignment=TA_CENTER,
+        textColor=colors.black
+    )
+    terms_style = ParagraphStyle(
+        'Terms',
+        parent=styles['BodyText'],
+        fontSize=8,
+        leading=10,
+        textColor=colors.black
+    )
+
+    def add_background(canvas, doc):
+        canvas.saveState()
+        canvas.setFillColor(colors.white)
+        canvas.rect(0, 0, doc.pagesize[0], doc.pagesize[1], fill=1)
+        footer_text = 'Thank you for your purchase!'
+        canvas.setFont('Helvetica-Bold', 10)
+        canvas.setFillColor(colors.black)
+        canvas.drawCentredString(doc.pagesize[0] / 2.0, 0.5 * inch, footer_text)
+        canvas.restoreState()
+
+    try:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        logo_path = os.path.join(base_dir, 'static', 'logo.jpg')  # Update this path to your logo
+        print(f"Checking logo at path: {logo_path}")  # Debug print
+
+        if os.path.exists(logo_path):
+            print("Logo found at path")  # Debug print
+            logo = Image(logo_path, width=1.5 * inch, height=1.5 * inch)
+            logo.hAlign = 'CENTER'
+            elements.append(logo)
+            elements.append(Spacer(1, 12))
+        else:
+            print("Logo not found at path")  # Debug print
+            elements.append(Paragraph("Logo not found.", normal_style))
+    except Exception as e:
+        print(f"Error loading logo: {e}")  # Debug print
+        elements.append(Paragraph("Logo could not be loaded.", normal_style))
+
+    elements.append(Paragraph('Transaction Report', title_style))
+    elements.append(Spacer(1, 12))
+
+    # Booking details at the top
+    for booking in bookings:
+        user = booking.user.username if booking.user else 'N/A'
+        elements.append(Paragraph(f'Booking ID: {booking.id}', subtitle_style))
+        elements.append(Paragraph(f'User: {user}', subtitle_style))
+        elements.append(Spacer(1, 12))
+        break  # Only show the first booking details
+
+    data = [['ID', 'Cinema Hall', 'Movie', 'Showtime', 'Seats', 'Payment Amount', 'Booking Date', 'Card Details']]
+    total_amount = 0
+
+    for booking in bookings:
+        seat_labels = ', '.join(seat.seat_label for seat in booking.seats.all())
+        showtime = booking.showtime.showtime if booking.showtime else 'N/A'
+        card_details = f"**** **** **** {booking.card_last4}" if booking.card_last4 else 'N/A'
+        total_amount += booking.payment_amount
+        data.append([
+            booking.id,
+            booking.cinema_hall.cinema_type if booking.cinema_hall else 'N/A',
+            booking.movie.title if booking.movie else 'N/A',
+            showtime,
+            seat_labels,
+            f"${booking.payment_amount}",
+            booking.booking_date.strftime('%Y-%m-%d %H:%M:%S') if booking.booking_date else 'N/A',
+            card_details
+        ])
+
+    elements.append(Paragraph(f'Total Amount: ${total_amount:.2f}', payment_style))
+    elements.append(Spacer(1, 12))
+
+    table = Table(data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FFD700')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+    ]))
+
+    elements.append(KeepTogether([table]))
+    doc.build(elements, onFirstPage=add_background, onLaterPages=add_background)
+    return response
 
 
 # Create your views here.
@@ -361,6 +713,11 @@ def process_payment(request):
                 payment_method=payment_method_id
             )
 
+             # Retrieve card details
+            payment_method = stripe.PaymentMethod.retrieve(payment_method_id)
+            card_last4 = payment_method.card.last4 if payment_method and payment_method.card else ''
+
+
             with transaction.atomic():
                 cinema_hall = CinemaHall.objects.get(id=cinema_hall_id)
                 movie = Movie.objects.get(id=movie_id)
@@ -377,7 +734,8 @@ def process_payment(request):
                     payment_amount=total_price,
                     showtime=showtime,
                     num_seats=total_tickets,
-                    charge_id=payment_intent.id  # Store the PaymentIntent ID
+                    charge_id=payment_intent.id,  # Store the PaymentIntent ID
+                    card_last4=card_last4
                 )
                 if request.user.is_authenticated:
                     booking.user = request.user

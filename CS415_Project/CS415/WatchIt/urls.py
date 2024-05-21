@@ -23,7 +23,8 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('purchase_history/', views.list_purchase_history, name='purchase_history'),
     path('your_bookings/', views.your_bookings, name='your_bookings'),
-
+    path('transaction_report/', views.transaction_report, name='transaction_report'),
+    path('transaction-report/pdf/', views.transaction_report_pdf, name='transaction_report_pdf'),
     path('edit_booking/<int:booking_id>/', views.edit_booking, name='edit_booking'),
     path('edit_showtime/<int:booking_id>/<int:movie_id>/<int:cinema_hall_id>/', views.edit_showtime, name='edit_showtime'),
     path('edit_seats/<int:booking_id>/<int:showtime_id>/<int:cinema_hall_id>/', views.edit_seats, name='edit_seats'),
