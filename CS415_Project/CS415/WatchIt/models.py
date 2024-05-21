@@ -19,6 +19,9 @@ class CinemaHall(models.Model):
     cinema_type = models.CharField(max_length=100, null=True, blank=True)
     num_rows = models.IntegerField(blank=True, null=True)
     num_cols = models.IntegerField(blank=True, null=True)
+    adult_price = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    child_price = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+
 
     def __str__(self):
         return f"{self.cinema_type} - {self.num_rows}x{self.num_cols} seats"
