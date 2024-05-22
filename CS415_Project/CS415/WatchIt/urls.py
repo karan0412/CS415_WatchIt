@@ -1,7 +1,9 @@
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.urls import include, path
 from .import views
+
 
 urlpatterns = [
     path("", views.Home, name="Home"),
@@ -39,8 +41,10 @@ urlpatterns = [
     path('enter_otp/', views.enter_otp, name='enter_otp'),
     path('resend-otp/', views.resend_otp, name='resend_otp'),
     path('QRcode', views.QRcode, name='QRcode'),
-    
-
+    # path('admin_tools/', include('admin_tools.urls')),
+    # path('admin/user_chart/', views.generate_user_chart, name='user_chart_view'),
+    path('user_activity_report/', views.user_activity_report_view, name='user_activity_report'),
+    path('sales_report/', views.sales_report_view, name='sales_report'),
 ]
 
 if settings.DEBUG:
