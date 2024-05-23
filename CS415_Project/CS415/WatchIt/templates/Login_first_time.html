@@ -13,12 +13,11 @@
 
 {% block content %}
 
-
 <div class="card-container mb-5">
     <div class="card bg-dark">
         <h3 class="text-center mb-4">Login</h3>
         
-        <form method="post" action="{% url 'Login' %}">
+        <form method="post" action="{% url 'Login_first' %}">
             {% csrf_token %}
             <div class="form-group mb-3">
                 <label for="uname">Username:</label>
@@ -30,23 +29,6 @@
                 <a href ="forget_password" class="forgot_password" style="text-decoration: none;
                 color:rgb(243, 212, 8); margin-top: 1px; font-size:small;">Forgot password ?</a>
             </div>
-
-            
-            {% if not is_first_login %}
-
-                <br>
-                <label for="pwd">Receive OTP via :</label>
-                <div></div>
-           
-                <div class="hidden-toggles">
-			
-				    <input type="radio" id="coloration-low" class="hidden-toggles__input" name="otp_method" value="via_sms">
-				    <label for="coloration-low" class="hidden-toggles__label">SMS</label>
-				
-				    <input type="radio" id="coloration-medium" class="hidden-toggles__input" checked name="otp_method" value="via_email">
-				    <label for="coloration-medium" class="hidden-toggles__label">Email</label>
-                </div>
-            {% endif %}
 
             <button type="submit" class="btn btn-outline-light btn-block mt-3">Login</button>
         </form>

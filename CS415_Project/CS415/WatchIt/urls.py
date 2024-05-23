@@ -23,8 +23,6 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('purchase_history/', views.list_purchase_history, name='purchase_history'),
     path('your_bookings/', views.your_bookings, name='your_bookings'),
-
-    
     path('transaction_report/', views.transaction_report, name='transaction_report'),
     path('transaction-report/pdf/', views.transaction_report_pdf, name='transaction_report_pdf'),
     path('edit_booking/<int:booking_id>/', views.edit_booking, name='edit_booking'),
@@ -39,6 +37,11 @@ urlpatterns = [
     path('enter_otp/', views.enter_otp, name='enter_otp'),
     path('resend-otp/', views.resend_otp, name='resend_otp'),
     path('QRcode', views.QRcode, name='QRcode'),
+    path('generate_purchase_history/<int:booking_id>/', views.generate_purchase_history, name='generate_purchase_history'),
+    path('send_sms/', views.send_test_sms, name='send_sms'),
+    path('verify_otp_sms/', views.verify_otp_sms, name='verify_otp_sms'),
+    path('Login_first/', views.Login_first, name='Login_first'),
+    path('resend_otp_sms/', views.resend_otp_sms, name='resend_otp_sms'),
     
 
 ]

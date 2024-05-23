@@ -4,6 +4,8 @@ from django.conf import settings
 from django.shortcuts import render
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, render, redirect
+import pyotp
+from xhtml2pdf import pisa
 from .models import User
 from django.utils import timezone
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -408,7 +410,8 @@ def Loggedin(request):
 
 def LogoutUser(request):
     logout(request)
-    return redirect('Home') 
+    messages.success(request, 'Logged out Successfully')
+    return redirect('Home')
 
 
 def display_hall(request, cinema_hall_id, movie_id, showtime_id):
@@ -715,12 +718,9 @@ def process_payment(request):
     print("Invalid request method")
     return JsonResponse({'error': 'Invalid request method'})
 
-
-
 def booking_success(request):
     return render(request, 'booking_success.html')
 
-@login_required
 def generate_purchase_history(request, booking_id):
     # Get the booking instance
     booking = get_object_or_404(Booking, id=booking_id)
@@ -729,153 +729,19 @@ def generate_purchase_history(request, booking_id):
     showtime_instance = Showtime.objects.filter(movie=booking.movie, cinema_hall=booking.cinema_hall).first()
     showtime = showtime_instance.showtime.strftime("%Y-%m-%d %H:%M:%S") if showtime_instance else "N/A"
 
-    # Prepare the HTTP response
+    # Render HTML template with context
+    html = render_to_string('generating_pdf.html', {'booking': booking, 'showtime': showtime})
+
+    # Create PDF
     response = HttpResponse(content_type='application/pdf')
-    filename = f"purchase_history_{booking.id}.pdf"
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    response['Content-Disposition'] = f'attachment; filename="purchase_history_{booking.id}.pdf"'
 
-    # Set up the document template
-    doc = SimpleDocTemplate(response, pagesize=A4)
-    elements = []
+    # Generate PDF
+    pisa_status = pisa.CreatePDF(html, dest=response)
 
-    # Get default styles and customize
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle(
-        'Title',
-        parent=styles['Title'],
-        alignment=TA_CENTER,
-        fontSize=24,
-        textColor=colors.black  # Black color for the title
-    )
-    subtitle_style = ParagraphStyle(
-        'Heading2',
-        parent=styles['Heading2'],
-        alignment=TA_CENTER,
-        fontSize=18,
-        textColor=colors.black  # Black color for the subtitle
-    )
-    normal_style = ParagraphStyle(
-        'Normal',
-        parent=styles['BodyText'],
-        fontSize=10,
-        leading=12,
-        textColor=colors.black  # Black color for the text
-    )
-    payment_style = ParagraphStyle(
-        'Payment',
-        parent=styles['BodyText'],
-        fontSize=12,
-        leading=14,
-        textColor=colors.black,  # Black color for the payment text
-        fontName='Helvetica-Bold',  # Bold font
-        alignment=TA_RIGHT
-    )
-    movie_style = ParagraphStyle(
-        'Movie',
-        parent=styles['BodyText'],
-        fontSize=12,
-        leading=14,
-        textColor=colors.black,  # Black color for the movie text
-        fontName='Helvetica-Bold',  # Bold font
-        alignment=TA_CENTER
-    )
-    small_bold_style = ParagraphStyle(
-        'SmallBold',
-        parent=styles['BodyText'],
-        fontSize=10,
-        leading=12,
-        alignment=TA_CENTER,
-        textColor=colors.black  # Black color for the thank you message
-    )
-    terms_style = ParagraphStyle(
-        'Terms',
-        parent=styles['BodyText'],
-        fontSize=8,
-        leading=10,
-        textColor=colors.black  # Black color for terms text
-    )
-
-    # Base directory
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-
-    # Create a function to add a background and footer to each page
-    def add_background(canvas, doc):
-        canvas.saveState()
-        canvas.setFillColor(colors.white)  # White background
-        canvas.rect(0, 0, doc.pagesize[0], doc.pagesize[1], fill=1)
-
-        # Add footer note centered
-        footer_text = 'Thank you for your purchase!'
-        canvas.setFont('Helvetica-Bold', 10)
-        canvas.setFillColor(colors.black)
-        canvas.drawCentredString(doc.pagesize[0] / 2.0, 0.5 * inch, footer_text)  # Centering the footer text
-        canvas.restoreState()
-
-    # Add event image at the top-left corner
-    image_path = os.path.join(base_dir, 'movie_images', 'WIT.jpg')
-    event_image = Image(image_path, width=doc.width * 0.3, height=doc.width * 0.3)  # Adjust as needed
-    elements.append(event_image)
-    elements.append(Spacer(1, 20))
-
-    # Add solid line
-    elements.append(HRFlowable(width="100%", color=colors.black, lineCap='butt'))
-
-    # Add the Movie detail centered and in bold
-    movie_detail = f'<b>Movie:</b> {booking.movie.title if booking.movie else "N/A"}'
-    movie_paragraph = Paragraph(movie_detail, movie_style)
-    elements.append(movie_paragraph)
-    elements.append(Spacer(1, 20))
-
-    # Add receipt details including user information
-    details = [
-        f'<b>User:</b> {booking.user.username if booking.user else "N/A"}',
-        f'<b>Cinema Hall:</b> {booking.cinema_hall.cinema_type if booking.cinema_hall else "N/A"}',
-        f'<b>Showtime:</b> {showtime}',
-        f'<b>Booking Date:</b> {booking.booking_date.strftime("%Y-%m-%d %H:%M:%S") if booking.booking_date else "N/A"}',
-        f'<b>Seats:</b> {", ".join(seat.seat_label for seat in booking.seats.all()) or "No seats"}'
-    ]
-
-    for detail in details:
-        p = Paragraph(detail, normal_style)
-        elements.append(p)
-        elements.append(Spacer(1, 12))
-
-    # Add dotted line between seats and payment amount
-    elements.append(HRFlowable(width="100%", color=colors.black, dash=(1, 2)))
-
-    # Add payment amount in bold
-    payment_amount_text = f'Payment Amount: ${"{:,.2f}".format(booking.payment_amount) if booking.payment_amount else "N/A"}'
-    payment_amount = Paragraph(payment_amount_text, payment_style)
-    elements.append(payment_amount)
-    elements.append(Spacer(1, 20))
-
-    # Add solid line
-    elements.append(HRFlowable(width="100%", color=colors.black, lineCap='butt'))
-
-    # Add terms and conditions with only bottom dotted border
-    terms_text = """
-    <b>Terms and Conditions for Cinema Payment</b><br/>
-    <b>Acceptance of Terms</b><br/>
-    By purchasing a ticket, you agree to be bound by these terms and conditions.<br/><br/>
-    <b>Ticket Purchase</b><br/>
-    All ticket sales are final. Once purchased, tickets cannot be transferred or refunded.<br/>
-    Customers are responsible for checking the details of their booking (film, time, and date) before confirming the purchase.<br/><br/>
-    <b>Payment Methods</b><br/>
-    We accept major credit and debit cards, online payment platforms, and cash at the box office.<br/>
-    Payment must be made in full at the time of booking.<br/><br/>
-    <b>Pricing and Fees</b><br/>
-    Ticket prices are subject to change without notice.<br/>
-    Additional fees may apply for online bookings, premium seats, or special screenings.<br/><br/>
-    <b>Discounts and Offers</b><br/>
-    Discounts, vouchers, and promotional offers are subject to specific terms and conditions and may not be combined unless stated otherwise.<br/>
-    Proof of eligibility may be required for discounted tickets (e.g., student ID, senior citizen card).
-    """
-    terms = Paragraph(terms_text, terms_style)
-    elements.append(terms)
-    elements.append(HRFlowable(width="100%", color=colors.black, dash=(1, 2)))
-
-    # Build the PDF
-    doc.build(elements, onFirstPage=add_background, onLaterPages=add_background)
+    # Return PDF response
+    if pisa_status.err:
+        return HttpResponse('We had some errors<pre>' + html + '</pre>')
     return response
 
 @login_required
@@ -1163,7 +1029,6 @@ def resend_otp(request):
     return redirect('enter_otp')
     
 
-
 def Home(request):
     today = timezone.now().date()
     movies = Movie.objects.filter(release_date__lte=today)  # Fetch movies with release_date today or in the past
@@ -1191,6 +1056,7 @@ def SignUp (request):
         user_email = request.POST.get('user_email')
         user_username = request.POST.get('user_username')
         user_pwd = request.POST.get('user_pwd')
+        user_phone = request.POST.get('user_phone')
 
         if len(user_pwd) < 6:
             styled_warning_message = mark_safe('<span style="color: black; font-weight:bold">WARNING</span><br>Password should be at least 6 characters')
@@ -1226,7 +1092,7 @@ def SignUp (request):
         
             # Redirect to login page after successful registration
 
-        user = User.objects.create_user(first_name=user_fname, last_name=user_lname,username=user_username, email= user_email,password=user_pwd)
+        user = User.objects.create_user(first_name=user_fname, last_name=user_lname,username=user_username, email= user_email,user_phone=user_phone,password=user_pwd)
         user.save()
 
         if not context['has_error']:
@@ -1235,10 +1101,13 @@ def SignUp (request):
 
             styled_message = mark_safe('<span style="color: black; font-weight:bold">VERIFY</span><br>We sent you an email to verify your account')
             messages.success(request, styled_message)
-            return redirect('Login')
+            return redirect('Login_first')
 
             
     return render(request, 'SignUp.html')
+
+def get_login_context(user):
+    return {'is_first_login': user.is_first_login}
 
 @auth_user_should_not_access
 def Login(request):
@@ -1246,10 +1115,8 @@ def Login(request):
         context = {'has_error': False, 'data': request.POST}
         username = request.POST.get('uname')
         password = request.POST.get('pwd')
-        
-        # Print the username and password for debugging purposes
-        print(f'Username: {username}')
-        print(f'Password: {password}')
+        otp_method = request.POST.get('otp_method')
+
         
         # Check if the user exists
         if not User.objects.filter(username=username).exists():
@@ -1267,16 +1134,54 @@ def Login(request):
             return render(request, 'Login.html', context)
 
         if not user.is_email_verified:
-            messages.error(request, 'Email is not verified, please check your email inbox')
+            messages.error(request, 'Email is not verified, please check your registered email inbox')
+            context['has_error'] = True
+            return render(request, 'Login.html', context)
+
+        request.session['pre_otp_user_id'] = user.id  # Save user ID in session
+
+        if user and otp_method == 'via_sms':
+            messages.success(request, 'OTP has been sent to your registered phone number')
+            return redirect('send_sms')
+        
+        if user and otp_method  == 'via_email':
+            send_otp(request,user)
+            messages.success(request, 'OTP has been sent to your registered email')
+            return redirect('enter_otp')
+        
+    return render(request, 'Login.html')
+
+@auth_user_should_not_access
+def Login_first(request):
+    if request.method == 'POST':
+        context = {'has_error': False, 'data': request.POST}
+        username = request.POST.get('uname')
+        password = request.POST.get('pwd')
+
+        # Check if the user exists
+        if not User.objects.filter(username=username).exists():
+            messages.error(request, "User not found.")
             context['has_error'] = True
             return render(request, 'Login.html', context)
         
-        # Send OTP and redirect to enter_otp view if user is authenticated and email is verified
-        send_otp(request, user)
-        messages.success(request, 'OTP has been sent to your registered email')
-        return redirect('enter_otp')
+        # Authenticate the user
+        user = authenticate(request, username=username, password=password)
+        print(f'Authenticated User: {user}')
+        
+        if user is None:
+            messages.error(request, "Username or password did not match.")
+            context['has_error'] = True
+            return render(request, 'Login.html', context)
 
-    return render(request, 'Login.html')
+        if not user.is_email_verified:
+            messages.error(request, 'Email is not verified, please check your registered email inbox')
+            context['has_error'] = True
+            return render(request, 'Login.html', context)
+        
+        login(request, user)
+        return redirect('Home')
+        
+    return render(request, 'Login_first_time.html')
 
 def activate_user(request, uidb64, token):
 
@@ -1293,9 +1198,9 @@ def activate_user(request, uidb64, token):
         user.save()
 
         messages.success(request, 'Email verified, you can now login')
-        return redirect(reverse('Login'))
+        return redirect(reverse('Login_first'))
     messages.error(request, 'Your activation link is not valid.')
-    return render(request,'Login.html')
+    return render(request,'Login_first.html')
 
 def send_resetpassword_email(user, request):
 
@@ -1391,6 +1296,13 @@ def reset_password(request, uidb64, token):
 def QRcode(request):
     # Generate or retrieve the secret key for the current user
     user = request.user
+
+    #Generate or retrieve the secret key for the current user
+    if not user.secret_key:
+        user.secret_key = pyotp.random_base32()
+        print(user.secret_key)
+        user.save()
+
     secret_key = user.secret_key
     
     # Use the user's email address as the account name
@@ -1415,7 +1327,7 @@ def QRcode(request):
         box_size=10,
         border=4,
     )
-    qr.add_data(f'otpauth://totp/{account_name}?{qr_data}')
+    qr.add_data(f'otpauth://totp/{account_name}?secret={secret_key}&issuer={issuer}&algorithm=SHA1&digits=6')
     qr.make(fit=True)
     
     # Create a BytesIO object to hold the image data
@@ -1427,3 +1339,120 @@ def QRcode(request):
 
     # Pass the base64-encoded image string to the template
     return render(request, 'security.html', {'qr_img': img_str})
+
+@login_required
+def enter_otp_app(request):
+    if request.method == 'POST':
+        # Get the entered OTP from the form
+        entered_otp_app = request.POST.get('otp')
+
+        # Retrieve the secret key for the current user
+        user = request.user
+        secret_key = user.secret_key
+
+        # Verify OTP
+        totp = pyotp.TOTP(secret_key)
+        current_otp = totp.now()
+        current_time = datetime.now()
+        print(f"Secret Key: {secret_key}")
+        print(f"Current OTP: {current_otp}")
+        print(f"Entered OTP: {entered_otp_app}")
+        print(f"Current Server Time: {current_time}")
+
+        if totp.verify(entered_otp_app):
+            print('OTP successfully verified!')
+            messages.success(request, 'OTP successfully verified!')
+        else:
+            print('oh oh wrong!')
+            messages.error(request, 'Invalid OTP. Please try again.')
+
+        return redirect('enter_otp_app')  # Redirect back to the OTP entry page
+
+    return render(request, 'enter_otp_app.html')
+
+from django.shortcuts import render
+from django.http import HttpResponse
+from .utils import send_sms
+
+def send_test_sms(request):
+    user_id = request.session.get('pre_otp_user_id')
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        messages.error(request, 'User does not exist.')
+        return redirect('Login')
+
+    phone_number = user.user_phone
+
+    if phone_number:
+        otp = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        message = f'Hi {user.username}! Your verification code for WatchIt App is {otp}'
+
+        try:
+            send_sms(phone_number, message)  # Function to send SMS
+            # Store OTP and user details in the session
+            request.session['otp'] = otp
+            return redirect('verify_otp_sms')  # Redirect to OTP verification view
+        except Exception as e:
+            messages.error(request, f'Failed to send SMS: {e}')
+    else:
+        messages.error(request, 'Phone number not found.')
+
+    return render(request, 'send_sms.html')
+
+def resend_otp_sms(request):
+    user_id = request.session.get('pre_otp_user_id')
+
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        messages.error(request, 'User does not exist.')
+        return redirect('Login')
+
+    phone_number = user.user_phone
+    if phone_number:
+        otp = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        message = f'Hi {user.username}! Your new verification code for WatchIt App is : {otp}'
+        try:
+            send_sms(phone_number, message)  # Function to send SMS
+            # Update OTP in the session
+            request.session['otp'] = otp
+            messages.success(request, 'New OTP sent successfully!')
+            return redirect('verify_otp_sms')  # Redirect to OTP verification view
+        except Exception as e:
+            messages.error(request, f'Failed to send SMS: {e}')
+    else:
+        messages.error(request, 'Phone number not found.')
+
+    return render(request, 'send_sms.html')
+
+def verify_otp_sms(request):
+    if request.method == 'POST':
+        entered_otp = ''.join([
+            request.POST.get('otp1'),
+            request.POST.get('otp2'),
+            request.POST.get('otp3'),
+            request.POST.get('otp4'),
+            request.POST.get('otp5'),
+            request.POST.get('otp6'),
+        ])
+
+        stored_otp = request.session.get('otp')
+        user_id = request.session.get('pre_otp_user_id')
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            messages.error(request, 'User does not exist.')
+            return redirect('Login')
+
+        if entered_otp == stored_otp:
+            login(request, user)
+            # Clear the OTP from the session
+            request.session.pop('otp', None)
+            request.session.pop('pre_otp_user_id', None)
+            return redirect('Home')  # Redirect to a home page or dashboard
+        else:
+            messages.error(request, 'Invalid OTP. Please try again.')
+
+    return render(request, 'verify_sms.html')
