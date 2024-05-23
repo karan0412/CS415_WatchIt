@@ -25,8 +25,6 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('purchase_history/', views.list_purchase_history, name='purchase_history'),
     path('your_bookings/', views.your_bookings, name='your_bookings'),
-
-    
     path('transaction_report/', views.transaction_report, name='transaction_report'),
     path('transaction-report/pdf/', views.transaction_report_pdf, name='transaction_report_pdf'),
     
@@ -45,10 +43,19 @@ urlpatterns = [
     path('enter_otp/', views.enter_otp, name='enter_otp'),
     path('resend-otp/', views.resend_otp, name='resend_otp'),
     path('QRcode', views.QRcode, name='QRcode'),
+
+    path('generate_purchase_history/<int:booking_id>/', views.generate_purchase_history, name='generate_purchase_history'),
+    path('send_sms/', views.send_test_sms, name='send_sms'),
+    path('verify_otp_sms/', views.verify_otp_sms, name='verify_otp_sms'),
+    path('Login_first/', views.Login_first, name='Login_first'),
+    path('resend_otp_sms/', views.resend_otp_sms, name='resend_otp_sms'),
+    
+
     # path('admin_tools/', include('admin_tools.urls')),
     # path('admin/user_chart/', views.generate_user_chart, name='user_chart_view'),
     path('user_activity_report/', views.user_activity_report_view, name='user_activity_report'),
     path('sales_report/', views.sales_report_view, name='sales_report'),
+
 
 
 if settings.DEBUG:
