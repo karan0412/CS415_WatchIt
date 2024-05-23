@@ -1,0 +1,17 @@
+{% comment %} {% extends 'base_generic.html' %} {% endcomment %}
+
+{% block content %}
+<h1>Sales Report</h1>
+<table>
+    <tr>
+        <th>Date</th>
+        <th>Total Sales</th>
+    </tr>
+    {% for item in data %}
+    <tr>
+        <td>{{ item.date }}</td>
+        <td>${{ item.total_sales }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

@@ -27,14 +27,11 @@
                         <p class="card-text"><strong>Booking Date:</strong> {{ booking.booking_date }}</p>
                         <p class="card-text"><strong>Seats:</strong> {{ booking.get_seat_labels }}</p>
                         <p class="card-text"><strong>Payment Amount:</strong> ${{ booking.payment_amount }}</p>
-
-                        <p class="card-text"><strong>Card Details:</strong> **** **** **** {{ booking.card_last4 }}</p>
-
+                        {% comment %} <p class="card-text"><strong>Card Details:</strong> **** **** **** {{ booking.card_last4 }}</p> {% endcomment %}
                         <p class="text-light"><a href="{% url 'generate_purchase_history' booking.id %}">Download PDF</a></p>
                         {% if can_edit %}
                         <a href="{% url 'edit_booking' booking.id %}" class="btn btn-warning">Edit</a>
                         {% endif %}
-
                     </div>
                 </div>
             </div>
