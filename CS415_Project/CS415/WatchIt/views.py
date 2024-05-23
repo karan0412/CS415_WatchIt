@@ -1,34 +1,38 @@
-from datetime import datetime
+import os
 import json
+import re
+import random
+import secrets
+import threading
+import stripe
+import pytz
+import qrcode
+import base64
+from io import BytesIO
+from datetime import datetime, timedelta
 from django.conf import settings
-from django.shortcuts import render
+from django.core.mail import EmailMessage
 from django.contrib import messages
-from django.shortcuts import get_object_or_404, render, redirect
-from .models import User
-from django.utils import timezone
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-import re
-from django.http import JsonResponse
-from .models import Seat, Booking, CinemaHall, Movie, Tag, Showtime, Deals
-from django.http import JsonResponse
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.contrib.sites.shortcuts import get_current_site
 from django.db import transaction
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404, render, redirect
+from django.template.loader import render_to_string
 from django.urls import reverse
-from django.views.decorators.http import require_POST
+from django.utils import timezone
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.safestring import mark_safe
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST, require_http_methods
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-from django.http import HttpResponse
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, letter, landscape
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
-from reportlab.platypus.flowables import HRFlowable, KeepTogether
-from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+
 import os
 from datetime import timedelta
 from reportlab.lib.pagesizes import landscape, A4
@@ -60,11 +64,31 @@ from django.utils import timezone
 token_generator = PasswordResetTokenGenerator()
 
 
-from .recommend import get_recommendations
-#from .forms import BookingForm
-import stripe
 
+from reportlab.platypus import (
+    SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, HRFlowable, KeepTogether
+)
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from .models import User, Seat, Booking, CinemaHall, Movie, Tag, Showtime, Deals, PasswordResetToken
+
+from .recommend import get_recommendations
+from .utils import generate_token
+from validate_email import validate_email
+from urllib.parse import urlencode
+from helpers.decorators import auth_user_should_not_access
+import matplotlib.pyplot as plt
+from django.http import HttpResponse
+from io import BytesIO
+from .utils import get_user_activity_report, get_sales_report
+
+# Initialize stripe API key
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+# Token generator for password reset
+token_generator = PasswordResetTokenGenerator()
+
+
+
 
 @login_required
 def transaction_report(request):
@@ -106,7 +130,6 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet
 from django.http import HttpResponse
 from datetime import datetime
-
 
 @login_required
 def transaction_report_pdf(request):
@@ -172,21 +195,6 @@ def transaction_report_pdf(request):
         fontName='Helvetica-Bold',
         alignment=TA_CENTER
     )
-    small_bold_style = ParagraphStyle(
-        'SmallBold',
-        parent=styles['BodyText'],
-        fontSize=10,
-        leading=12,
-        alignment=TA_CENTER,
-        textColor=colors.black
-    )
-    terms_style = ParagraphStyle(
-        'Terms',
-        parent=styles['BodyText'],
-        fontSize=8,
-        leading=10,
-        textColor=colors.black
-    )
 
     def add_background(canvas, doc):
         canvas.saveState()
@@ -200,34 +208,25 @@ def transaction_report_pdf(request):
 
     try:
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        logo_path = os.path.join(base_dir, 'static', 'logo.jpg')  # Update this path to your logo
-        print(f"Checking logo at path: {logo_path}")  # Debug print
-
-        if os.path.exists(logo_path):
-            print("Logo found at path")  # Debug print
-            logo = Image(logo_path, width=1.5 * inch, height=1.5 * inch)
-            logo.hAlign = 'CENTER'
-            elements.append(logo)
-            elements.append(Spacer(1, 12))
-        else:
-            print("Logo not found at path")  # Debug print
-            elements.append(Paragraph("Logo not found.", normal_style))
+        image_path = os.path.join(base_dir, 'movie_images', 'WIT.jpg')
+        event_image = Image(image_path, width=1.5 * inch, height=1.5 * inch)
+        event_image.hAlign = 'CENTER'
+        elements.append(event_image)
+        elements.append(Spacer(1, 20))
     except Exception as e:
-        print(f"Error loading logo: {e}")  # Debug print
+        print(f"Error loading logo: {e}")
         elements.append(Paragraph("Logo could not be loaded.", normal_style))
 
     elements.append(Paragraph('Transaction Report', title_style))
     elements.append(Spacer(1, 12))
 
-    # Booking details at the top
-    for booking in bookings:
+    if bookings:
+        booking = bookings[0]
         user = booking.user.username if booking.user else 'N/A'
-        elements.append(Paragraph(f'Booking ID: {booking.id}', subtitle_style))
         elements.append(Paragraph(f'User: {user}', subtitle_style))
         elements.append(Spacer(1, 12))
-        break  # Only show the first booking details
 
-    data = [['ID', 'Cinema Hall', 'Movie', 'Showtime', 'Seats', 'Payment Amount', 'Booking Date', 'Card Details']]
+    data = [['Cinema Hall', 'Movie', 'Showtime', 'Seats', 'Payment Amount', 'Booking Date', 'Card Details']]
     total_amount = 0
 
     for booking in bookings:
@@ -236,7 +235,6 @@ def transaction_report_pdf(request):
         card_details = f"**** **** **** {booking.card_last4}" if booking.card_last4 else 'N/A'
         total_amount += booking.payment_amount
         data.append([
-            booking.id,
             booking.cinema_hall.cinema_type if booking.cinema_hall else 'N/A',
             booking.movie.title if booking.movie else 'N/A',
             showtime,
@@ -264,6 +262,7 @@ def transaction_report_pdf(request):
     elements.append(KeepTogether([table]))
     doc.build(elements, onFirstPage=add_background, onLaterPages=add_background)
     return response
+
 
 
 # Create your views here.
@@ -420,6 +419,7 @@ def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
 
 
 
+
 def payment(request, cinema_hall_id):
     movie_id = request.GET.get('movie_id')
     showtime_id = request.GET.get('showtime_id')
@@ -449,9 +449,6 @@ def payment(request, cinema_hall_id):
         'stripe_public_key': settings.STRIPE_PUBLIC_KEY,  # Pass the Stripe public key to the template
     })
 
-
-
-@csrf_exempt
 
 def process_payment(request):
     if request.method == 'POST':
@@ -534,8 +531,6 @@ def process_payment(request):
     print("Invalid request method")
     return JsonResponse({'error': 'Invalid request method'})
 
-
-
 def booking_success(request):
     return render(request, 'booking_success.html')
 
@@ -592,7 +587,6 @@ def list_purchase_history(request):
     current_time = timezone.localtime(timezone.now())
     purchase_histories = Booking.objects.filter(user=request.user, showtime__showtime__lte=current_time).select_related('movie', 'cinema_hall', 'showtime')
     return render(request, 'purchase_history.html', {'purchase_histories': purchase_histories})
-
 
 @login_required
 def edit_booking(request, booking_id):
@@ -697,10 +691,6 @@ def confirm_edit_booking(request, booking_id, showtime_id, seats):
 
 
 
-
-
-# Create your views here.
-
 class EmailThread(threading.Thread):
 
     def __init__(self, email):
@@ -793,8 +783,6 @@ def resend_otp(request):
     send_otp(request, user)
     messages.success(request, 'New OTP sent successfully!')
     return redirect('enter_otp')
-    
-
 
 def Home(request):
     today = timezone.now().date()
@@ -1061,4 +1049,16 @@ def QRcode(request):
     return render(request, 'security.html', {'qr_img': img_str})
 
 
+def LogoutUser(request):
+    logout(request)
+    messages.success(request, 'Logged out Successfully')
+    return redirect('Home')
+
+def user_activity_report_view(request):
+    data = get_user_activity_report()
+    return render(request, 'reports/user_activity_report.html', {'data': data})
+
+def sales_report_view(request):
+    data = get_sales_report()
+    return render(request, 'reports/sales_report.html', {'data': data})
 
