@@ -27,11 +27,15 @@ urlpatterns = [
     
     path('transaction_report/', views.transaction_report, name='transaction_report'),
     path('transaction-report/pdf/', views.transaction_report_pdf, name='transaction_report_pdf'),
+    
     path('edit_booking/<int:booking_id>/', views.edit_booking, name='edit_booking'),
     path('edit_showtime/<int:booking_id>/<int:movie_id>/<int:cinema_hall_id>/', views.edit_showtime, name='edit_showtime'),
     path('edit_seats/<int:booking_id>/<int:showtime_id>/<int:cinema_hall_id>/', views.edit_seats, name='edit_seats'),
     path('confirm_edit_booking/<int:booking_id>/<int:showtime_id>/<str:seats>/', views.confirm_edit_booking, name='confirm_edit_booking'),
+    
     path('recommendations/', views.movie_recommendations, name='movie_recommendations'),
+    path('generate_purchase_history/<int:booking_id>/', views.generate_purchase_history, name='generate_purchase_history'),
+
     path('activate-user/<uidb64>/<token>', views.activate_user, name='activate'),
     path('Login/forget_password/', views.forget_password, name='forget_password'),
     path('reset_password/<uidb64>/<token>/', views.reset_password, name='reset_password'),
@@ -39,6 +43,8 @@ urlpatterns = [
     path('enter_otp/', views.enter_otp, name='enter_otp'),
     path('resend-otp/', views.resend_otp, name='resend_otp'),
     path('QRcode', views.QRcode, name='QRcode'),
+
+ 
     
 
 ]

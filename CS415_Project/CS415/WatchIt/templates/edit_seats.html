@@ -12,6 +12,7 @@
         {% csrf_token %}
         <div class="form-group">
             <label>Select Seats (You need to select exactly {{ num_seats }} seats)</label>
+            <labal>{{ showtime.movie }}</label>
             {% for seat in seats %}
             <div class="form-check">
                 <input class="form-check-input seat-checkbox" type="checkbox" name="seats[]" value="{{ seat.id }}" id="seat{{ seat.id }}" {% if not seat.availability %}disabled{% endif %}>

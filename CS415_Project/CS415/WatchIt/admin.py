@@ -1,6 +1,9 @@
 from django.contrib import admin
 from . import models
 from django.utils.html import format_html
+from django.core.mail import send_mail
+
+import logging
 
 admin.site.site_header = "WatchIt Administration"
 admin.site.site_title = "WatchIt Admin"
@@ -69,6 +72,8 @@ class SeatAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False
 
+
+
 admin.site.register(models.CinemaHall)
 admin.site.register(models.Seat, SeatAdmin)
 admin.site.register(models.Movie, MovieAdmin)
@@ -77,3 +82,5 @@ admin.site.register(models.Booking, BookingAdmin)
 admin.site.register(models.Showtime, ShowtimeAdmin)
 admin.site.register(models.Deals)
 admin.site.register(models.User)
+
+
