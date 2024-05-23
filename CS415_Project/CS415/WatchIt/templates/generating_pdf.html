@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase History</title>
+    <style>
+        /* Define CSS styles */
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .header {
+            background-color: rgb(205, 165, 6);
+            width: 90%;
+            height: 30%;
+            margin:0px;
+
+        }
+        .logo {
+            width: 200px; /* Adjust the logo width as needed */
+            margin-right: 20px; /* Add margin to the logo for spacing */
+            float: left; /* Float the logo to the left */
+        }
+        .title {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .subtitle {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .details {
+            margin-bottom: 20px;
+        }
+        .details p {
+            margin: 5px 0;
+        }
+        .payment-info {
+            text-align: right;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .terms {
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with logo and border -->
+    <div class="header">
+        {% load static %}
+        <img src="{% static 'WIT.jpg' %}" alt="Logo" class="logo">
+        <h1 class="title">Purchase History</h1>
+    </div>
+
+    <!-- Movie details -->
+    <div class="details">
+        <p><b>Movie:</b> {{ booking.movie.title }}</p>
+        <p><b>User:</b> {{ booking.user.username }}</p>
+        <p><b>Cinema Hall:</b> {{ booking.cinema_hall.cinema_type }}</p>
+        <p><b>Showtime:</b> {{ showtime }}</p>
+        <p><b>Booking Date:</b> {{ booking.booking_date }}</p>
+        <p><b>Seats:</b> {{ booking.seats.all|join:', ' }}</p>
+    </div>
+
+    <!-- Payment information -->
+    <div class="payment-info">
+        <p>Payment Amount: ${{ booking.payment_amount|floatformat:"2" }}</p>
+    </div>
+
+    <!-- Terms and conditions -->
+    <div class="terms">
+        <p><b>Terms and Conditions for Cinema Payment</b></p>
+        <p><b>Acceptance of Terms</b></p>
+        By purchasing a ticket, you agree to be bound by these terms and conditions.<br/><br/>
+    <b>Ticket Purchase</b><br/>
+    All ticket sales are final. Once purchased, tickets cannot be transferred or refunded.<br/>
+    Customers are responsible for checking the details of their booking (film, time, and date) before confirming the purchase.<br/><br/>
+    <b>Payment Methods</b><br/>
+    We accept major credit and debit cards, online payment platforms, and cash at the box office.<br/>
+    Payment must be made in full at the time of booking.<br/><br/>
+    <b>Pricing and Fees</b><br/>
+    Ticket prices are subject to change without notice.<br/>
+    Additional fees may apply for online bookings, premium seats, or special screenings.<br/><br/>
+    <b>Discounts and Offers</b><br/>
+    Discounts, vouchers, and promotional offers are subject to specific terms and conditions and may not be combined unless stated otherwise.<br/>
+    Proof of eligibility may be required for discounted tickets (e.g., student ID, senior citizen card).
+        <!-- Add other terms and conditions here -->
+    </div>
+</body>
+
+<script>
+    // Function to trigger download when page loads
+    window.onload = function() {
+        var filename = "purchase_history_{{ booking.id }}.pdf";
+        var link = document.createElement('a');
+        link.href = "{{ request.path }}";
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+</script>
+
+</html>

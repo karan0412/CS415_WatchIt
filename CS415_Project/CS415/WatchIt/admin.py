@@ -7,6 +7,11 @@ from .models import Booking, Showtime
 from .utils import get_sales_report
 from . import models
 from django.utils.html import format_html
+
+from django.core.mail import send_mail
+
+import logging
+
 from django.urls import path
 from .models import Booking
 from reportlab.lib.pagesizes import letter
@@ -15,6 +20,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 import os
 from xhtml2pdf import pisa
+
 
 
 admin.site.site_header = "WatchIt Administration"
@@ -327,6 +333,8 @@ class BookingAdmin(admin.ModelAdmin):
 
 
 
+
+
 admin.site.register(models.CinemaHall)
 admin.site.register(models.Seat, SeatAdmin)
 admin.site.register(models.Movie, MovieAdmin)
@@ -335,3 +343,5 @@ admin.site.register(models.Booking, BookingAdmin)
 admin.site.register(models.Showtime, ShowtimeAdmin)
 admin.site.register(models.Deals)
 admin.site.register(models.User)
+
+

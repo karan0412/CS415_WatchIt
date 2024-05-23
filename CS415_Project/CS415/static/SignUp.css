@@ -7,44 +7,175 @@
     align-items: center;
 }
 
-.card {
-    width: 100%;
-    max-width: 400px;
-    background: #424242;
+.bottom{
+    width: 380px;
+    height: 490px;
+    background-color: #222;
+    border-radius: 10px;
+    display: flex; /* Add this */
+    justify-content: center; /* Add this */
+    align-items: center;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.box{
+    position: relative;
+    width: 99%;
+    margin: 0.5% 0;
+    background: #1c1c1c;
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    
 }
 
-.form-control {
-    background-color: #495057;
+.box::before
+{
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 382px; /* Increase width and height to ensure full coverage */
+    height: 492px;
+    background: linear-gradient(0deg, transparent, transparent, #45f3ff, #45f3ff, #45f3ff);
+    z-index: -1;
+    transform-origin: bottom right;
+    animation: animate 6s linear infinite;
+    
+}
+.box::after
+{
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 382px; /* Increase width and height to ensure full coverage */
+    height: 492px;
+    background: linear-gradient(0deg, transparent, transparent, #45f3ff, #45f3ff, #45f3ff);
+    z-index: -1;
+    transform-origin: bottom right;
+    animation: animate 6s linear infinite;
+    animation-delay: -3s;
+    
+}
+
+.borderline{
+    position: absolute;
+    top: 0;
+    inset: 0;
+}
+
+.borderline::before
+{
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 382px; /* Increase width and height to ensure full coverage */
+    height: 492px;
+    background: linear-gradient(0deg, transparent, transparent, #ff2770, #ff2770, #ff2770);
+    z-index: -1;
+    transform-origin: bottom right;
+    animation: animate 6s linear infinite;
+    animation-delay: -1.5s;
+    
+}
+
+.borderline::after
+{
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 382px; /* Increase width and height to ensure full coverage */
+    height: 492px;
+    background: linear-gradient(0deg, transparent, transparent, #ff2770, #ff2770, #ff2770);
+    z-index: -1;
+    transform-origin: bottom right;
+    animation: animate 6s linear infinite;
+    animation-delay: -4.5s;
+    
+}
+
+@keyframes animate
+{
+    0%{
+        transform: rotate(0deg);
+    }
+    100%{
+        transform: rotate(360deg);
+    }
+}
+
+.input{
+    position: relative;
+    width: 100%;
+    padding: 20px 10px 10px;
+    background: transparent;
+    outline: none;
+    box-shadow: none;
     border: none;
-    color: white; /* Ensure this is a contrasting color */
+    color: #23242a;
+    font-size: 1em;
+    letter-spacing: 0.05em;
+    transition: 0.5s;
+    z-index: 10;
 }
 
-.form-control::placeholder {
-    color: #ced4da; /* Lighter placeholder text for visibility */
+form .inputbox label{
+    position: absolute;
+    left: 0;
+    padding: 20px 10px 10px; 
+    pointer-events: none;
+    color: #8f8f8f;
+    font-size: 1em;
+    letter-spacing: 0.05em;
+    transition: 0.5s;
 }
 
-.form-control:focus {
-    background-color: #495057;
-    border-color: #28a745;
-    color: white; /* Maintain text color on focus */
-}
-.is-invalid,
-.is-valid {
-    color: white;
+form .input:valid ~ label,
+form .input:focus ~ label{
+    color: #fff;
+    font-size: 0.75em;
+    transform: translateY(-34px);
 }
 
-.btn-primary {
-    background-color: #28a745;
+form .inputbox {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+form .inputbox i {
+    position: absolute;
+    left: 10px; /* Align with the label */
+    bottom: -5px; /* Adjust so it appears below the label */
+    width: calc(100% - 20px); /* Adjust width as needed */
+    height: 2px;
+    background: #fff;
+    border-radius: 4px;
+    overflow: hidden;
+    transition: 0.5s;
+    pointer-events: none;
+    
+}
+
+form .input:valid ~ i,
+form .input:focus ~ i{
+    height: 44px;
+}
+
+
+form input[type="submit"]:active
+{
     border: none;
-}
+    outline: none;
+    padding: 9px 25px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 2em;
+    border-radius: 4px;
+    font-weight: 600;
+    width: 100px;
 
-.btn-primary:hover {
-    background-color: #218838;
-}
-
-.form-group label {
-    color: white;
+    
 }

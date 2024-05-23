@@ -24,6 +24,11 @@ body {
     color: white;
 }
 
+.discount {
+
+    width: 30%;
+}
+
 @media(max-width: 767px) {
     .card {
         margin: 3vh auto;

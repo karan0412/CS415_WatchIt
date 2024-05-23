@@ -1,10 +1,7 @@
-<!-- templates/payment.html -->
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Finalize Your Payment</title>
-    <script src="https://js.stripe.com/v3/"></script>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+{% extends 'index.html' %}
+{% block content %}
+<script src="https://js.stripe.com/v3/"></script>
+
     <style>
         .payment-container {
             background: gray;
@@ -64,7 +61,7 @@
     </style>
 </head>
 <body>
-    <div class="payment-container">
+    <div class="payment-container mt-5">
         <div class="header">Finalize Your Payment</div>
         <div class="detail"><strong>Cinema Type:</strong> {{ cinema_type }}</div>
         <div class="detail"><strong>Movie Title:</strong> {{ movie_title }}</div>
@@ -157,5 +154,4 @@
             });
         }
     </script>
-</body>
-</html>
+{% endblock %}
