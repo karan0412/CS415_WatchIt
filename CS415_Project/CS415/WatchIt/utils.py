@@ -1,7 +1,12 @@
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 import six
+
 from twilio.rest import Client
 from django.conf import settings
+
+from .models import Booking, User
+from django.db.models import Sum, Count
+
 
 class TokenGenerator(PasswordResetTokenGenerator):
 
@@ -10,6 +15,7 @@ class TokenGenerator(PasswordResetTokenGenerator):
 
 
 generate_token = TokenGenerator()
+
 
 def get_twilio_client():
     return Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
@@ -22,4 +28,16 @@ def send_sms(to, message):
         to=to
     )
     return message.sid
+
+
+def get_user_activity_report():
+    # Example: Get user registration counts by date
+    data = User.objects.annotate(date_registered=TruncDay('date_joined')).values('date_registered').annotate(count=Count('id')).order_by('date_registered')
+    return data
+
+def get_sales_report():
+    # Example: Sum of payments received by date
+    data = Booking.objects.annotate(date=TruncDay('booking_date')).values('date').annotate(total_sales=Sum('payment_amount')).order_by('date')
+    return data
+
 

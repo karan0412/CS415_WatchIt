@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sales Report - WatchIt</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #fff;
+            background-color: #000;
+        }
+        h1 {
+            text-align: center;
+            color: #FFD700;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #fff;
+            text-align: left;
+        }
+        th {
+            background-color: #FFD700;
+            color: #000;
+        }
+        td {
+            background-color: #333;
+        }
+        .total {
+            font-weight: bold;
+            background-color: #FFD700;
+            color: #000;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo">
+        <img src="{{ STATIC_URL }}movie_images/WIT.jpg" alt="Logo" width="150" height="150">
+    </div>
+    <h1>Sales Report - WatchIt</h1>
+    <table>
+        <tr>
+            <th>Booking ID</th>
+            <th>User</th>
+            <th>Booking Date</th>
+            <th>Movie</th>
+            <th>Cinema Hall Type</th>
+            <th>Showtime</th>
+            <th>Seats</th>
+            <th>Payment Amount</th>
+            <th>Card Details</th>
+        </tr>
+        {% for booking in bookings %}
+        <tr>
+            <td>{{ booking.id }}</td>
+            <td>{{ booking.user.username }}</td>
+            <td>{{ booking.booking_date }}</td>
+            <td>{{ booking.movie.title }}</td>
+            <td>{{ booking.cinema_hall.cinema_type }}</td>
+            <td>{{ booking.showtime_display }}</td>
+            <td>{{ booking.seat_labels }}</td>
+            <td>${{ booking.payment_amount }}</td>
+            <td>{{ booking.card_details }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <td colspan="7" class="total">Total Amount</td>
+            <td colspan="2" class="total">${{ total_amount }}</td>
+        </tr>
+    </table>
+</body>
+</html>
