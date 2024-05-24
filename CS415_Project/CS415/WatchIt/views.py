@@ -458,6 +458,7 @@ def payment(request, cinema_hall_id):
     })
 
 
+@csrf_exempt
 def process_payment(request):
     if request.method == 'POST':
         try:

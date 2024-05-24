@@ -1,14 +1,42 @@
 {% extends "dashboard.html" %}
 
 {% block content %}
+<style>
+    .fixed-image {
+        height: 200px;
+        object-fit: cover;
+        border-radius: 15px;
+        position: relative;
+    }
+    .card {
+        border-radius: 15px;
+        background: black;
+        box-shadow: 0 0 15px rgba(0, 123, 255, 0.5); 
+    }
+    .card-body {
+        display: flex;
+        flex-direction: column;
+        
+    }
+    .card-title {
+        font-size: 1.25rem;
+    }
+    .btn-warning {
+        background-color: #ffc107;
+        border: none;
+    }
+    .btn-warning:hover {
+        background-color: #e0a800;
+    }
+</style>
 <div class="container">
     <h1 class="my-4">Your Purchases History</h1>
     <div class="row">
         {% for booking in purchase_histories %}
         <div class="col-md-4 mb-4">
-            <div class="card bg-dark text-white">
+            <div class="card text-white">
  
-                <img src="{{ booking.movie.image.url }}" class="card-img-top" alt="{{ booking.movie.title }}">
+                <img src="{{ booking.movie.image.url }}" class="card-img-top fixed-image" alt="{{ booking.movie.title }}">
                
                 <div class="card-body">
                     <h5 class="card-title">{{ booking.movie.title }}</h5>

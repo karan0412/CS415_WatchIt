@@ -14,52 +14,45 @@
 {% block content %}
 <div class="card-container mt-5 mb-5">
     <div class="bottom">
-      
-    <div class="box">
-        <span class="borderline"></span>
-        <form method="post" action="{% url 'SignUp' %}">
-            <h3 class="text-center mb-4">Sign Up</h3>
-            {% csrf_token %}
-            <div class="form-group mb-3 inputbox">
-                <input type="text" class="input ps-3" id="user_fname" name="user_fname" required pattern="[A-Za-z\s]+" title="First name must not contain numbers">
-                <label for="user_fname">First Name:</label>
-                <i></i>
-            </div>
-            <div class="form-group mb-3 inputbox">
-                <input type="text" class="input ps-3" id="user_lname" name="user_lname" required pattern="[A-Za-z\s]+" title="Last name must not contain numbers">
-                <label for="user_lname">Last Name:</label>
-                <i></i>
-            </div>
-            <div class="form-group mb-3 inputbox">
-                <input type="email" class="input ps-3" id="user_email" name="user_email" required pattern="^\S+@\S+\.\S+$" title="Please enter a valid email address">
-                <label for="user_email">Email:</label>
-                <i></i>
-            </div>
-
-
-            <div class="form-group mb-3">
-                <label for="user_phone">Contact Number:</label>
-                <input type="tel" class="form-control"  id="user_phone" name="user_phone"  pattern="[+]?\d{10,}" required title="Must contain only numbers">
-
-            </div>
-
-            <div class="form-group mb-3">
-
-            <div class="form-group mb-3 inputbox">
-                <input type="text" class="input ps-3" id="user_username" name="user_username" required>
-
-                <label for="user_username">Username:</label>
-                <i></i>
-            </div>
-            <div class="form-group mb-3 inputbox">
-                <input type="password" class="input ps-3" id="user_pwd" name="user_pwd" required pattern="(?=.*\d)(?=.*[a-z]).{8,}" title="Must contain at least one number and one lowercase letter, and at least 8 or more characters">
-                <label for="user_pwd">Password:</label>
-                <i></i>
-            </div>
-            <button type="submit" class="btn btn-outline-light btn-block">Sign Up</button>
-        </form>
+        <div class="box">
+            <span class="borderline"></span>
+            <form method="post" action="{% url 'SignUp' %}">
+                <h3 class="text-center mb-4">Sign Up</h3>
+                {% csrf_token %}
+                <div class="form-group mb-3 inputbox">
+                    <input type="text" class="input ps-3" id="user_fname" name="user_fname" required pattern="[A-Za-z\s]+" title="First name must not contain numbers">
+                    <label for="user_fname">First Name:</label>
+                    <i></i>
+                </div>
+                <div class="form-group mb-3 inputbox">
+                    <input type="text" class="input ps-3" id="user_lname" name="user_lname" required pattern="[A-Za-z\s]+" title="Last name must not contain numbers">
+                    <label for="user_lname">Last Name:</label>
+                    <i></i>
+                </div>
+                <div class="form-group mb-3 inputbox">
+                    <input type="email" class="input ps-3" id="user_email" name="user_email" required pattern="^\S+@\S+\.\S+$" title="Please enter a valid email address">
+                    <label for="user_email">Email:</label>
+                    <i></i>
+                </div>
+                <div class="form-group mb-3 inputbox">
+                    <input type="tel" class="input ps-3" id="user_phone" name="user_phone" pattern="[+]?\d{10,}" required title="Must contain only numbers">
+                    <label for="user_phone">Contact Number:</label>
+                    <i></i>
+                </div>
+                <div class="form-group mb-3 inputbox">
+                    <input type="text" class="input ps-3" id="user_username" name="user_username" required>
+                    <label for="user_username">Username:</label>
+                    <i></i>
+                </div>
+                <div class="form-group mb-3 inputbox">
+                    <input type="password" class="input ps-3" id="user_pwd" name="user_pwd" required pattern="(?=.*\d)(?=.*[a-z]).{8,}" title="Must contain at least one number and one lowercase letter, and at least 8 or more characters">
+                    <label for="user_pwd">Password:</label>
+                    <i></i>
+                </div>
+                <button type="submit" class="btn btn-outline-light btn-block">Sign Up</button>
+            </form>
+        </div>
     </div>
-</div>
 </div>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
@@ -99,7 +92,6 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/alertify.min.js"></script>
 
 <script>
-    
 {% for message in messages %}
     {% if message.tags == 'warning' %}
         alertify.set('notifier', 'position', 'top-right');
@@ -109,8 +101,5 @@ document.addEventListener('DOMContentLoaded', function() {
         alertify.success('{{ message|safe }}');
     {% endif %}
 {% endfor %}
-
-
-
 </script>
 {% endblock %}

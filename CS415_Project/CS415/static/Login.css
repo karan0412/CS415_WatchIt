@@ -6,44 +6,147 @@
    
 }
 
-.card {
-    width: 100%;
-    max-width: 400px;
-    background: #424242; /* Dark gray background for the card */
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    color: white; /* White text */
+.bottom {
+  width: 380px;
+  height: 395px;
+  background-color: #222;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
+  overflow: hidden;
 }
 
-.form-control {
-    background-color: #495057;
-    border: none;
-    color: white;
+
+.box {
+  position: relative;
+  width: 98%;
+  margin: 0.5% 0;
+  background: #1c1c1c;
+  padding: 20px;
+  border-radius: 10px;
+
 }
 
-.form-control::placeholder {
-    color: #ced4da;
+.box::before, .box::after, .borderline::before, .borderline::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 380px;
+  height: 395px;
+  background: linear-gradient(0deg, transparent, transparent, #45f3ff, #45f3ff, #45f3ff);
+  z-index: -1;
+  transform-origin: bottom right;
+  animation: animate 6s linear infinite;
 }
 
-.form-control:focus {
-    background-color: #495057;
-    border-color: #007bff;
-    color: white;
+.box::before {
+  animation-delay: 0s;
 }
 
-.btn-primary {
-    background-color: #007bff;
-    border: none;
+.box::after {
+  animation-delay: -3s;
 }
 
-.btn-primary:hover {
-    background-color: #0069d9;
+.borderline::before {
+  background: linear-gradient(0deg, transparent, transparent, #ff2770, #ff2770, #ff2770);
+  animation-delay: -1.5s;
 }
 
-.form-group label {
-    color: white;
+.borderline::after {
+  background: linear-gradient(0deg, transparent, transparent, #ff2770, #ff2770, #ff2770);
+  animation-delay: -4.5s;
 }
+
+@keyframes animate {
+  0% {
+      transform: rotate(0deg);
+  }
+  100% {
+      transform: rotate(360deg);
+  }
+}
+
+
+.input {
+  position: relative;
+  width: 100%;
+  padding: 20px 10px 10px;
+  background: transparent;
+  outline: none;
+  box-shadow: none;
+  border: none;
+  color: #23242a;
+  font-size: 1em;
+  letter-spacing: 0.05em;
+  transition: 0.5s;
+  z-index: 10; /* Ensure inputs are above the gradient */
+}
+
+form .inputbox label {
+  position: absolute;
+  left: 0;
+  padding: 20px 10px 10px;
+  pointer-events: none;
+  color: #8f8f8f;
+  font-size: 1em;
+  letter-spacing: 0.05em;
+  transition: 0.5s;
+}
+
+form .input:valid ~ label,
+form .input:focus ~ label {
+  color: #fff;
+  font-size: 0.75em;
+  transform: translateY(-34px);
+}
+
+form .inputbox {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+form .inputbox i {
+  position: absolute;
+  left: 10px; /* Align with the label */
+  bottom: -5px; /* Adjust so it appears below the label */
+  width: calc(100% - 20px); /* Adjust width as needed */
+  height: 2px;
+  background: #fff;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: 0.5s;
+  pointer-events: none;
+}
+
+form .input:valid ~ i,
+form .input:focus ~ i {
+  height: 44px;
+}
+
+form input[type="submit"] {
+  border: none;
+  outline: none;
+  padding: 9px 25px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 1em;
+  border-radius: 4px;
+  font-weight: 600;
+  width: 100%;
+  margin-top: 20px; /* Add some margin for spacing */
+  z-index: 10; /* Ensure button is above the gradient */
+}
+
+form input[type="submit"]:active {
+  background: #ddd; /* Change background color on active */
+}
+
+
+
+
 
 .hidden-toggles {
   position: relative;
@@ -110,3 +213,5 @@
     border-left:  0.125em  solid #c89a06;
   }
 }
+
+
