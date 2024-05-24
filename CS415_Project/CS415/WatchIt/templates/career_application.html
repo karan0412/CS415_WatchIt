@@ -1,0 +1,29 @@
+{% extends 'index.html' %}
+
+{% block title %}
+<title>Career Application</title>
+{% endblock %}
+
+{% block content %}
+<div class="card-container mt-5 mb-5">
+    <div class="card bg-dark text-white">
+        <h3 class="text-center mb-4">Submit Your Application</h3>
+        <form method="post" action="{% url 'career_application' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group mb-3">
+                <label for="name">Your Name:</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="form-group mb-3">
+                <label for="cv">Upload CV:</label>
+                <input type="file" class="form-control-file" id="cv" name="cv" required>
+            </div>
+            <div class="form-group mb-3">
+                <label for="cover_letter">Upload Cover Letter:</label>
+                <input type="file" class="form-control-file" id="cover_letter" name="cover_letter" required>
+            </div>
+            <button type="submit" class="btn btn-outline-light btn-block">Submit Application</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

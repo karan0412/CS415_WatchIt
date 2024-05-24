@@ -23,6 +23,16 @@ from datetime import timedelta
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+class CareerApplication(models.Model):
+    name = models.CharField(max_length=255)
+    cv = models.FileField(upload_to='cv_files/')
+    cover_letter = models.FileField(upload_to='cover_letter_files/')
+    approved = models.BooleanField(default=False)
+    reviewed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
+
 class Feedback(models.Model):
     subject = models.CharField(max_length=255)
     feedback = models.TextField()

@@ -36,7 +36,7 @@ from reportlab.platypus import (
     SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, HRFlowable, KeepTogether
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from .models import User, Seat, Booking, CinemaHall, Movie, Tag, Showtime, Deals, PasswordResetToken
+from .models import User, Seat, Booking, CinemaHall, Movie, Tag, Showtime, Deals, PasswordResetToken, CareerApplication
 from .recommend import get_recommendations
 from .utils import generate_token
 from validate_email import validate_email
@@ -54,7 +54,7 @@ from django.db.models.functions import Cast
 from django.db.models import FloatField
 from django.template.loader import get_template
 from xhtml2pdf import pisa
-from .forms import FeedbackForm  # Import the form here
+from .forms import CareerApplicationForm, FeedbackForm  # Import the form here
 
 
 
@@ -64,37 +64,37 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # Token generator for password reset
 token_generator = PasswordResetTokenGenerator()
 
+def career_application(request):
+    if request.method == 'POST':
+        form = CareerApplicationForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Application successfully submitted!')
+            return redirect('Home')
+        else:
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = CareerApplicationForm()
+    return render(request, 'career_application.html', {'form': form})
 
+def career_applications_list(request):
+    applications = CareerApplication.objects.filter(reviewed=False)  # Show only unreviewed applications
+    return render(request, 'career_applications_list.html', {'applications': applications})
 
+def approve_application(request, application_id):
+    application = CareerApplication.objects.get(id=application_id)
+    application.approved = True
+    application.reviewed = True
+    application.save()
+    return redirect('career_applications_list')
 
-# def admin_dashboard(request):
-#     total_bookings = Booking.objects.count()
-    
-#     # Modify this to cast Decimal to float
-#     monthly_sales = (Booking.objects.annotate(month=TruncMonth('booking_date'))
-#                      .values('month')
-#                      .annotate(total_sales=Cast(Sum('payment_amount'), FloatField()))
-#                      .order_by('month'))
+def reject_application(request, application_id):
+    application = CareerApplication.objects.get(id=application_id)
+    application.approved = False
+    application.reviewed = True
+    application.save()
+    return redirect('career_applications_list')
 
-#     popular_movies = (Movie.objects.annotate(total_bookings=Count('bookings'))
-#                       .order_by('-total_bookings')[:5])
-    
-#     user_registrations = (User.objects.annotate(month=TruncMonth('date_joined'))
-#                           .values('month')
-#                           .annotate(count=Count('id'))
-#                           .order_by('month'))
-
-#     # Ensure data is in a format JavaScript can understand
-#     monthly_sales_data = [[sale['month'].strftime('%b'), float(sale['total_sales'])] for sale in monthly_sales]
-#     user_registrations_data = [[reg['month'].strftime('%b'), reg['count']] for reg in user_registrations]
-
-#     context = {
-#         'total_bookings': total_bookings,
-#         'monthly_sales': monthly_sales_data,
-#         'popular_movies': popular_movies,
-#         'user_registrations': user_registrations_data,
-#     }
-#     return render(request, 'admin/admin_dashboard.html', context)
 def admin_dashboard(request):
     total_bookings = Booking.objects.count()
 

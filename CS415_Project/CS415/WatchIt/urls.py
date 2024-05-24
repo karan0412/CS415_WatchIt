@@ -49,8 +49,12 @@ urlpatterns = [
     path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin_dashboard/minute_sales/', views.minute_sales, name='admin_dashboard_minute_sales'),
     path('admin_dashboard/minute_registrations/', views.minute_registrations, name='admin_dashboard_minute_registrations'),
-    path('Feedback/', views.Feedback, name='Feedback'),
-
+    path('Feedback/',views.Feedback, name='Feedback'),
+    path('career_application/', views.career_application, name='career_application'),
+    path('career_applications_list/', views.career_applications_list, name='career_applications_list'),
+    path('approve_application/<int:application_id>/', views.approve_application, name='approve_application'),
+    path('reject_application/<int:application_id>/', views.reject_application, name='reject_application'),
+    
 ]
 
 if settings.DEBUG:

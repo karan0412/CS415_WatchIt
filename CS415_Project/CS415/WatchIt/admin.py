@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.http import HttpResponse
-from .models import Booking, Showtime
+from .models import Booking, CareerApplication, Showtime
 from .utils import get_sales_report
 from . import models
 from django.utils.html import format_html
@@ -128,8 +128,12 @@ class BookingAdmin(admin.ModelAdmin):
            return HttpResponse('We had some errors <pre>' + html_string + '</pre>')
         return response
 
+class CareerApplicationAdmin(admin.ModelAdmin):
+    list_display = ('name', 'approved', 'reviewed')
 
 
+
+admin.site.register(CareerApplication, CareerApplicationAdmin)
 admin.site.register(models.CinemaHall)
 admin.site.register(models.Seat, SeatAdmin)
 admin.site.register(models.Movie, MovieAdmin)
