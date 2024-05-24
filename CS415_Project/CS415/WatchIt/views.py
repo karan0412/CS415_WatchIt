@@ -54,6 +54,7 @@ from django.db.models.functions import Cast
 from django.db.models import FloatField
 from django.template.loader import get_template
 from xhtml2pdf import pisa
+from .forms import FeedbackForm  # Import the form here
 
 
 
@@ -62,6 +63,8 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 # Token generator for password reset
 token_generator = PasswordResetTokenGenerator()
+
+
 
 
 # def admin_dashboard(request):
@@ -1291,3 +1294,18 @@ def user_activity_report_view(request):
 def sales_report_view(request):
     data = get_sales_report()
     return render(request, 'reports/sales_report.html', {'data': data})
+
+
+def Feedback(request):
+    if request.method == 'POST':
+        form = FeedbackForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Feedback successfully submitted!')
+            return redirect('Home')  # Make sure 'home' matches the name of your home URL pattern
+        else:
+            print(form.errors)  # Print form errors to the console
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = FeedbackForm()
+    return render(request, 'Feedback.html', {'form': form})

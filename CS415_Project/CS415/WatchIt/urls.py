@@ -49,6 +49,7 @@ urlpatterns = [
     path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin_dashboard/minute_sales/', views.minute_sales, name='admin_dashboard_minute_sales'),
     path('admin_dashboard/minute_registrations/', views.minute_registrations, name='admin_dashboard_minute_registrations'),
+    path('Feedback/', views.Feedback, name='Feedback'),
 
 ]
 

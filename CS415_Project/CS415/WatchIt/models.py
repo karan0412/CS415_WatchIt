@@ -23,6 +23,14 @@ from datetime import timedelta
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+class Feedback(models.Model):
+    subject = models.CharField(max_length=255)
+    feedback = models.TextField()
+    file = models.FileField(upload_to='feedback_files/', null=True, blank=True)  # Adjust the `upload_to` path as needed
+
+    def __str__(self):
+        return self.subject
+
 class User(AbstractUser):
     is_email_verified = models.BooleanField(default=False)
     secret_key = models.CharField(max_length=50, null=True, blank=True)

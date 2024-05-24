@@ -6,38 +6,49 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            color: #fff;
-            background-color: #000;
+            color: #000;
+            background-color: #f4f4f4;
+            margin: 10px 20px; /* Narrower top margin */
+            padding: 20px;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
         }
         h1 {
             text-align: center;
-            color: #FFD700;
+            color: #333;
+            margin-bottom: 20px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
         }
         th, td {
-            padding: 10px;
-            border: 1px solid #fff;
+            padding: 8px;
             text-align: left;
         }
         th {
-            background-color: #FFD700;
-            color: #000;
-        }
-        td {
             background-color: #333;
+            color: #fff;
         }
         .total {
             font-weight: bold;
             background-color: #FFD700;
             color: #000;
-        }
-        .logo {
+            padding: 10px;
             text-align: center;
-            margin-bottom: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        @media print {
+            @page {
+                size: landscape;
+                margin: 20mm; /* Uniform narrower margins for print */
+            }
+            body {
+                margin: 0; /* Remove default margin for print */
+            }
         }
     </style>
 </head>
@@ -49,32 +60,31 @@
     <table>
         <tr>
             <th>Booking ID</th>
-            <th>User</th>
-            <th>Booking Date</th>
-            <th>Movie</th>
-            <th>Cinema Hall Type</th>
+            <th>Username</th>
+            <th>Payment Details</th>
+            <th>Amount</th>
+            <th>Movie Title</th>
+            <th>Date</th>
+            <th>Cinema</th>
             <th>Showtime</th>
             <th>Seats</th>
-            <th>Payment Amount</th>
-            <th>Card Details</th>
         </tr>
         {% for booking in bookings %}
         <tr>
             <td>{{ booking.id }}</td>
             <td>{{ booking.user.username }}</td>
-            <td>{{ booking.booking_date }}</td>
+            <td>**** **** **** {{ booking.card_details | slice:"-4:" }}</td>  <!-- Only shows the last 4 digits -->
+            <td>${{ booking.payment_amount }}</td>
             <td>{{ booking.movie.title }}</td>
+            <td>{{ booking.booking_date }}</td>
             <td>{{ booking.cinema_hall.cinema_type }}</td>
             <td>{{ booking.showtime_display }}</td>
             <td>{{ booking.seat_labels }}</td>
-            <td>${{ booking.payment_amount }}</td>
-            <td>{{ booking.card_details }}</td>
         </tr>
         {% endfor %}
-        <tr>
-            <td colspan="7" class="total">Total Amount</td>
-            <td colspan="2" class="total">${{ total_amount }}</td>
-        </tr>
     </table>
+    <div class="total">
+        Total Amount: ${{ total_amount }}
+    </div>
 </body>
 </html>

@@ -74,6 +74,9 @@
       <li class="nav-item mx-3">
           <a class="nav-link text-light" href="#findUs">Find Us</a>
       </li>
+      <li class="nav-item mx-3">
+        <a class="nav-link text-light" href="{% url 'Feedback' %}">Feedback</a>
+      </li>
 
       {% if request.user.is_authenticated %}
           <li class="nav-item mx-3">

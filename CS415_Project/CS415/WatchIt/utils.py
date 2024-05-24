@@ -3,6 +3,7 @@ import six
 from .models import Booking, User
 from django.db.models import Sum, Count
 
+
 class TokenGenerator(PasswordResetTokenGenerator):
 
     def _make_hash_value(self, user, timestamp):

@@ -1,4 +1,3 @@
-<!-- templates/payment.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -61,6 +60,14 @@
             margin-top: 10px;
             font-size: 14px;
         }
+        .progress {
+            height: 20px;
+            margin-top: 20px;
+        }
+        .progress-bar {
+            background-color: #4CAF50; /* Green to match your button */
+            transition: width 0.4s ease-in-out;
+        }
     </style>
 </head>
 <body>
@@ -77,6 +84,10 @@
                     <span class="seat-label" data-id="{{ seat.id }}">{{ seat.seat_label }}</span>{% if not forloop.last %}, {% endif %}
                 {% endfor %}
             </div>
+        </div>
+
+        <div class="progress">
+            <div id="payment-progress" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">Processing...</div>
         </div>
 
         <form id="payment-form">
@@ -110,6 +121,8 @@
         });
 
         function submitPayment() {
+            var progressElem = document.getElementById('payment-progress');
+            progressElem.style.width = "0%"; // Reset progress on new submission
             stripe.createPaymentMethod({
                 type: 'card',
                 card: card,
@@ -117,7 +130,11 @@
                 if (result.error) {
                     var errorElement = document.getElementById('card-errors');
                     errorElement.textContent = result.error.message;
+                    progressElem.style.width = "0%";
+                    progressElem.textContent = 'Failed to process payment.';
                 } else {
+                    updateProgressBar(30); // Assume creating payment method takes 30% of the time
+
                     var paymentMethodId = result.paymentMethod.id;
                     var data = {
                         payment_method_id: paymentMethodId,
@@ -140,21 +157,36 @@
                         method: "POST",
                         data: JSON.stringify(data),
                         contentType: "application/json",
+                        beforeSend: function() {
+                            updateProgressBar(50); // Reaching server assumed at 50%
+                        },
                         success: function(response) {
-                            console.log("Server response:", response);
                             if (response.success) {
-                                window.location.href = "/booking-success/";
+                                updateProgressBar(100);
+                                setTimeout(function() {
+                                    window.location.href = "/booking-success/";
+                                }, 1000); // Redirect after 1 second of full progress
                             } else {
                                 $('#form-response').text(response.error);
+                                progressElem.style.width = "0%";
+                                progressElem.textContent = 'Payment failed.';
                             }
                         },
                         error: function(xhr, status, error) {
                             console.log("AJAX error:", error);
                             $('#form-response').text('An error occurred while processing the payment. Please try again.');
+                            progressElem.style.width = "0%";
+                            progressElem.textContent = 'Error processing payment.';
                         }
                     });
                 }
             });
+        }
+
+        function updateProgressBar(percent) {
+            var progressElem = document.getElementById('payment-progress');
+            progressElem.style.width = percent + "%";
+            progressElem.textContent = percent < 100 ? "Processing..." : "Payment successful!";
         }
     </script>
 </body>
