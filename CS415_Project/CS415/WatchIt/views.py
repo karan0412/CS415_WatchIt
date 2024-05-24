@@ -46,6 +46,16 @@ import matplotlib.pyplot as plt
 from django.http import HttpResponse
 from io import BytesIO
 from .utils import get_user_activity_report, get_sales_report
+from django.shortcuts import render
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models.functions import TruncMinute
+from django.db.models import Count, Sum
+from django.db.models.functions import Cast
+from django.db.models import FloatField
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+
+
 
 # Initialize stripe API key
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -54,7 +64,95 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 token_generator = PasswordResetTokenGenerator()
 
 
+# def admin_dashboard(request):
+#     total_bookings = Booking.objects.count()
+    
+#     # Modify this to cast Decimal to float
+#     monthly_sales = (Booking.objects.annotate(month=TruncMonth('booking_date'))
+#                      .values('month')
+#                      .annotate(total_sales=Cast(Sum('payment_amount'), FloatField()))
+#                      .order_by('month'))
 
+#     popular_movies = (Movie.objects.annotate(total_bookings=Count('bookings'))
+#                       .order_by('-total_bookings')[:5])
+    
+#     user_registrations = (User.objects.annotate(month=TruncMonth('date_joined'))
+#                           .values('month')
+#                           .annotate(count=Count('id'))
+#                           .order_by('month'))
+
+#     # Ensure data is in a format JavaScript can understand
+#     monthly_sales_data = [[sale['month'].strftime('%b'), float(sale['total_sales'])] for sale in monthly_sales]
+#     user_registrations_data = [[reg['month'].strftime('%b'), reg['count']] for reg in user_registrations]
+
+#     context = {
+#         'total_bookings': total_bookings,
+#         'monthly_sales': monthly_sales_data,
+#         'popular_movies': popular_movies,
+#         'user_registrations': user_registrations_data,
+#     }
+#     return render(request, 'admin/admin_dashboard.html', context)
+def admin_dashboard(request):
+    total_bookings = Booking.objects.count()
+
+    # Fetch minute-wise sales and convert Decimal to float for JavaScript compatibility
+    minute_sales = (Booking.objects
+                     .annotate(minute=TruncMinute('booking_date'))
+                     .values('minute')
+                     .annotate(total_sales=Sum('payment_amount'))
+                     .order_by('minute'))
+
+    minute_sales_data = [[sale['minute'].strftime('%H:%M'), float(sale['total_sales']) if sale['total_sales'] else 0] for sale in minute_sales]
+
+    # Fetch minute-wise user registrations and prepare data
+    minute_registrations = (User.objects
+                          .annotate(minute=TruncMinute('date_joined'))
+                          .values('minute')
+                          .annotate(count=Count('id'))
+                          .order_by('minute'))
+
+    minute_registrations_data = [[reg['minute'].strftime('%H:%M'), reg['count']] for reg in minute_registrations]
+
+    context = {
+        'total_bookings': total_bookings,
+        'minute_sales': minute_sales_data,
+        'minute_registrations': minute_registrations_data,
+    }
+    return render(request, 'admin/admin_dashboard.html', context)
+
+def minute_sales(request):
+    total_bookings = Booking.objects.count()
+
+    minute_sales = (Booking.objects
+                     .annotate(minute=TruncMinute('booking_date'))
+                     .values('minute')
+                     .annotate(total_sales=Sum('payment_amount'))
+                     .order_by('minute'))
+
+    minute_sales_data = [[sale['minute'].strftime('%H:%M'), float(sale['total_sales']) if sale['total_sales'] else 0] for sale in minute_sales]
+
+    context = {
+        'total_bookings': total_bookings,
+        'minute_sales': minute_sales_data,
+    }
+    return render(request, 'admin/minute_sales.html', context)
+
+def minute_registrations(request):
+    total_bookings = Booking.objects.count()
+
+    minute_registrations = (User.objects
+                          .annotate(minute=TruncMinute('date_joined'))
+                          .values('minute')
+                          .annotate(count=Count('id'))
+                          .order_by('minute'))
+
+    minute_registrations_data = [[reg['minute'].strftime('%H:%M'), reg['count']] for reg in minute_registrations]
+
+    context = {
+        'total_bookings': total_bookings,
+        'minute_registrations': minute_registrations_data,
+    }
+    return render(request, 'admin/minute_registrations.html', context)
 
 @login_required
 def transaction_report(request):
@@ -90,15 +188,6 @@ def transaction_report(request):
     return render(request, 'your_bookings.html', context)
 
 
-# views.py
-from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-from django.http import HttpResponse
-from datetime import datetime
-
-
-
 @login_required
 def transaction_report_pdf(request):
     movie_id = request.GET.get('movie_id')
@@ -117,119 +206,182 @@ def transaction_report_pdf(request):
     if end_date:
         bookings = bookings.filter(booking_date__lte=datetime.strptime(end_date, '%Y-%m-%d'))
 
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="transaction_report.pdf"'
-
-    doc = SimpleDocTemplate(response, pagesize=landscape(A4))
-    elements = []
-
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle(
-        'Title',
-        parent=styles['Title'],
-        alignment=TA_CENTER,
-        fontSize=24,
-        textColor=colors.black
-    )
-    subtitle_style = ParagraphStyle(
-        'Heading2',
-        parent=styles['Heading2'],
-        alignment=TA_CENTER,
-        fontSize=18,
-        textColor=colors.black
-    )
-    normal_style = ParagraphStyle(
-        'Normal',
-        parent=styles['BodyText'],
-        fontSize=10,
-        leading=12,
-        textColor=colors.black
-    )
-    payment_style = ParagraphStyle(
-        'Payment',
-        parent=styles['BodyText'],
-        fontSize=12,
-        leading=14,
-        textColor=colors.black,
-        fontName='Helvetica-Bold',
-        alignment=TA_RIGHT
-    )
-    movie_style = ParagraphStyle(
-        'Movie',
-        parent=styles['BodyText'],
-        fontSize=12,
-        leading=14,
-        textColor=colors.black,
-        fontName='Helvetica-Bold',
-        alignment=TA_CENTER
-    )
-
-    def add_background(canvas, doc):
-        canvas.saveState()
-        canvas.setFillColor(colors.white)
-        canvas.rect(0, 0, doc.pagesize[0], doc.pagesize[1], fill=1)
-        footer_text = 'Thank you for your purchase!'
-        canvas.setFont('Helvetica-Bold', 10)
-        canvas.setFillColor(colors.black)
-        canvas.drawCentredString(doc.pagesize[0] / 2.0, 0.5 * inch, footer_text)
-        canvas.restoreState()
-
-    try:
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        image_path = os.path.join(base_dir, 'movie_images', 'WIT.jpg')
-        event_image = Image(image_path, width=1.5 * inch, height=1.5 * inch)
-        event_image.hAlign = 'CENTER'
-        elements.append(event_image)
-        elements.append(Spacer(1, 20))
-    except Exception as e:
-        print(f"Error loading logo: {e}")
-        elements.append(Paragraph("Logo could not be loaded.", normal_style))
-
-    elements.append(Paragraph('Transaction Report', title_style))
-    elements.append(Spacer(1, 12))
-
-    if bookings:
-        booking = bookings[0]
-        user = booking.user.username if booking.user else 'N/A'
-        elements.append(Paragraph(f'User: {user}', subtitle_style))
-        elements.append(Spacer(1, 12))
-
-    data = [['Cinema Hall', 'Movie', 'Showtime', 'Seats', 'Payment Amount', 'Booking Date', 'Card Details']]
-    total_amount = 0
+    total_amount = sum(booking.payment_amount for booking in bookings)
+    booking_list = []
 
     for booking in bookings:
         seat_labels = ', '.join(seat.seat_label for seat in booking.seats.all())
         showtime = booking.showtime.showtime if booking.showtime else 'N/A'
         card_details = f"**** **** **** {booking.card_last4}" if booking.card_last4 else 'N/A'
-        total_amount += booking.payment_amount
-        data.append([
-            booking.cinema_hall.cinema_type if booking.cinema_hall else 'N/A',
-            booking.movie.title if booking.movie else 'N/A',
-            showtime,
-            seat_labels,
-            f"${booking.payment_amount}",
-            booking.booking_date.strftime('%Y-%m-%d %H:%M:%S') if booking.booking_date else 'N/A',
-            card_details
-        ])
+        booking_list.append({
+            'cinema_hall': booking.cinema_hall.cinema_type if booking.cinema_hall else 'N/A',
+            'movie': booking.movie.title if booking.movie else 'N/A',
+            'showtime': showtime,
+            'seat_labels': seat_labels,
+            'payment_amount': booking.payment_amount,
+            'booking_date': booking.booking_date.strftime('%Y-%m-%d %H:%M:%S') if booking.booking_date else 'N/A',
+            'card_details': card_details
+        })
 
-    elements.append(Paragraph(f'Total Amount: ${total_amount:.2f}', payment_style))
-    elements.append(Spacer(1, 12))
+    context = {
+        'user': request.user.username if request.user else 'N/A',
+        'total_amount': f"{total_amount:.2f}",
+        'bookings': booking_list,
+        'image_url': None
+    }
 
-    table = Table(data)
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FFD700')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-    ]))
+    try:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        image_path = os.path.join(base_dir, 'movie_images', 'WIT.jpg')
+        if os.path.exists(image_path):
+            context['image_url'] = image_path
+    except Exception as e:
+        print(f"Error loading logo: {e}")
 
-    elements.append(KeepTogether([table]))
-    doc.build(elements, onFirstPage=add_background, onLaterPages=add_background)
+    template = get_template('transaction_report.html')
+    html = template.render(context)
+    result = BytesIO()
+
+    pisa_status = pisa.CreatePDF(BytesIO(html.encode('UTF-8')), dest=result)
+
+    if pisa_status.err:
+        return HttpResponse('We had some errors with code %s' % pisa_status.err)
+
+    response = HttpResponse(result.getvalue(), content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="transaction_report.pdf"'
     return response
+
+
+# def transaction_report_pdf(request):
+#     movie_id = request.GET.get('movie_id')
+#     genre_id = request.GET.get('genre_id')
+#     start_date = request.GET.get('start_date')
+#     end_date = request.GET.get('end_date')
+
+#     bookings = Booking.objects.filter(user=request.user).order_by('-booking_date')
+
+#     if movie_id:
+#         bookings = bookings.filter(movie_id=movie_id)
+#     if genre_id:
+#         bookings = bookings.filter(movie__tags__id=genre_id)
+#     if start_date:
+#         bookings = bookings.filter(booking_date__gte=datetime.strptime(start_date, '%Y-%m-%d'))
+#     if end_date:
+#         bookings = bookings.filter(booking_date__lte=datetime.strptime(end_date, '%Y-%m-%d'))
+
+#     response = HttpResponse(content_type='application/pdf')
+#     response['Content-Disposition'] = 'attachment; filename="transaction_report.pdf"'
+
+#     doc = SimpleDocTemplate(response, pagesize=landscape(A4))
+#     elements = []
+
+#     styles = getSampleStyleSheet()
+#     title_style = ParagraphStyle(
+#         'Title',
+#         parent=styles['Title'],
+#         alignment=TA_CENTER,
+#         fontSize=24,
+#         textColor=colors.black
+#     )
+#     subtitle_style = ParagraphStyle(
+#         'Heading2',
+#         parent=styles['Heading2'],
+#         alignment=TA_CENTER,
+#         fontSize=18,
+#         textColor=colors.black
+#     )
+#     normal_style = ParagraphStyle(
+#         'Normal',
+#         parent=styles['BodyText'],
+#         fontSize=10,
+#         leading=12,
+#         textColor=colors.black
+#     )
+#     payment_style = ParagraphStyle(
+#         'Payment',
+#         parent=styles['BodyText'],
+#         fontSize=12,
+#         leading=14,
+#         textColor=colors.black,
+#         fontName='Helvetica-Bold',
+#         alignment=TA_RIGHT
+#     )
+#     movie_style = ParagraphStyle(
+#         'Movie',
+#         parent=styles['BodyText'],
+#         fontSize=12,
+#         leading=14,
+#         textColor=colors.black,
+#         fontName='Helvetica-Bold',
+#         alignment=TA_CENTER
+#     )
+
+#     def add_background(canvas, doc):
+#         canvas.saveState()
+#         canvas.setFillColor(colors.white)
+#         canvas.rect(0, 0, doc.pagesize[0], doc.pagesize[1], fill=1)
+#         footer_text = 'Thank you for your purchase!'
+#         canvas.setFont('Helvetica-Bold', 10)
+#         canvas.setFillColor(colors.black)
+#         canvas.drawCentredString(doc.pagesize[0] / 2.0, 0.5 * inch, footer_text)
+#         canvas.restoreState()
+
+#     try:
+#         base_dir = os.path.dirname(os.path.abspath(__file__))
+#         image_path = os.path.join(base_dir, 'movie_images', 'WIT.jpg')
+#         event_image = Image(image_path, width=1.5 * inch, height=1.5 * inch)
+#         event_image.hAlign = 'CENTER'
+#         elements.append(event_image)
+#         elements.append(Spacer(1, 20))
+#     except Exception as e:
+#         print(f"Error loading logo: {e}")
+#         elements.append(Paragraph("Logo could not be loaded.", normal_style))
+
+#     elements.append(Paragraph('Transaction Report', title_style))
+#     elements.append(Spacer(1, 12))
+
+#     if bookings:
+#         booking = bookings[0]
+#         user = booking.user.username if booking.user else 'N/A'
+#         elements.append(Paragraph(f'User: {user}', subtitle_style))
+#         elements.append(Spacer(1, 12))
+
+#     data = [['Cinema Hall', 'Movie', 'Showtime', 'Seats', 'Payment Amount', 'Booking Date', 'Card Details']]
+#     total_amount = 0
+
+#     for booking in bookings:
+#         seat_labels = ', '.join(seat.seat_label for seat in booking.seats.all())
+#         showtime = booking.showtime.showtime if booking.showtime else 'N/A'
+#         card_details = f"**** **** **** {booking.card_last4}" if booking.card_last4 else 'N/A'
+#         total_amount += booking.payment_amount
+#         data.append([
+#             booking.cinema_hall.cinema_type if booking.cinema_hall else 'N/A',
+#             booking.movie.title if booking.movie else 'N/A',
+#             showtime,
+#             seat_labels,
+#             f"${booking.payment_amount}",
+#             booking.booking_date.strftime('%Y-%m-%d %H:%M:%S') if booking.booking_date else 'N/A',
+#             card_details
+#         ])
+
+#     elements.append(Paragraph(f'Total Amount: ${total_amount:.2f}', payment_style))
+#     elements.append(Spacer(1, 12))
+
+#     table = Table(data)
+#     table.setStyle(TableStyle([
+#         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FFD700')),
+#         ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+#         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+#         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+#         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+#         ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+#         ('GRID', (0, 0), (-1, -1), 1, colors.black),
+#         ('FONTSIZE', (0, 0), (-1, -1), 10),
+#     ]))
+
+#     elements.append(KeepTogether([table]))
+#     doc.build(elements, onFirstPage=add_background, onLaterPages=add_background)
+#     return response
 
 
 

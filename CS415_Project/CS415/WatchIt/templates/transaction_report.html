@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            color: black;
+            font-size: 16px;
+        }
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            text-decoration: underline;
+            text-align: center;
+        }
+        .subtitle {
+            font-size: 16px;
+            margin: 12px 0;
+        }
+        .payment {
+            font-size: 16px;
+            color: black;
+            text-align: right;
+            margin: 12px 0;
+        }
+        .movie-logo {
+            margin: 20px 0;
+            text-align: left;
+        }
+        .footer {
+            text-align: center;
+            font-size: 16px;
+            color: black;
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+        }
+        .footer-statement {
+            font-size: 16px;
+            color: black;
+            margin-top: 20px;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th {
+            background-color: #FFD700;
+            color: black;
+            font-weight: bold;
+            padding: 12px;
+            border: none;
+        }
+        td {
+            padding: 10px;
+            text-align: center;
+            border: none;
+        }
+        tr:nth-child(even) td {
+            background-color: #FFFACD; /* Pastel yellow */
+        }
+        tr:nth-child(odd) td {
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-2">
+                <div class="movie-logo">
+                    {% if image_url %}
+                        <img src="{{ image_url }}" class="img-fluid" alt="Movie Logo" style="width: 30px; height: 30px;">
+                    {% else %}
+                        <p>Logo could not be loaded.</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-8">
+                <div class="title">Transaction Report</div>
+            </div>
+            <div class="col-2"></div>
+        </div>
+        {% if user %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="subtitle">User: {{ user }}</div>
+                </div>
+            </div>
+        {% endif %}
+        <div class="row">
+            <div class="col-12">
+                <div class="payment">Total Amount: ${{ total_amount }}</div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <table class="table table-borderless">
+                    <thead>
+                        <tr>
+                            <th>Cinema Hall</th>
+                            <th>Movie</th>
+                            <th>Showtime</th>
+                            <th>Seats</th>
+                            <th>Payment Amount</th>
+                            <th>Booking Date</th>
+                            <th>Card Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                            <tr>
+                                <td>{{ booking.cinema_hall }}</td>
+                                <td>{{ booking.movie }}</td>
+                                <td>{{ booking.showtime }}</td>
+                                <td>{{ booking.seat_labels }}</td>
+                                <td>${{ booking.payment_amount }}</td>
+                                <td>{{ booking.booking_date }}</td>
+                                <td>{{ booking.card_details }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="footer">Thank you for your purchase!</div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="footer-statement">
+                    This transaction report is generated for your records. For any queries, contact us at support@watchit.com. Thank you for choosing WatchIt!
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

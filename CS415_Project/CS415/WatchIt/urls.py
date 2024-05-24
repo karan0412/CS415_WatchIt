@@ -3,6 +3,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
 from .import views
+from .views import admin_dashboard
 
 
 urlpatterns = [
@@ -45,6 +46,10 @@ urlpatterns = [
     # path('admin/user_chart/', views.generate_user_chart, name='user_chart_view'),
     path('user_activity_report/', views.user_activity_report_view, name='user_activity_report'),
     path('sales_report/', views.sales_report_view, name='sales_report'),
+    path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('admin_dashboard/minute_sales/', views.minute_sales, name='admin_dashboard_minute_sales'),
+    path('admin_dashboard/minute_registrations/', views.minute_registrations, name='admin_dashboard_minute_registrations'),
+
 ]
 
 if settings.DEBUG:
