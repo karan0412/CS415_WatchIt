@@ -55,7 +55,7 @@ urlpatterns = [
     # path('admin/user_chart/', views.generate_user_chart, name='user_chart_view'),
     path('user_activity_report/', views.user_activity_report_view, name='user_activity_report'),
     path('sales_report/', views.sales_report_view, name='sales_report'),
-
+]
 
 
 if settings.DEBUG:

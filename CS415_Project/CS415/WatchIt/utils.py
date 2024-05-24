@@ -3,7 +3,7 @@ import six
 
 from twilio.rest import Client
 from django.conf import settings
-
+from django.db.models.functions import TruncDay
 from .models import Booking, User
 from django.db.models import Sum, Count
 
