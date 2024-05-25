@@ -14,25 +14,34 @@
 {% block content %}
 
 <div class="card-container mb-5">
-    <div class="card bg-dark">
-        <h3 class="text-center mb-4">Login</h3>
+    <div class="bottom">
+    <div class="box">
+        <span class="borderline"></span>
+        
         
         <form method="post" action="{% url 'Login_first' %}">
+            <h3 class="text-center mb-4">Login</h3>
             {% csrf_token %}
-            <div class="form-group mb-3">
+            <div class="form-group mb-3 inputbox">
+                
+                <input type="text" class="input ps-3" id="uname" name="uname" required>
                 <label for="uname">Username:</label>
-                <input type="text" class="form-control" id="uname" name="uname" required>
+                <i></i>
             </div>
-            <div class="form-group">
+            <div class="form-group mb-3 inputbox">
+                <input type="password" class="input ps-3" id="pwd" name="pwd" required>
                 <label for="pwd">Password:</label>
-                <input type="password" class="form-control" id="pwd" name="pwd" required>
-                <a href ="forget_password" class="forgot_password" style="text-decoration: none;
-                color:rgb(243, 212, 8); margin-top: 1px; font-size:small;">Forgot password ?</a>
+                
+                <i></i>
+                
             </div>
 
             <button type="submit" class="btn btn-outline-light btn-block mt-3">Login</button>
+            <a href ="forget_password" class="forgot_password" style="text-decoration: none;
+                color:rgb(243, 212, 8); margin-top: 1px; font-size:small;">Forgot password ?</a>
         </form>
     </div>
+</div>
 </div>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>

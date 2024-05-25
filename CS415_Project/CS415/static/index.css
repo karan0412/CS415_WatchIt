@@ -27,9 +27,26 @@ body{
     bottom: 0; /* Align at the bottom of the navbar */
     left: 50%; /* Start from the center */
     width: 100%; /* Set the width of the 'border' */
-    border-bottom: 1px solid rgba(225, 225, 225, 0.19); /* Light grey border with reduced opacity */
     transform: translateX(-50%); /* Center the pseudo-element */
 }
 .footer{
-    background-color: #DBA622;
+    background-color: #4E4FEB;
+}
+.link{
+    background-color: #068FFF;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 25px;
+    font-weight: 600;
+    color: white;
+}
+.link:hover{
+    background-color: #0B60B0;
+}
+
+.user{
+    padding: 10px;
+    border-radius: 30px;
+    background-color: #4E4FEB;
+    font-weight: 600;
 }

@@ -13,15 +13,12 @@ body {
     margin-bottom: 5vh;
 }
 
-.card {
+.box {
     margin: auto;
     max-width: 950px;
     width: 90%;
-    box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.19); /* This already creates a floating effect */
     border-radius: 1rem;
-    border: transparent;
-    background-color: #6c757d; /* Sets the background to a gray color */
-    color: white;
+  
 }
 
 .discount {
@@ -40,6 +37,7 @@ body {
     padding: 4vh 5vh;
     border-bottom-left-radius: 1rem;
     border-top-left-radius: 1rem;
+    color: white; /* Ensure text is readable */
 }
 
 @media(max-width: 767px) {
