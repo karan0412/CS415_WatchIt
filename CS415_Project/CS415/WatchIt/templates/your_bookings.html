@@ -56,10 +56,35 @@
                         <p class="card-text"><strong>Card Details:</strong> **** **** **** {{ booking.card_last4 }}</p>
                         <p class="text-light mt-auto"><a href="{% url 'generate_purchase_history' booking.id %}">Download PDF</a></p>
                         {% if can_edit %}
-                        <a href="{% url 'edit_booking' booking.id %}" class="btn btn-warning mt-2">Edit</a>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editBookingModal{{ booking.id }}">
+                            Edit Booking
+                        </button>
                         {% endif %}
                     </div>
                 </div>
+
+                 <!-- Edit Booking Modal -->
+                <div class="modal fade" id="editBookingModal{{ booking.id }}" tabindex="-1" aria-labelledby="editBookingModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content bg-dark">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="editBookingModalLabel">Edit Booking Options</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                                 
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <!-- Buttons to choose edit type -->
+                                <a href="{% url 'edit_seats' booking.id booking.showtime.id booking.cinema_hall.id %}" class="btn btn-secondary">Change Seats</a>
+                                <a href="{% url 'edit_showtime' booking.id booking.movie.id booking.cinema_hall.id %}" class="btn btn-secondary">Change Showtime</a>
+                                <a href="{% url 'edit_booking' booking.id %}" class="btn btn-secondary">Change Movie</a>
+                               
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
             </div>
             {% endfor %}
         {% else %}
@@ -67,5 +92,7 @@
         {% endif %}
     </div>
 </div>
+
+
 
 {% endblock %}

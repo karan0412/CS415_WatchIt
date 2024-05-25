@@ -7,9 +7,6 @@
 }
 
 .bottom {
-  width: 380px;
-  height: 395px;
-  background-color: #222;
   border-radius: 10px;
   display: flex;
   justify-content: center;
@@ -34,8 +31,8 @@
   position: absolute;
   top: -50%;
   left: -50%;
-  width: 380px;
-  height: 395px;
+  width: 100%;
+  height: 100%;
   background: linear-gradient(0deg, transparent, transparent, #45f3ff, #45f3ff, #45f3ff);
   z-index: -1;
   transform-origin: bottom right;

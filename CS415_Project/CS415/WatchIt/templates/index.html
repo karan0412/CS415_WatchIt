@@ -63,16 +63,16 @@
     <div class="collapse navbar-collapse" id="navbarNavDarkDropdown">
       <ul class="navbar-nav me-3">
         <li class="nav-item mx-3">
-          <a class="nav-link text-light" href="{% url 'movie_list' %}">Movies</a>
+          <a class="nav-link text-light" href="{% url 'movie_list' %}"><button class="link">Movies</button></a>
         </li>
         <li class="nav-item mx-3">
-          <a class="nav-link text-light" href="#nowShowing">Now Showing</a>
+          <a class="nav-link" href="#nowShowing"><button class="link">Now Showing</button></a>
       </li>
       <li class="nav-item mx-3">
-          <a class="nav-link text-light" href="#dealsSection">Our Deals</a>
+          <a class="nav-link" href="#dealsSection"><button class="link">Our Deals</button></a>
       </li>
       <li class="nav-item mx-3">
-          <a class="nav-link text-light" href="#findUs">Find Us</a>
+          <a class="nav-link" href="#findUs"><button class="link">Find Us</button></a>
       </li>
 
       {% if request.user.is_authenticated %}
@@ -80,7 +80,7 @@
             </li>
         {% else %}
         <li class="nav-item mx-3" id="signup-link">
-          <a class="nav-link text-light" href="{% url 'SignUp' %}">Sign Up Now</a>
+          <a class="nav-link text-light" href="{% url 'SignUp' %}"><button class="signup">Sign Up Now</button></a>
         </li>
         
         {% endif %}
@@ -89,20 +89,20 @@
     <ul class="navbar-nav ms-auto">
         {% if request.user.is_authenticated %}
           <li class="nav-item mx-3 ">
-                <div class="nav-item dropdown me-5">
+                <div class="nav-item dropdown me-5 user">
                     <a class="nav-link dropdown-toggle text-light" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Welcome, {{ request.user.username }}
+                      Welcome, {{ request.user.username }}
                     </a>
-                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-                        <a class="dropdown-item" href="{% url 'dashboard' %}">Dashboard</a>
-                        <a class="dropdown-item" href="{% url 'LogoutUser' %}">Logout</a>
+                    <div class="dropdown-menu dropdown-menu-right bg-dark" aria-labelledby="navbarDropdownMenuLink">
+                        <a class="dropdown-item fw-semibold text-light" href="{% url 'dashboard' %}">Dashboard</a>
+                        <a class="dropdown-item fw-semibold text-light" href="{% url 'LogoutUser' %}">Logout</a>
                     </div>
                 </div>
               
         {% else %}
 
         
-          <a class="nav-item nav-link text-light me-5 btn btn-danger" href="{% url 'Login' %}">Login</a>
+          <a class="nav-item nav-link text-light me-5 btn btn-danger" href="{% url 'Login' %}"><button class="userLink">Login</button></a>
         </li>
         
         {% endif %}

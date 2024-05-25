@@ -26,7 +26,7 @@ urlpatterns = [
     path('purchase_history/', views.list_purchase_history, name='purchase_history'),
     path('your_bookings/', views.your_bookings, name='your_bookings'),
     path('transaction_report/', views.transaction_report, name='transaction_report'),
-    path('transaction-report/pdf/', views.transaction_report_pdf, name='transaction_report_pdf'),
+    path('transaction_report/pdf/', views.transaction_report_pdf, name='transaction_report_pdf'),
     
     path('edit_booking/<int:booking_id>/', views.edit_booking, name='edit_booking'),
     path('edit_showtime/<int:booking_id>/<int:movie_id>/<int:cinema_hall_id>/', views.edit_showtime, name='edit_showtime'),
@@ -55,6 +55,10 @@ urlpatterns = [
     # path('admin/user_chart/', views.generate_user_chart, name='user_chart_view'),
     path('user_activity_report/', views.user_activity_report_view, name='user_activity_report'),
     path('sales_report/', views.sales_report_view, name='sales_report'),
+
+    path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('admin_dashboard/minute_sales/', views.minute_sales, name='admin_dashboard_minute_sales'),
+    path('admin_dashboard/minute_registrations/', views.minute_registrations, name='admin_dashboard_minute_registrations'),
 ]
 
 
