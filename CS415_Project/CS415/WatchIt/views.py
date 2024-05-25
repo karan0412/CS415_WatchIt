@@ -14,7 +14,7 @@ from django.conf import settings
 from django.core.mail import EmailMessage
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
 from django.db import transaction
@@ -36,7 +36,7 @@ from reportlab.platypus import (
     SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, HRFlowable, KeepTogether
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from .models import User, Seat, Booking, CinemaHall, Movie, Tag, Showtime, Deals, PasswordResetToken, CareerApplication
+from .models import Feedback, User, Seat, Booking, CinemaHall, Movie, Tag, Showtime, Deals, PasswordResetToken
 from .recommend import get_recommendations
 from .utils import generate_token
 from validate_email import validate_email
@@ -54,7 +54,7 @@ from django.db.models.functions import Cast
 from django.db.models import FloatField
 from django.template.loader import get_template
 from xhtml2pdf import pisa
-from .forms import CareerApplicationForm, FeedbackForm  # Import the form here
+from .forms import FeedbackForm  
 
 
 
@@ -64,36 +64,38 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # Token generator for password reset
 token_generator = PasswordResetTokenGenerator()
 
-def career_application(request):
-    if request.method == 'POST':
-        form = CareerApplicationForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Application successfully submitted!')
-            return redirect('Home')
-        else:
-            messages.error(request, 'Please correct the error below.')
-    else:
-        form = CareerApplicationForm()
-    return render(request, 'career_application.html', {'form': form})
+# @login_required
+# def career_application(request):
+#     if request.method == 'POST':
+#         form = CareerApplicationForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             form.save()
+#             messages.success(request, 'Application successfully submitted!')
+#             return redirect('Home')
+#         else:
+#             messages.error(request, 'Please correct the error below.')
+#     else:
+#         form = CareerApplicationForm()
+#     return render(request, 'career_application.html', {'form': form})
 
-def career_applications_list(request):
-    applications = CareerApplication.objects.filter(reviewed=False)  # Show only unreviewed applications
-    return render(request, 'career_applications_list.html', {'applications': applications})
+# def career_applications_list(request):
+#     applications = CareerApplication.objects.filter(reviewed=False)  # Show only unreviewed applications
+#     return render(request, 'career_applications_list.html', {'applications': applications})
 
-def approve_application(request, application_id):
-    application = CareerApplication.objects.get(id=application_id)
-    application.approved = True
-    application.reviewed = True
-    application.save()
-    return redirect('career_applications_list')
+# def approve_application(request, application_id):
+#     application = CareerApplication.objects.get(id=application_id)
+#     application.approved = True
+#     application.reviewed = True
+#     application.save()
+#     return redirect('career_applications_list')
 
-def reject_application(request, application_id):
-    application = CareerApplication.objects.get(id=application_id)
-    application.approved = False
-    application.reviewed = True
-    application.save()
-    return redirect('career_applications_list')
+# def reject_application(request, application_id):
+#     application = CareerApplication.objects.get(id=application_id)
+#     application.approved = False
+#     application.reviewed = True
+#     application.save()
+#     return redirect('career_applications_list')
+
 
 def admin_dashboard(request):
     total_bookings = Booking.objects.count()
@@ -517,8 +519,6 @@ def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
         'movie': movie,
         'show': show,
     })
-
-
 
 
 def payment(request, cinema_hall_id):
@@ -1296,16 +1296,76 @@ def sales_report_view(request):
     return render(request, 'reports/sales_report.html', {'data': data})
 
 
-def Feedback(request):
+def is_admin(user):
+    return user.is_superuser
+# def Feedback(request):
+#     if request.method == 'POST':
+#         form = FeedbackForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             form.save()
+#             messages.success(request, 'Feedback successfully submitted!')
+#             return redirect('Home')  # Make sure 'home' matches the name of your home URL pattern
+#         else:
+#             print(form.errors)  # Print form errors to the console
+#             messages.error(request, 'Please correct the error below.')
+#     else:
+#         form = FeedbackForm()
+#     return render(request, 'Feedback.html', {'form': form})
+
+def submit_feedback(request):
     if request.method == 'POST':
         form = FeedbackForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            feedback = form.save(commit=False)
+            feedback.user = request.user
+            feedback.save()
             messages.success(request, 'Feedback successfully submitted!')
-            return redirect('Home')  # Make sure 'home' matches the name of your home URL pattern
+            return redirect('my_feedback')  # Redirect to 'user_feedback_list'
         else:
             print(form.errors)  # Print form errors to the console
             messages.error(request, 'Please correct the error below.')
     else:
         form = FeedbackForm()
     return render(request, 'Feedback.html', {'form': form})
+
+def my_feedback(request):
+    feedbacks = Feedback.objects.filter(user=request.user)
+    return render(request, 'my_feedback.html', {'feedbacks': feedbacks})
+
+def feedback_list(request):
+    feedbacks = submit_feedback.objects.filter(reviewed=False)  # Show only unreviewed feedback
+    return render(request, 'feedback_list.html', {'feedbacks': feedbacks})
+
+# def approve_feedback(request, feedback_id):
+#     feedback = get_object_or_404(submit_feedback, id=feedback_id)
+#     feedback.approved = True
+#     feedback.reviewed = True
+#     feedback.save()
+#     return redirect('feedback_list')
+
+# def reject_feedback(request, feedback_id):
+#     feedback = get_object_or_404(submit_feedback, id=feedback_id)
+#     feedback.approved = False
+#     feedback.reviewed = True
+#     feedback.save()
+#     return redirect('feedback_list')
+
+@login_required
+@user_passes_test(is_admin)
+def approve_feedback(request, feedback_id):
+    feedback = get_object_or_404(Feedback, id=feedback_id)
+    feedback.approved = True
+    feedback.reviewed = True
+    feedback.save()
+    messages.success(request, 'Feedback approved successfully!')
+    return redirect('admin_dashboard')
+
+@login_required
+@user_passes_test(is_admin)
+def reject_feedback(request, feedback_id):
+    feedback = get_object_or_404(Feedback, id=feedback_id)
+    feedback.approved = False
+    feedback.reviewed = True
+    feedback.save()
+    messages.success(request, 'Feedback rejected successfully!')
+    return redirect('admin_dashboard')

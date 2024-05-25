@@ -28,7 +28,7 @@
             </div>
         {% endif %}
         
-        <form method="post" action="{% url 'Feedback' %}" enctype="multipart/form-data">
+        <form method="post" action="{% url 'submit_feedback' %}" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="form-group mb-3">
                 <label for="feedback_subject">Subject of Change Request:</label>
