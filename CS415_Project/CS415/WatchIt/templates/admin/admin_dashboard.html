@@ -7,7 +7,15 @@
 <style>
 body {
     font-family: 'Arial', sans-serif;
+
 }
+
+    
+
+ul {
+    list-style: none;
+  }
+
 
 #sidebar {
     min-height: 100vh;
@@ -39,6 +47,10 @@ body {
 }
 
 .admin-dashboard {
+
+
+    background: black;
+
     max-width: 1200px;
     margin: auto;
     padding: 20px;
@@ -99,6 +111,7 @@ body {
 #sidebar .widget h2, #sidebar .widget p {
     color: #fff;  /* Add this rule to make the text color white */
 }
+
 </style>
 {% endblock %}
 
@@ -123,11 +136,13 @@ body {
                             Minute-wise User Registrations
                         </a>
                     </li>
+
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'booking_report_view' %}">
                             Generate Sales Report
                         </a>
                     </li>
+
                 </ul>
             </div>
         </nav>
@@ -135,7 +150,11 @@ body {
         <!-- Main content -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
             <div class="admin-dashboard mt-5">
+
                 <h1 class="mb-4">Admin Dashboard</h1>
+
+                <h1 class="mb-4 text-dark">Admin Dashboard</h1>
+
                 <div class="dashboard-widgets row g-4">
                     {% block dashboard_content %}
                     <!-- Placeholder for dynamic content based on URL -->

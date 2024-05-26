@@ -26,15 +26,17 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('purchase_history/', views.list_purchase_history, name='purchase_history'),
     path('your_bookings/', views.your_bookings, name='your_bookings'),
-
-    
     path('transaction_report/', views.transaction_report, name='transaction_report'),
-    path('transaction-report/pdf/', views.transaction_report_pdf, name='transaction_report_pdf'),
+    path('transaction_report/pdf/', views.transaction_report_pdf, name='transaction_report_pdf'),
+    
     path('edit_booking/<int:booking_id>/', views.edit_booking, name='edit_booking'),
     path('edit_showtime/<int:booking_id>/<int:movie_id>/<int:cinema_hall_id>/', views.edit_showtime, name='edit_showtime'),
     path('edit_seats/<int:booking_id>/<int:showtime_id>/<int:cinema_hall_id>/', views.edit_seats, name='edit_seats'),
     path('confirm_edit_booking/<int:booking_id>/<int:showtime_id>/<str:seats>/', views.confirm_edit_booking, name='confirm_edit_booking'),
+    
     path('recommendations/', views.movie_recommendations, name='movie_recommendations'),
+    path('generate_purchase_history/<int:booking_id>/', views.generate_purchase_history, name='generate_purchase_history'),
+
     path('activate-user/<uidb64>/<token>', views.activate_user, name='activate'),
     path('Login/forget_password/', views.forget_password, name='forget_password'),
     path('reset_password/<uidb64>/<token>/', views.reset_password, name='reset_password'),
@@ -42,10 +44,19 @@ urlpatterns = [
     path('enter_otp/', views.enter_otp, name='enter_otp'),
     path('resend-otp/', views.resend_otp, name='resend_otp'),
     path('QRcode', views.QRcode, name='QRcode'),
+
+    path('generate_purchase_history/<int:booking_id>/', views.generate_purchase_history, name='generate_purchase_history'),
+    path('send_sms/', views.send_test_sms, name='send_sms'),
+    path('verify_otp_sms/', views.verify_otp_sms, name='verify_otp_sms'),
+    path('Login_first/', views.Login_first, name='Login_first'),
+    path('resend_otp_sms/', views.resend_otp_sms, name='resend_otp_sms'),
+    
+
     # path('admin_tools/', include('admin_tools.urls')),
     # path('admin/user_chart/', views.generate_user_chart, name='user_chart_view'),
     path('user_activity_report/', views.user_activity_report_view, name='user_activity_report'),
     path('sales_report/', views.sales_report_view, name='sales_report'),
+
     path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin_dashboard/minute_sales/', views.minute_sales, name='admin_dashboard_minute_sales'),
     path('admin_dashboard/minute_registrations/', views.minute_registrations, name='admin_dashboard_minute_registrations'),
@@ -60,7 +71,10 @@ urlpatterns = [
     path('my_feedback/', views.my_feedback, name='my_feedback'),
     path('booking_report_view/', views.booking_report_view, name='booking_report_view'),
 
+
+
 ]
+
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

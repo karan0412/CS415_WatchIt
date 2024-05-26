@@ -71,7 +71,7 @@ def get_recommendations(user):
     for idx in range(cosine_sim.shape[0]):
         sim_scores = list(enumerate(cosine_sim[idx]))
         sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-        sim_scores = sim_scores[:5]  # Get top similar movies
+        sim_scores = sim_scores[:3]  # Get top similar movies
 
         for i in sim_scores:
             movie_id = df['id'].iloc[i[0]]
@@ -82,7 +82,7 @@ def get_recommendations(user):
         print("No similar movies found")
         return Movie.objects.none()
 
-    recommended_movies = Movie.objects.filter(id__in=similar_movies)[:10]
+    recommended_movies = Movie.objects.filter(id__in=similar_movies)[:3]
 
     # Debug: Print recommended movies
     print("Recommended Movies:\n", recommended_movies)

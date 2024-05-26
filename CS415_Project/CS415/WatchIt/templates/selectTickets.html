@@ -9,7 +9,12 @@
     {% endblock %}
   
 {% block content %}
-    <div class="card mt-5">
+{% if is_wednesday %}
+<div class="alert alert-info discount text-cente mt-4" style="margin: 0 auto; width: fit-content;">
+    Get 50% off on every ticket!
+</div>
+{% endif %}
+    <div class="box mt-5 mb-5">
         <div class="row">
             <div class="col-md-8 cart text-dark">
                 <div class="title">
@@ -25,31 +30,41 @@
                         </div>
                     </div>
                 </div>
-                <p>Debug Cinema Hall ID: {{ cinema_hall.id }}</p>
-            <p>Debug Movie ID: {{ movie.id }}</p>
-            <p>Showtime ID: {{ show.id }}</p>
+               
                 <form method="POST" action="{% url 'selectTickets' cinema_hall_id=cinema_hall.id movie_id=movie.id showtime_id=show.id %}">
                     {% csrf_token %}
                     <input type="hidden" name="adult_quantity" id="adult_quantity_input" value="0">
                     <input type="hidden" name="child_quantity" id="child_quantity_input" value="0">
-                    <div class="row border-top border-bottom">
+                    <div class="row border-top border-bottom border-dark">
                         <div class="row main align-items-center">
                             <div class="col quantity">
                                 <div class="col ">Adult</div>
+                                {% if is_wednesday %}
+                                <div class="col adult-price">${{ half_adult_price }}</div>
+                                {% else %}
                                 <div class="col adult-price">${{ cinema_hall.adult_price }}</div>
+                                {% endif %}
+                                
+                                
                                 <a href="#" id="adult-minus">-</a>
                                 <span id="adult-quantity" class="border">0</span>
                                 <a href="#" id="adult-plus">+</a>
-                                <div class="col subtotal">Subtotal: $  <span class="adult-subtotal">0.00</span></div>
+                                <div class="col subtotal">Subtotal: <span class="adult-subtotal">0.00</span></div>
                             </div>
                         </div>
                             <div class="col quantity">
                                 <div class="col ">Child</div>
+                                {% if is_wednesday %}
+                                <div class="col child-price">${{ half_child_price }}</div>
+                                {% else %}
                                 <div class="col child-price">${{ cinema_hall.child_price }}</div>
+                                {% endif %}
+                                
+                                
                                 <a href="#" id="child-minus">-</a>
                                 <span id="child-quantity" class="border">0</span>
                                 <a href="#" id="child-plus">+</a>
-                                <div class="col subtotal">Subtotal: $  <span class="child-subtotal">0.00</span></div>
+                                <div class="col subtotal">Subtotal:  <span class="child-subtotal">0.00</span></div>
                             </div>
                         </div>
                     </div>

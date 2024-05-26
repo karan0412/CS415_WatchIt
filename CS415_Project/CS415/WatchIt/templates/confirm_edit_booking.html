@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container">
     <h1>Confirm Edit Booking</h1>
-    <p>Movie: {{ booking.movie.title }}</p>
+    <p>Movie: {{ showtime.movie.title }}</p>
     <p>Cinema Hall: {{ showtime.cinema_hall.cinema_type }}</p>
     <p>Showtime: {{ showtime.local_showtime }}</p>
     <p>Seats: {% for seat in seats %}{{ seat.seat_label }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>

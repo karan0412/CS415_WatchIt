@@ -80,6 +80,7 @@ class Feedback(models.Model):
 
 
 class User(AbstractUser):
+    user_phone = models.CharField(max_length=15, blank=True, null=True)
     is_email_verified = models.BooleanField(default=False)
     secret_key = models.CharField(max_length=50, null=True, blank=True)
     
@@ -224,3 +225,9 @@ class PasswordResetToken(models.Model):
 
     def __str__(self):
         return self.token
+    
+
+
+
+
+

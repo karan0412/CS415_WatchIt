@@ -13,6 +13,14 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.contrib import messages
+
+from django.shortcuts import get_object_or_404, render, redirect
+import pyotp
+from xhtml2pdf import pisa
+from .models import User
+from django.utils import timezone
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -32,11 +40,51 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, letter, landscape
 from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+from django.db.models.functions import TruncMinute
+from django.db.models import Count, Sum
+from django.db.models.functions import Cast
+from django.db.models import FloatField
+from django.template.loader import get_template
+import os
+from datetime import timedelta
+from reportlab.lib.pagesizes import landscape, A4
+import secrets
+import qrcode
+import random
+from io import BytesIO
+import base64
+from django.contrib import messages
+from validate_email import validate_email
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from django.utils.safestring import mark_safe
+from helpers.decorators import auth_user_should_not_access
+from django.contrib.sites.shortcuts import get_current_site
+from django.template.loader import render_to_string
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from .utils import generate_token
+from django.core.mail import EmailMessage
+import threading
+from urllib.parse import urlencode
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from .models import PasswordResetToken
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+from xhtml2pdf import pisa  
+from decimal import Decimal
+from django.utils import timezone
+token_generator = PasswordResetTokenGenerator()
+
+
+
 from reportlab.platypus import (
     SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, HRFlowable, KeepTogether
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+
 from .models import Feedback, User, Seat, Booking, CinemaHall, Movie, Tag, Showtime, Deals, PasswordResetToken
+
+from .models import User, Seat, Booking, CinemaHall, Movie, Tag, Showtime, Deals, PasswordResetToken
 from .recommend import get_recommendations
 from .utils import generate_token
 from validate_email import validate_email
@@ -105,37 +153,6 @@ def booking_report_view(request):
         'total_amount': total_amount,
     })
 
-# @login_required
-# def career_application(request):
-#     if request.method == 'POST':
-#         form = CareerApplicationForm(request.POST, request.FILES)
-#         if form.is_valid():
-#             form.save()
-#             messages.success(request, 'Application successfully submitted!')
-#             return redirect('Home')
-#         else:
-#             messages.error(request, 'Please correct the error below.')
-#     else:
-#         form = CareerApplicationForm()
-#     return render(request, 'career_application.html', {'form': form})
-
-# def career_applications_list(request):
-#     applications = CareerApplication.objects.filter(reviewed=False)  # Show only unreviewed applications
-#     return render(request, 'career_applications_list.html', {'applications': applications})
-
-# def approve_application(request, application_id):
-#     application = CareerApplication.objects.get(id=application_id)
-#     application.approved = True
-#     application.reviewed = True
-#     application.save()
-#     return redirect('career_applications_list')
-
-# def reject_application(request, application_id):
-#     application = CareerApplication.objects.get(id=application_id)
-#     application.approved = False
-#     application.reviewed = True
-#     application.save()
-#     return redirect('career_applications_list')
 
 
 def admin_dashboard(request):
@@ -234,6 +251,14 @@ def transaction_report(request):
     return render(request, 'your_bookings.html', context)
 
 
+
+# views.py
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from django.http import HttpResponse
+from datetime import datetime
+
 @login_required
 def transaction_report_pdf(request):
     movie_id = request.GET.get('movie_id')
@@ -297,6 +322,7 @@ def transaction_report_pdf(request):
     response['Content-Disposition'] = 'attachment; filename="transaction_report.pdf"'
     return response
 
+  
 def Home(request):
     today = timezone.now().date()
     movies = Movie.objects.filter(release_date__lte=today)  # Fetch movies with release_date today or in the past
@@ -311,7 +337,8 @@ def Loggedin(request):
 
 def LogoutUser(request):
     logout(request)
-    return redirect('Home') 
+    messages.success(request, 'Logged out Successfully')
+    return redirect('Home')
 
 def display_hall(request, cinema_hall_id, movie_id, showtime_id):
     
@@ -358,9 +385,22 @@ def movie_list(request):
         'selected_tag_name': selected_tag_name
     })
 
+from collections import defaultdict
+from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
+from .models import Movie, Showtime
+
 def movie_detail(request, movie_id):
     movie = get_object_or_404(Movie, pk=movie_id)
-    return render(request, 'movie_detail.html', {'movie': movie})
+    showtimes_by_date = defaultdict(list)
+    
+    # Grouping showtimes by date
+    for showtime in movie.showtimes.filter(showtime__gt=timezone.now()).order_by('showtime'):
+        showtime_date = showtime.showtime.date()
+        showtimes_by_date[showtime_date].append(showtime)
+    
+    return render(request, 'movie_detail.html', {'movie': movie, 'showtimes_by_date': dict(showtimes_by_date)})
+
 
 def redirect_to_payment(request, cinema_hall_id):
     selected_seat_ids = request.POST.getlist('seats[]')
@@ -375,50 +415,60 @@ def save_total_price_to_session(request):
     request.session['total_price'] = request.POST.get('total_price')
     return JsonResponse({'success': True})
 
+  
 from django.shortcuts import get_object_or_404, render, redirect
 
+
 def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
-    # Corrected parameter names and use these to fetch objects
     cinema_hall = get_object_or_404(CinemaHall, id=cinema_hall_id)
     movie = get_object_or_404(Movie, id=movie_id)
     show = get_object_or_404(Showtime, id=showtime_id)
+    
     print("Cinema Hall ID:", cinema_hall_id)
     print("Movie ID:", movie_id)
     print("Showtime ID:", show)
+
+    is_wednesday = show.showtime.weekday() == 2
 
     if request.method == 'POST':
         adult_tickets = int(request.POST.get('adult_quantity', 0))
         child_tickets = int(request.POST.get('child_quantity', 0))
         adult_price = cinema_hall.adult_price
         child_price = cinema_hall.child_price
-
-        total_amount = (adult_tickets * adult_price) + (child_tickets * child_price)
+        
         total_tickets = adult_tickets + child_tickets
 
-        # Check if any tickets are selected
-        if adult_tickets == 0 and child_tickets == 0:
-            # If no tickets are selected, display a message
+        if is_wednesday:
+            total_amount = (Decimal(adult_tickets) * (adult_price/2)) + (Decimal(child_tickets) * (child_price/2))
+            
+        else:
+            total_amount = (Decimal(adult_tickets) * adult_price) + (Decimal(child_tickets) * child_price)
+
+        
+        if total_tickets == 0:
             message = "Please select at least one ticket before proceeding."
             return render(request, 'selectTickets.html', {
                 'message': message, 
-                'cinema_hall': cinema_hall,  # Pass objects, not IDs
+                'cinema_hall': cinema_hall,
                 'movie': movie,
                 'show': show,
+                'is_wednesday': is_wednesday
             })
         else:
-            # Store ticket info in session and redirect
             request.session['adult_tickets'] = adult_tickets
             request.session['child_tickets'] = child_tickets
             request.session['total_price'] = float(total_amount)
             request.session['total_tickets'] = total_tickets
-            # Redirect should use correct URL pattern and parameter names
+
             return redirect('display_hall', cinema_hall_id=cinema_hall_id, movie_id=movie_id, showtime_id=showtime_id)
 
-    # Render initial form view
     return render(request, 'selectTickets.html', {
         'cinema_hall': cinema_hall,
         'movie': movie,
         'show': show,
+        'is_wednesday': is_wednesday,
+        'half_adult_price': cinema_hall.adult_price/2,
+        'half_child_price': cinema_hall.child_price/2,
     })
 
 def payment(request, cinema_hall_id):
@@ -450,8 +500,9 @@ def payment(request, cinema_hall_id):
         'stripe_public_key': settings.STRIPE_PUBLIC_KEY,  # Pass the Stripe public key to the template
     })
 
+
+  
 @csrf_exempt
-@login_required
 def process_payment(request):
     if request.method == 'POST':
         try:
@@ -536,7 +587,6 @@ def process_payment(request):
 def booking_success(request):
     return render(request, 'booking_success.html')
 
-@login_required
 def generate_purchase_history(request, booking_id):
     # Get the booking instance
     booking = get_object_or_404(Booking, id=booking_id)
@@ -545,154 +595,21 @@ def generate_purchase_history(request, booking_id):
     showtime_instance = Showtime.objects.filter(movie=booking.movie, cinema_hall=booking.cinema_hall).first()
     showtime = showtime_instance.showtime.strftime("%Y-%m-%d %H:%M:%S") if showtime_instance else "N/A"
 
-    # Prepare the HTTP response
+    # Render HTML template with context
+    html = render_to_string('generating_pdf.html', {'booking': booking, 'showtime': showtime})
+
+    # Create PDF
     response = HttpResponse(content_type='application/pdf')
-    filename = f"purchase_history_{booking.id}.pdf"
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    response['Content-Disposition'] = f'attachment; filename="purchase_history_{booking.id}.pdf"'
 
-    # Set up the document template
-    doc = SimpleDocTemplate(response, pagesize=A4)
-    elements = []
+    # Generate PDF
+    pisa_status = pisa.CreatePDF(html, dest=response)
 
-    # Get default styles and customize
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle(
-        'Title',
-        parent=styles['Title'],
-        alignment=TA_CENTER,
-        fontSize=24,
-        textColor=colors.black  # Black color for the title
-    )
-    subtitle_style = ParagraphStyle(
-        'Heading2',
-        parent=styles['Heading2'],
-        alignment=TA_CENTER,
-        fontSize=18,
-        textColor=colors.black  # Black color for the subtitle
-    )
-    normal_style = ParagraphStyle(
-        'Normal',
-        parent=styles['BodyText'],
-        fontSize=10,
-        leading=12,
-        textColor=colors.black  # Black color for the text
-    )
-    payment_style = ParagraphStyle(
-        'Payment',
-        parent=styles['BodyText'],
-        fontSize=12,
-        leading=14,
-        textColor=colors.black,  # Black color for the payment text
-        fontName='Helvetica-Bold',  # Bold font
-        alignment=TA_RIGHT
-    )
-    movie_style = ParagraphStyle(
-        'Movie',
-        parent=styles['BodyText'],
-        fontSize=12,
-        leading=14,
-        textColor=colors.black,  # Black color for the movie text
-        fontName='Helvetica-Bold',  # Bold font
-        alignment=TA_CENTER
-    )
-    small_bold_style = ParagraphStyle(
-        'SmallBold',
-        parent=styles['BodyText'],
-        fontSize=10,
-        leading=12,
-        alignment=TA_CENTER,
-        textColor=colors.black  # Black color for the thank you message
-    )
-    terms_style = ParagraphStyle(
-        'Terms',
-        parent=styles['BodyText'],
-        fontSize=8,
-        leading=10,
-        textColor=colors.black  # Black color for terms text
-    )
-
-    # Base directory
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-
-    # Create a function to add a background and footer to each page
-    def add_background(canvas, doc):
-        canvas.saveState()
-        canvas.setFillColor(colors.white)  # White background
-        canvas.rect(0, 0, doc.pagesize[0], doc.pagesize[1], fill=1)
-
-        # Add footer note centered
-        footer_text = 'Thank you for your purchase!'
-        canvas.setFont('Helvetica-Bold', 10)
-        canvas.setFillColor(colors.black)
-        canvas.drawCentredString(doc.pagesize[0] / 2.0, 0.5 * inch, footer_text)  # Centering the footer text
-        canvas.restoreState()
-
-    # Add event image at the top-left corner
-    image_path = os.path.join(base_dir, 'movie_images', 'WIT.jpg')
-    event_image = Image(image_path, width=doc.width * 0.3, height=doc.width * 0.3)  # Adjust as needed
-    elements.append(event_image)
-    elements.append(Spacer(1, 20))
-
-    # Add solid line
-    elements.append(HRFlowable(width="100%", color=colors.black, lineCap='butt'))
-
-    # Add the Movie detail centered and in bold
-    movie_detail = f'<b>Movie:</b> {booking.movie.title if booking.movie else "N/A"}'
-    movie_paragraph = Paragraph(movie_detail, movie_style)
-    elements.append(movie_paragraph)
-    elements.append(Spacer(1, 20))
-
-    # Add receipt details including user information
-    details = [
-        f'<b>User:</b> {booking.user.username if booking.user else "N/A"}',
-        f'<b>Cinema Hall:</b> {booking.cinema_hall.cinema_type if booking.cinema_hall else "N/A"}',
-        f'<b>Showtime:</b> {showtime}',
-        f'<b>Booking Date:</b> {booking.booking_date.strftime("%Y-%m-%d %H:%M:%S") if booking.booking_date else "N/A"}',
-        f'<b>Seats:</b> {", ".join(seat.seat_label for seat in booking.seats.all()) or "No seats"}'
-    ]
-
-    for detail in details:
-        p = Paragraph(detail, normal_style)
-        elements.append(p)
-        elements.append(Spacer(1, 12))
-
-    # Add dotted line between seats and payment amount
-    elements.append(HRFlowable(width="100%", color=colors.black, dash=(1, 2)))
-
-    # Add payment amount in bold
-    payment_amount_text = f'Payment Amount: ${"{:,.2f}".format(booking.payment_amount) if booking.payment_amount else "N/A"}'
-    payment_amount = Paragraph(payment_amount_text, payment_style)
-    elements.append(payment_amount)
-    elements.append(Spacer(1, 20))
-
-    # Add solid line
-    elements.append(HRFlowable(width="100%", color=colors.black, lineCap='butt'))
-
-    # Add terms and conditions with only bottom dotted border
-    terms_text = """
-    <b>Terms and Conditions for Cinema Payment</b><br/>
-    <b>Acceptance of Terms</b><br/>
-    By purchasing a ticket, you agree to be bound by these terms and conditions.<br/><br/>
-    <b>Ticket Purchase</b><br/>
-    All ticket sales are final. Once purchased, tickets cannot be transferred or refunded.<br/>
-    Customers are responsible for checking the details of their booking (film, time, and date) before confirming the purchase.<br/><br/>
-    <b>Payment Methods</b><br/>
-    We accept major credit and debit cards, online payment platforms, and cash at the box office.<br/>
-    Payment must be made in full at the time of booking.<br/><br/>
-    <b>Pricing and Fees</b><br/>
-    Ticket prices are subject to change without notice.<br/>
-    Additional fees may apply for online bookings, premium seats, or special screenings.<br/><br/>
-    <b>Discounts and Offers</b><br/>
-    Discounts, vouchers, and promotional offers are subject to specific terms and conditions and may not be combined unless stated otherwise.<br/>
-    Proof of eligibility may be required for discounted tickets (e.g., student ID, senior citizen card).
-    """
-    terms = Paragraph(terms_text, terms_style)
-    elements.append(terms)
-    elements.append(HRFlowable(width="100%", color=colors.black, dash=(1, 2)))
-
-    # Build the PDF
-    doc.build(elements, onFirstPage=add_background, onLaterPages=add_background)
+    # Return PDF response
+    if pisa_status.err:
+        return HttpResponse('We had some errors<pre>' + html + '</pre>')
     return response
+
 
 @login_required
 def dashboard(request):
@@ -709,10 +626,13 @@ def movie_recommendations(request):
 def your_bookings(request):
     current_time = timezone.localtime(timezone.now())
     your_bookings = Booking.objects.filter(user=request.user, showtime__showtime__gt=current_time).select_related('movie', 'cinema_hall', 'showtime')
+    
 
     bookings_with_edit_permission = []
     for booking in your_bookings:
-        can_edit = not booking.edited and current_time <= booking.showtime.showtime - timedelta(hours=2)
+        # Check if the booking was made for a Wednesday show
+        is_wednesday_show = booking.showtime.showtime.weekday() == 2
+        can_edit = not (booking.edited or is_wednesday_show) and current_time <= booking.showtime.showtime - timedelta(hours=2)
         bookings_with_edit_permission.append((booking, can_edit))
 
     return render(request, 'your_bookings.html', {'bookings_with_edit_permission': bookings_with_edit_permission})
@@ -728,7 +648,8 @@ def list_purchase_history(request):
 def edit_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
 
-    if booking.edited or timezone.now() > booking.showtime.showtime - timedelta(hours=2):
+    # Disallow editing if booking is for a Wednesday show
+    if booking.edited or booking.showtime.showtime.weekday() == 2 or timezone.now() > booking.showtime.showtime - timedelta(hours=2):
         return redirect('your_bookings')
 
     movies = Movie.objects.all()
@@ -781,15 +702,18 @@ def edit_seats(request, booking_id, showtime_id, cinema_hall_id):
                 'showtime': showtime,
                 'seats': seats,
                 'message': message,
-                'num_seats': booking.num_seats
+                'num_seats': booking.num_seats,
+                'cinema_hall': showtime.cinema_hall,
             })
         return redirect('confirm_edit_booking', booking_id=booking_id, showtime_id=showtime_id, seats=','.join(selected_seat_ids))
 
     return render(request, 'edit_seats.html', {
         'showtime': showtime,
         'seats': seats,
-        'num_seats': booking.num_seats
+        'num_seats': booking.num_seats,
+        'cinema_hall': showtime.cinema_hall,
     })
+
 
 @login_required
 def confirm_edit_booking(request, booking_id, showtime_id, seats):
@@ -810,6 +734,7 @@ def confirm_edit_booking(request, booking_id, showtime_id, seats):
             previous_seats = booking.seats.all()
             previous_seats.update(availability=True)
             booking.showtime = showtime
+            booking.movie = showtime.movie
             booking.seats.set(selected_seats)
             booking.edited = True  # Mark the booking as edited
             booking.save()
@@ -822,6 +747,7 @@ def confirm_edit_booking(request, booking_id, showtime_id, seats):
         'showtime': showtime,
         'seats': selected_seats,
     })
+
 
 class EmailThread(threading.Thread):
 
@@ -942,6 +868,7 @@ def SignUp (request):
         user_email = request.POST.get('user_email')
         user_username = request.POST.get('user_username')
         user_pwd = request.POST.get('user_pwd')
+        user_phone = request.POST.get('user_phone')
 
         if len(user_pwd) < 6:
             styled_warning_message = mark_safe('<span style="color: black; font-weight:bold">WARNING</span><br>Password should be at least 6 characters')
@@ -977,7 +904,7 @@ def SignUp (request):
         
             # Redirect to login page after successful registration
 
-        user = User.objects.create_user(first_name=user_fname, last_name=user_lname,username=user_username, email= user_email,password=user_pwd)
+        user = User.objects.create_user(first_name=user_fname, last_name=user_lname,username=user_username, email= user_email,user_phone=user_phone,password=user_pwd)
         user.save()
 
         if not context['has_error']:
@@ -986,10 +913,13 @@ def SignUp (request):
 
             styled_message = mark_safe('<span style="color: black; font-weight:bold">VERIFY</span><br>We sent you an email to verify your account')
             messages.success(request, styled_message)
-            return redirect('Login')
+            return redirect('Login_first')
 
             
     return render(request, 'SignUp.html')
+
+def get_login_context(user):
+    return {'is_first_login': user.is_first_login}
 
 @auth_user_should_not_access
 def Login(request):
@@ -997,10 +927,8 @@ def Login(request):
         context = {'has_error': False, 'data': request.POST}
         username = request.POST.get('uname')
         password = request.POST.get('pwd')
-        
-        # Print the username and password for debugging purposes
-        print(f'Username: {username}')
-        print(f'Password: {password}')
+        otp_method = request.POST.get('otp_method')
+
         
         # Check if the user exists
         if not User.objects.filter(username=username).exists():
@@ -1018,16 +946,54 @@ def Login(request):
             return render(request, 'Login.html', context)
 
         if not user.is_email_verified:
-            messages.error(request, 'Email is not verified, please check your email inbox')
+            messages.error(request, 'Email is not verified, please check your registered email inbox')
+            context['has_error'] = True
+            return render(request, 'Login.html', context)
+
+        request.session['pre_otp_user_id'] = user.id  # Save user ID in session
+
+        if user and otp_method == 'via_sms':
+            messages.success(request, 'OTP has been sent to your registered phone number')
+            return redirect('send_sms')
+        
+        if user and otp_method  == 'via_email':
+            send_otp(request,user)
+            messages.success(request, 'OTP has been sent to your registered email')
+            return redirect('enter_otp')
+        
+    return render(request, 'Login.html')
+
+@auth_user_should_not_access
+def Login_first(request):
+    if request.method == 'POST':
+        context = {'has_error': False, 'data': request.POST}
+        username = request.POST.get('uname')
+        password = request.POST.get('pwd')
+
+        # Check if the user exists
+        if not User.objects.filter(username=username).exists():
+            messages.error(request, "User not found.")
             context['has_error'] = True
             return render(request, 'Login.html', context)
         
-        # Send OTP and redirect to enter_otp view if user is authenticated and email is verified
-        send_otp(request, user)
-        messages.success(request, 'OTP has been sent to your registered email')
-        return redirect('enter_otp')
+        # Authenticate the user
+        user = authenticate(request, username=username, password=password)
+        print(f'Authenticated User: {user}')
+        
+        if user is None:
+            messages.error(request, "Username or password did not match.")
+            context['has_error'] = True
+            return render(request, 'Login.html', context)
 
-    return render(request, 'Login.html')
+        if not user.is_email_verified:
+            messages.error(request, 'Email is not verified, please check your registered email inbox')
+            context['has_error'] = True
+            return render(request, 'Login.html', context)
+        
+        login(request, user)
+        return redirect('Home')
+        
+    return render(request, 'Login_first_time.html')
 
 def activate_user(request, uidb64, token):
 
@@ -1044,9 +1010,9 @@ def activate_user(request, uidb64, token):
         user.save()
 
         messages.success(request, 'Email verified, you can now login')
-        return redirect(reverse('Login'))
+        return redirect(reverse('Login_first'))
     messages.error(request, 'Your activation link is not valid.')
-    return render(request,'Login.html')
+    return render(request,'Login_first.html')
 
 def send_resetpassword_email(user, request):
 
@@ -1141,6 +1107,13 @@ def reset_password(request, uidb64, token):
 def QRcode(request):
     # Generate or retrieve the secret key for the current user
     user = request.user
+
+    #Generate or retrieve the secret key for the current user
+    if not user.secret_key:
+        user.secret_key = pyotp.random_base32()
+        print(user.secret_key)
+        user.save()
+
     secret_key = user.secret_key
     
     # Use the user's email address as the account name
@@ -1165,7 +1138,7 @@ def QRcode(request):
         box_size=10,
         border=4,
     )
-    qr.add_data(f'otpauth://totp/{account_name}?{qr_data}')
+    qr.add_data(f'otpauth://totp/{account_name}?secret={secret_key}&issuer={issuer}&algorithm=SHA1&digits=6')
     qr.make(fit=True)
     
     # Create a BytesIO object to hold the image data
@@ -1177,6 +1150,125 @@ def QRcode(request):
 
     # Pass the base64-encoded image string to the template
     return render(request, 'security.html', {'qr_img': img_str})
+
+
+@login_required
+def enter_otp_app(request):
+    if request.method == 'POST':
+        # Get the entered OTP from the form
+        entered_otp_app = request.POST.get('otp')
+
+        # Retrieve the secret key for the current user
+        user = request.user
+        secret_key = user.secret_key
+
+        # Verify OTP
+        totp = pyotp.TOTP(secret_key)
+        current_otp = totp.now()
+        current_time = datetime.now()
+        print(f"Secret Key: {secret_key}")
+        print(f"Current OTP: {current_otp}")
+        print(f"Entered OTP: {entered_otp_app}")
+        print(f"Current Server Time: {current_time}")
+
+        if totp.verify(entered_otp_app):
+            print('OTP successfully verified!')
+            messages.success(request, 'OTP successfully verified!')
+        else:
+            print('oh oh wrong!')
+            messages.error(request, 'Invalid OTP. Please try again.')
+
+        return redirect('enter_otp_app')  # Redirect back to the OTP entry page
+
+    return render(request, 'enter_otp_app.html')
+
+from django.shortcuts import render
+from django.http import HttpResponse
+from .utils import send_sms
+
+def send_test_sms(request):
+    user_id = request.session.get('pre_otp_user_id')
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        messages.error(request, 'User does not exist.')
+        return redirect('Login')
+
+    phone_number = user.user_phone
+
+    if phone_number:
+        otp = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        message = f'Hi {user.username}! Your verification code for WatchIt App is {otp}'
+
+        try:
+            send_sms(phone_number, message)  # Function to send SMS
+            # Store OTP and user details in the session
+            request.session['otp'] = otp
+            return redirect('verify_otp_sms')  # Redirect to OTP verification view
+        except Exception as e:
+            messages.error(request, f'Failed to send SMS: {e}')
+    else:
+        messages.error(request, 'Phone number not found.')
+
+    return render(request, 'send_sms.html')
+
+def resend_otp_sms(request):
+    user_id = request.session.get('pre_otp_user_id')
+
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        messages.error(request, 'User does not exist.')
+        return redirect('Login')
+
+    phone_number = user.user_phone
+    if phone_number:
+        otp = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        message = f'Hi {user.username}! Your new verification code for WatchIt App is : {otp}'
+        try:
+            send_sms(phone_number, message)  # Function to send SMS
+            # Update OTP in the session
+            request.session['otp'] = otp
+            messages.success(request, 'New OTP sent successfully!')
+            return redirect('verify_otp_sms')  # Redirect to OTP verification view
+        except Exception as e:
+            messages.error(request, f'Failed to send SMS: {e}')
+    else:
+        messages.error(request, 'Phone number not found.')
+
+    return render(request, 'send_sms.html')
+
+def verify_otp_sms(request):
+    if request.method == 'POST':
+        entered_otp = ''.join([
+            request.POST.get('otp1'),
+            request.POST.get('otp2'),
+            request.POST.get('otp3'),
+            request.POST.get('otp4'),
+            request.POST.get('otp5'),
+            request.POST.get('otp6'),
+        ])
+
+        stored_otp = request.session.get('otp')
+        user_id = request.session.get('pre_otp_user_id')
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            messages.error(request, 'User does not exist.')
+            return redirect('Login')
+
+        if entered_otp == stored_otp:
+            login(request, user)
+            # Clear the OTP from the session
+            request.session.pop('otp', None)
+            request.session.pop('pre_otp_user_id', None)
+            return redirect('Home')  # Redirect to a home page or dashboard
+        else:
+            messages.error(request, 'Invalid OTP. Please try again.')
+
+    return render(request, 'verify_sms.html')
+
 
 def LogoutUser(request):
     logout(request)
@@ -1191,21 +1283,10 @@ def sales_report_view(request):
     data = get_sales_report()
     return render(request, 'reports/sales_report.html', {'data': data})
 
+
 def is_admin(user):
     return user.is_superuser
-# def Feedback(request):
-#     if request.method == 'POST':
-#         form = FeedbackForm(request.POST, request.FILES)
-#         if form.is_valid():
-#             form.save()
-#             messages.success(request, 'Feedback successfully submitted!')
-#             return redirect('Home')  # Make sure 'home' matches the name of your home URL pattern
-#         else:
-#             print(form.errors)  # Print form errors to the console
-#             messages.error(request, 'Please correct the error below.')
-#     else:
-#         form = FeedbackForm()
-#     return render(request, 'Feedback.html', {'form': form})
+
 
 def submit_feedback(request):
     if request.method == 'POST':
@@ -1231,20 +1312,7 @@ def feedback_list(request):
     feedbacks = submit_feedback.objects.filter(reviewed=False)  # Show only unreviewed feedback
     return render(request, 'feedback_list.html', {'feedbacks': feedbacks})
 
-# def approve_feedback(request, feedback_id):
-#     feedback = get_object_or_404(submit_feedback, id=feedback_id)
-#     feedback.approved = True
-#     feedback.reviewed = True
-#     feedback.save()
-#     return redirect('feedback_list')
-
-# def reject_feedback(request, feedback_id):
-#     feedback = get_object_or_404(submit_feedback, id=feedback_id)
-#     feedback.approved = False
-#     feedback.reviewed = True
-#     feedback.save()
-#     return redirect('feedback_list')
-
+  
 @login_required
 @user_passes_test(is_admin)
 def approve_feedback(request, feedback_id):
@@ -1264,3 +1332,67 @@ def reject_feedback(request, feedback_id):
     feedback.save()
     messages.success(request, 'Feedback rejected successfully!')
     return redirect('admin_dashboard')
+
+  
+def admin_dashboard(request):
+    total_bookings = Booking.objects.count()
+
+    # Fetch minute-wise sales and convert Decimal to float for JavaScript compatibility
+    minute_sales = (Booking.objects
+                     .annotate(minute=TruncMinute('booking_date'))
+                     .values('minute')
+                     .annotate(total_sales=Sum('payment_amount'))
+                     .order_by('minute'))
+
+    minute_sales_data = [[sale['minute'].strftime('%H:%M'), float(sale['total_sales']) if sale['total_sales'] else 0] for sale in minute_sales]
+
+    # Fetch minute-wise user registrations and prepare data
+    minute_registrations = (User.objects
+                          .annotate(minute=TruncMinute('date_joined'))
+                          .values('minute')
+                          .annotate(count=Count('id'))
+                          .order_by('minute'))
+
+    minute_registrations_data = [[reg['minute'].strftime('%H:%M'), reg['count']] for reg in minute_registrations]
+
+    context = {
+        'total_bookings': total_bookings,
+        'minute_sales': minute_sales_data,
+        'minute_registrations': minute_registrations_data,
+    }
+    return render(request, 'admin/admin_dashboard.html', context)
+
+def minute_sales(request):
+    total_bookings = Booking.objects.count()
+
+    minute_sales = (Booking.objects
+                     .annotate(minute=TruncMinute('booking_date'))
+                     .values('minute')
+                     .annotate(total_sales=Sum('payment_amount'))
+                     .order_by('minute'))
+
+    minute_sales_data = [[sale['minute'].strftime('%H:%M'), float(sale['total_sales']) if sale['total_sales'] else 0] for sale in minute_sales]
+
+    context = {
+        'total_bookings': total_bookings,
+        'minute_sales': minute_sales_data,
+    }
+    return render(request, 'admin/minute_sales.html', context)
+
+def minute_registrations(request):
+    total_bookings = Booking.objects.count()
+
+    minute_registrations = (User.objects
+                          .annotate(minute=TruncMinute('date_joined'))
+                          .values('minute')
+                          .annotate(count=Count('id'))
+                          .order_by('minute'))
+
+    minute_registrations_data = [[reg['minute'].strftime('%H:%M'), reg['count']] for reg in minute_registrations]
+
+    context = {
+        'total_bookings': total_bookings,
+        'minute_registrations': minute_registrations_data,
+    }
+    return render(request, 'admin/minute_registrations.html', context)
+
