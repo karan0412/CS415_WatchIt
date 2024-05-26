@@ -4,9 +4,8 @@
 
     <style>
         .payment-container {
-            background: gray;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background: #19A7CE;
+            border-radius: 20px;
             padding: 20px;
             max-width: 600px;
             margin: 40px auto;
@@ -67,7 +66,7 @@
         <div class="detail"><strong>Movie Title:</strong> {{ movie_title }}</div>
         <div class="detail"><strong>Show:</strong> {{ show }}</div>
         <div class="detail"><strong>Movie Duration:</strong> {{ movie_duration }} minutes</div>
-        <div class="detail"><strong>Total Price:</strong> ${{ total_price }}</div>
+        <div class="detail"><strong>Total Price:</strong> ${{ total_price|floatformat:2 }}</div>
         <div class="detail"><strong>Selected Seats:</strong>
             <div id="seat-list">
                 {% for seat in selected_seats %}
