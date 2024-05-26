@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}
+<title>Feedback List</title>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h3 class="mb-4">Feedback List</h3>
+    <ul class="list-group">
+        {% for feedback in feedbacks %}
+        <li class="list-group-item">
+            <h5>{{ feedback.subject }}</h5>
+            <p>{{ feedback.feedback }}</p>
+            {% if feedback.file %}
+            <a href="{{ feedback.file.url }}" target="_blank">View Attachment</a>
+            {% endif %}
+            <div>
+                <a href="{% url 'approve_feedback' feedback.id %}" class="btn btn-success">Approve</a>
+                <a href="{% url 'reject_feedback' feedback.id %}" class="btn btn-danger">Reject</a>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

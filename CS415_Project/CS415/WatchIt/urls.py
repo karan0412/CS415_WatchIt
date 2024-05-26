@@ -3,6 +3,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
 from .import views
+from .views import admin_dashboard
 
 
 urlpatterns = [
@@ -59,6 +60,19 @@ urlpatterns = [
     path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin_dashboard/minute_sales/', views.minute_sales, name='admin_dashboard_minute_sales'),
     path('admin_dashboard/minute_registrations/', views.minute_registrations, name='admin_dashboard_minute_registrations'),
+    path('submit_feedback/',views.submit_feedback, name='submit_feedback'),
+    # path('career_application/', views.career_application, name='career_application'),
+    # path('career_applications_list/', views.career_applications_list, name='career_applications_list'),
+    # path('approve_application/<int:application_id>/', views.approve_application, name='approve_application'),
+    # path('reject_application/<int:application_id>/', views.reject_application, name='reject_application'),
+    path('feedback_list/', views.feedback_list, name='feedback_list'),
+    path('approve_feedback/<int:feedback_id>/', views.approve_feedback, name='approve_feedback'),
+    path('reject_feedback/<int:feedback_id>/', views.reject_feedback, name='reject_feedback'),
+    path('my_feedback/', views.my_feedback, name='my_feedback'),
+    path('booking_report_view/', views.booking_report_view, name='booking_report_view'),
+
+
+
 ]
 
 

@@ -22,7 +22,7 @@ from django.utils import timezone
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
 from django.db import transaction
@@ -81,8 +81,10 @@ from reportlab.platypus import (
     SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, HRFlowable, KeepTogether
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from .models import User, Seat, Booking, CinemaHall, Movie, Tag, Showtime, Deals, PasswordResetToken
 
+from .models import Feedback, User, Seat, Booking, CinemaHall, Movie, Tag, Showtime, Deals, PasswordResetToken
+
+from .models import User, Seat, Booking, CinemaHall, Movie, Tag, Showtime, Deals, PasswordResetToken
 from .recommend import get_recommendations
 from .utils import generate_token
 from validate_email import validate_email
@@ -92,6 +94,17 @@ import matplotlib.pyplot as plt
 from django.http import HttpResponse
 from io import BytesIO
 from .utils import get_user_activity_report, get_sales_report
+from django.shortcuts import render
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models.functions import TruncMinute
+from django.db.models import Count, Sum
+from django.db.models.functions import Cast
+from django.db.models import FloatField
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+from .forms import FeedbackForm  
+
+
 
 # Initialize stripe API key
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -99,8 +112,110 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # Token generator for password reset
 token_generator = PasswordResetTokenGenerator()
 
+@staff_member_required
+def booking_report_view(request):
+    queryset = Booking.objects.all()
+
+    # Apply filters
+    booking_date = request.GET.get('booking_date')
+    cinema_hall_id = request.GET.get('cinema_hall')
+    user = request.GET.get('user')
+
+    if booking_date:
+        queryset = queryset.filter(booking_date=booking_date)
+    if cinema_hall_id:
+        queryset = queryset.filter(cinema_hall__id=cinema_hall_id)
+    if user:
+        queryset = queryset.filter(user__username__icontains=user)
+
+    total_amount = sum(booking.payment_amount for booking in queryset)
+
+    if 'download' in request.GET:
+        html_string = render_to_string('sales_report_pdf.html', {
+            'bookings': queryset,
+            'total_amount': total_amount,
+        })
+
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="sales_report.pdf"'
+
+        pisa_status = pisa.CreatePDF(
+            html_string, dest=response
+        )
+
+        if pisa_status.err:
+            return HttpResponse('We had some errors <pre>' + html_string + '</pre>')
+        return response
+
+    return render(request, 'admin/booking_report.html', {
+        'bookings': queryset,
+        'cinema_halls': CinemaHall.objects.all(),
+        'total_amount': total_amount,
+    })
 
 
+
+def admin_dashboard(request):
+    total_bookings = Booking.objects.count()
+
+    # Fetch minute-wise sales and convert Decimal to float for JavaScript compatibility
+    minute_sales = (Booking.objects
+                     .annotate(minute=TruncMinute('booking_date'))
+                     .values('minute')
+                     .annotate(total_sales=Sum('payment_amount'))
+                     .order_by('minute'))
+
+    minute_sales_data = [[sale['minute'].strftime('%H:%M'), float(sale['total_sales']) if sale['total_sales'] else 0] for sale in minute_sales]
+
+    # Fetch minute-wise user registrations and prepare data
+    minute_registrations = (User.objects
+                          .annotate(minute=TruncMinute('date_joined'))
+                          .values('minute')
+                          .annotate(count=Count('id'))
+                          .order_by('minute'))
+
+    minute_registrations_data = [[reg['minute'].strftime('%H:%M'), reg['count']] for reg in minute_registrations]
+
+    context = {
+        'total_bookings': total_bookings,
+        'minute_sales': minute_sales_data,
+        'minute_registrations': minute_registrations_data,
+    }
+    return render(request, 'admin/admin_dashboard.html', context)
+
+def minute_sales(request):
+    total_bookings = Booking.objects.count()
+
+    minute_sales = (Booking.objects
+                     .annotate(minute=TruncMinute('booking_date'))
+                     .values('minute')
+                     .annotate(total_sales=Sum('payment_amount'))
+                     .order_by('minute'))
+
+    minute_sales_data = [[sale['minute'].strftime('%H:%M'), float(sale['total_sales']) if sale['total_sales'] else 0] for sale in minute_sales]
+
+    context = {
+        'total_bookings': total_bookings,
+        'minute_sales': minute_sales_data,
+    }
+    return render(request, 'admin/minute_sales.html', context)
+
+def minute_registrations(request):
+    total_bookings = Booking.objects.count()
+
+    minute_registrations = (User.objects
+                          .annotate(minute=TruncMinute('date_joined'))
+                          .values('minute')
+                          .annotate(count=Count('id'))
+                          .order_by('minute'))
+
+    minute_registrations_data = [[reg['minute'].strftime('%H:%M'), reg['count']] for reg in minute_registrations]
+
+    context = {
+        'total_bookings': total_bookings,
+        'minute_registrations': minute_registrations_data,
+    }
+    return render(request, 'admin/minute_registrations.html', context)
 
 @login_required
 def transaction_report(request):
@@ -134,6 +249,7 @@ def transaction_report(request):
     }
 
     return render(request, 'your_bookings.html', context)
+
 
 
 # views.py
@@ -206,8 +322,7 @@ def transaction_report_pdf(request):
     response['Content-Disposition'] = 'attachment; filename="transaction_report.pdf"'
     return response
 
-
-# Create your views here.
+  
 def Home(request):
     today = timezone.now().date()
     movies = Movie.objects.filter(release_date__lte=today)  # Fetch movies with release_date today or in the past
@@ -215,18 +330,15 @@ def Home(request):
     movies_chunks = [movies[i:i+3] for i in range(0, len(movies), 3)]
     return render(request, 'Home.html', {'movies': movies, 'movies_chunks': movies_chunks, 'deals': deals,})
 
-
 @login_required
 def Loggedin(request):
     
     return render(request, 'LoggedIn.html')
 
-
 def LogoutUser(request):
     logout(request)
     messages.success(request, 'Logged out Successfully')
     return redirect('Home')
-
 
 def display_hall(request, cinema_hall_id, movie_id, showtime_id):
     
@@ -255,7 +367,6 @@ def display_hall(request, cinema_hall_id, movie_id, showtime_id):
         'total_tickets': total_tickets,
         'showtime': showtime,
     })
-
 
 def movie_list(request):
     tags = Tag.objects.all()
@@ -304,7 +415,8 @@ def save_total_price_to_session(request):
     request.session['total_price'] = request.POST.get('total_price')
     return JsonResponse({'success': True})
 
-
+  
+from django.shortcuts import get_object_or_404, render, redirect
 
 
 def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
@@ -359,9 +471,6 @@ def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
         'half_child_price': cinema_hall.child_price/2,
     })
 
-
-
-
 def payment(request, cinema_hall_id):
     movie_id = request.GET.get('movie_id')
     showtime_id = request.GET.get('showtime_id')
@@ -392,6 +501,7 @@ def payment(request, cinema_hall_id):
     })
 
 
+  
 @csrf_exempt
 def process_payment(request):
     if request.method == 'POST':
@@ -639,7 +749,6 @@ def confirm_edit_booking(request, booking_id, showtime_id, seats):
     })
 
 
-
 class EmailThread(threading.Thread):
 
     def __init__(self, email):
@@ -749,7 +858,6 @@ def Home(request):
 
     return render(request, 'Home.html', {'movies': movies, 'movies_chunks': movies_chunks, 'deals': deals})
 
-  
 @auth_user_should_not_access
 def SignUp (request):
     if request.method =='POST':
@@ -995,7 +1103,6 @@ def reset_password(request, uidb64, token):
     else:
         return render(request, "reset_password_confirm.html")
 
-
 @login_required
 def QRcode(request):
     # Generate or retrieve the secret key for the current user
@@ -1176,6 +1283,57 @@ def sales_report_view(request):
     data = get_sales_report()
     return render(request, 'reports/sales_report.html', {'data': data})
 
+
+def is_admin(user):
+    return user.is_superuser
+
+
+def submit_feedback(request):
+    if request.method == 'POST':
+        form = FeedbackForm(request.POST, request.FILES)
+        if form.is_valid():
+            feedback = form.save(commit=False)
+            feedback.user = request.user
+            feedback.save()
+            messages.success(request, 'Feedback successfully submitted!')
+            return redirect('my_feedback')  # Redirect to 'user_feedback_list'
+        else:
+            print(form.errors)  # Print form errors to the console
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = FeedbackForm()
+    return render(request, 'Feedback.html', {'form': form})
+
+def my_feedback(request):
+    feedbacks = Feedback.objects.filter(user=request.user)
+    return render(request, 'my_feedback.html', {'feedbacks': feedbacks})
+
+def feedback_list(request):
+    feedbacks = submit_feedback.objects.filter(reviewed=False)  # Show only unreviewed feedback
+    return render(request, 'feedback_list.html', {'feedbacks': feedbacks})
+
+  
+@login_required
+@user_passes_test(is_admin)
+def approve_feedback(request, feedback_id):
+    feedback = get_object_or_404(Feedback, id=feedback_id)
+    feedback.approved = True
+    feedback.reviewed = True
+    feedback.save()
+    messages.success(request, 'Feedback approved successfully!')
+    return redirect('admin_dashboard')
+
+@login_required
+@user_passes_test(is_admin)
+def reject_feedback(request, feedback_id):
+    feedback = get_object_or_404(Feedback, id=feedback_id)
+    feedback.approved = False
+    feedback.reviewed = True
+    feedback.save()
+    messages.success(request, 'Feedback rejected successfully!')
+    return redirect('admin_dashboard')
+
+  
 def admin_dashboard(request):
     total_bookings = Booking.objects.count()
 
@@ -1237,3 +1395,4 @@ def minute_registrations(request):
         'minute_registrations': minute_registrations_data,
     }
     return render(request, 'admin/minute_registrations.html', context)
+

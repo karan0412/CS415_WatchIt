@@ -10,6 +10,7 @@
 {% load static %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'index.css' %}">
 {% block css %}
@@ -75,6 +76,12 @@
       <li class="nav-item mx-3">
           <a class="nav-link" href="#findUs"><button class="link">Find Us</button></a>
       </li>
+      <li class="nav-item mx-3">
+        <a class="nav-link text-light" href="{% url 'submit_feedback' %}">Feedback</a>
+      </li>
+      {% comment %} <li class="nav-item mx-3">
+        <a class="nav-link text-light" href="{% url 'career_application' %}">Careers</a>
+      </li> {% endcomment %}
 
       {% if request.user.is_authenticated %}
           <li class="nav-item mx-3">

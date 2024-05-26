@@ -63,10 +63,12 @@
 <body class="custom-font">
     <div class="sidebar">
         <h2>Dashboard</h2>
+
         <a href="{% url 'Home' %}" class=" links {% if request.resolver_match.url_name == 'Home' %}active-link{% endif %}"><i class="fa-solid fa-house me-2"></i>Home</a>
         <a href="{% url 'your_bookings' %}" class=" links {% if request.resolver_match.url_name == 'your_bookings' %}active-link{% endif %}"><i class="fa-solid fa-ticket me-2"></i>Your Bookings</a>
         <a href="{% url 'purchase_history' %}" class=" links {% if request.resolver_match.url_name == 'purchase_history' %}active-link{% endif %}"><i class="fa-solid fa-rectangle-list me-2"></i>Purchase History</a>
         <a href="{% url 'movie_recommendations' %}" class="links {% if request.resolver_match.url_name == 'movie_recommendations' %}active-link{% endif %}"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Movie Recommendations</a>
+        <a href="{% url 'my_feedback' %}" class="links {% if request.resolver_match.url_name == 'my_feedback' %}active-link{% endif %}">Feedback</a>
         <!-- User dropup menu -->
         <div class="dropup" style="position: absolute; bottom: 20px; width: 100%;">
             <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
@@ -77,6 +79,7 @@
                 <li><a class="dropdown-item text-dark" href="{% url 'LogoutUser' %}">Logout</a></li>
             </ul>
         </div>
+
     </div>
     <div class="main-content">
         {% block content %}{% endblock %}
