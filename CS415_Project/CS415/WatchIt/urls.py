@@ -58,6 +58,7 @@ urlpatterns = [
     path('approve_feedback/<int:feedback_id>/', views.approve_feedback, name='approve_feedback'),
     path('reject_feedback/<int:feedback_id>/', views.reject_feedback, name='reject_feedback'),
     path('my_feedback/', views.my_feedback, name='my_feedback'),
+    path('booking_report_view/', views.booking_report_view, name='booking_report_view'),
 
 ]
 

@@ -64,6 +64,47 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # Token generator for password reset
 token_generator = PasswordResetTokenGenerator()
 
+@staff_member_required
+def booking_report_view(request):
+    queryset = Booking.objects.all()
+
+    # Apply filters
+    booking_date = request.GET.get('booking_date')
+    cinema_hall_id = request.GET.get('cinema_hall')
+    user = request.GET.get('user')
+
+    if booking_date:
+        queryset = queryset.filter(booking_date=booking_date)
+    if cinema_hall_id:
+        queryset = queryset.filter(cinema_hall__id=cinema_hall_id)
+    if user:
+        queryset = queryset.filter(user__username__icontains=user)
+
+    total_amount = sum(booking.payment_amount for booking in queryset)
+
+    if 'download' in request.GET:
+        html_string = render_to_string('sales_report_pdf.html', {
+            'bookings': queryset,
+            'total_amount': total_amount,
+        })
+
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="sales_report.pdf"'
+
+        pisa_status = pisa.CreatePDF(
+            html_string, dest=response
+        )
+
+        if pisa_status.err:
+            return HttpResponse('We had some errors <pre>' + html_string + '</pre>')
+        return response
+
+    return render(request, 'admin/booking_report.html', {
+        'bookings': queryset,
+        'cinema_halls': CinemaHall.objects.all(),
+        'total_amount': total_amount,
+    })
+
 # @login_required
 # def career_application(request):
 #     if request.method == 'POST':
@@ -256,141 +297,6 @@ def transaction_report_pdf(request):
     response['Content-Disposition'] = 'attachment; filename="transaction_report.pdf"'
     return response
 
-
-# def transaction_report_pdf(request):
-#     movie_id = request.GET.get('movie_id')
-#     genre_id = request.GET.get('genre_id')
-#     start_date = request.GET.get('start_date')
-#     end_date = request.GET.get('end_date')
-
-#     bookings = Booking.objects.filter(user=request.user).order_by('-booking_date')
-
-#     if movie_id:
-#         bookings = bookings.filter(movie_id=movie_id)
-#     if genre_id:
-#         bookings = bookings.filter(movie__tags__id=genre_id)
-#     if start_date:
-#         bookings = bookings.filter(booking_date__gte=datetime.strptime(start_date, '%Y-%m-%d'))
-#     if end_date:
-#         bookings = bookings.filter(booking_date__lte=datetime.strptime(end_date, '%Y-%m-%d'))
-
-#     response = HttpResponse(content_type='application/pdf')
-#     response['Content-Disposition'] = 'attachment; filename="transaction_report.pdf"'
-
-#     doc = SimpleDocTemplate(response, pagesize=landscape(A4))
-#     elements = []
-
-#     styles = getSampleStyleSheet()
-#     title_style = ParagraphStyle(
-#         'Title',
-#         parent=styles['Title'],
-#         alignment=TA_CENTER,
-#         fontSize=24,
-#         textColor=colors.black
-#     )
-#     subtitle_style = ParagraphStyle(
-#         'Heading2',
-#         parent=styles['Heading2'],
-#         alignment=TA_CENTER,
-#         fontSize=18,
-#         textColor=colors.black
-#     )
-#     normal_style = ParagraphStyle(
-#         'Normal',
-#         parent=styles['BodyText'],
-#         fontSize=10,
-#         leading=12,
-#         textColor=colors.black
-#     )
-#     payment_style = ParagraphStyle(
-#         'Payment',
-#         parent=styles['BodyText'],
-#         fontSize=12,
-#         leading=14,
-#         textColor=colors.black,
-#         fontName='Helvetica-Bold',
-#         alignment=TA_RIGHT
-#     )
-#     movie_style = ParagraphStyle(
-#         'Movie',
-#         parent=styles['BodyText'],
-#         fontSize=12,
-#         leading=14,
-#         textColor=colors.black,
-#         fontName='Helvetica-Bold',
-#         alignment=TA_CENTER
-#     )
-
-#     def add_background(canvas, doc):
-#         canvas.saveState()
-#         canvas.setFillColor(colors.white)
-#         canvas.rect(0, 0, doc.pagesize[0], doc.pagesize[1], fill=1)
-#         footer_text = 'Thank you for your purchase!'
-#         canvas.setFont('Helvetica-Bold', 10)
-#         canvas.setFillColor(colors.black)
-#         canvas.drawCentredString(doc.pagesize[0] / 2.0, 0.5 * inch, footer_text)
-#         canvas.restoreState()
-
-#     try:
-#         base_dir = os.path.dirname(os.path.abspath(__file__))
-#         image_path = os.path.join(base_dir, 'movie_images', 'WIT.jpg')
-#         event_image = Image(image_path, width=1.5 * inch, height=1.5 * inch)
-#         event_image.hAlign = 'CENTER'
-#         elements.append(event_image)
-#         elements.append(Spacer(1, 20))
-#     except Exception as e:
-#         print(f"Error loading logo: {e}")
-#         elements.append(Paragraph("Logo could not be loaded.", normal_style))
-
-#     elements.append(Paragraph('Transaction Report', title_style))
-#     elements.append(Spacer(1, 12))
-
-#     if bookings:
-#         booking = bookings[0]
-#         user = booking.user.username if booking.user else 'N/A'
-#         elements.append(Paragraph(f'User: {user}', subtitle_style))
-#         elements.append(Spacer(1, 12))
-
-#     data = [['Cinema Hall', 'Movie', 'Showtime', 'Seats', 'Payment Amount', 'Booking Date', 'Card Details']]
-#     total_amount = 0
-
-#     for booking in bookings:
-#         seat_labels = ', '.join(seat.seat_label for seat in booking.seats.all())
-#         showtime = booking.showtime.showtime if booking.showtime else 'N/A'
-#         card_details = f"**** **** **** {booking.card_last4}" if booking.card_last4 else 'N/A'
-#         total_amount += booking.payment_amount
-#         data.append([
-#             booking.cinema_hall.cinema_type if booking.cinema_hall else 'N/A',
-#             booking.movie.title if booking.movie else 'N/A',
-#             showtime,
-#             seat_labels,
-#             f"${booking.payment_amount}",
-#             booking.booking_date.strftime('%Y-%m-%d %H:%M:%S') if booking.booking_date else 'N/A',
-#             card_details
-#         ])
-
-#     elements.append(Paragraph(f'Total Amount: ${total_amount:.2f}', payment_style))
-#     elements.append(Spacer(1, 12))
-
-#     table = Table(data)
-#     table.setStyle(TableStyle([
-#         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FFD700')),
-#         ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-#         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-#         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-#         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-#         ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-#         ('GRID', (0, 0), (-1, -1), 1, colors.black),
-#         ('FONTSIZE', (0, 0), (-1, -1), 10),
-#     ]))
-
-#     elements.append(KeepTogether([table]))
-#     doc.build(elements, onFirstPage=add_background, onLaterPages=add_background)
-#     return response
-
-
-
-# Create your views here.
 def Home(request):
     today = timezone.now().date()
     movies = Movie.objects.filter(release_date__lte=today)  # Fetch movies with release_date today or in the past
@@ -398,17 +304,14 @@ def Home(request):
     movies_chunks = [movies[i:i+3] for i in range(0, len(movies), 3)]
     return render(request, 'Home.html', {'movies': movies, 'movies_chunks': movies_chunks, 'deals': deals,})
 
-
 @login_required
 def Loggedin(request):
     
     return render(request, 'LoggedIn.html')
 
-
 def LogoutUser(request):
     logout(request)
     return redirect('Home') 
-
 
 def display_hall(request, cinema_hall_id, movie_id, showtime_id):
     
@@ -437,7 +340,6 @@ def display_hall(request, cinema_hall_id, movie_id, showtime_id):
         'total_tickets': total_tickets,
         'showtime': showtime,
     })
-
 
 def movie_list(request):
     tags = Tag.objects.all()
@@ -472,7 +374,6 @@ def redirect_to_payment(request, cinema_hall_id):
 def save_total_price_to_session(request):
     request.session['total_price'] = request.POST.get('total_price')
     return JsonResponse({'success': True})
-
 
 from django.shortcuts import get_object_or_404, render, redirect
 
@@ -520,7 +421,6 @@ def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
         'show': show,
     })
 
-
 def payment(request, cinema_hall_id):
     movie_id = request.GET.get('movie_id')
     showtime_id = request.GET.get('showtime_id')
@@ -550,7 +450,6 @@ def payment(request, cinema_hall_id):
         'stripe_public_key': settings.STRIPE_PUBLIC_KEY,  # Pass the Stripe public key to the template
     })
 
-# views.py
 @csrf_exempt
 @login_required
 def process_payment(request):
@@ -924,7 +823,6 @@ def confirm_edit_booking(request, booking_id, showtime_id, seats):
         'seats': selected_seats,
     })
 
-
 class EmailThread(threading.Thread):
 
     def __init__(self, email):
@@ -1034,7 +932,6 @@ def Home(request):
 
     return render(request, 'Home.html', {'movies': movies, 'movies_chunks': movies_chunks, 'deals': deals})
 
-  
 @auth_user_should_not_access
 def SignUp (request):
     if request.method =='POST':
@@ -1240,7 +1137,6 @@ def reset_password(request, uidb64, token):
     else:
         return render(request, "reset_password_confirm.html")
 
-
 @login_required
 def QRcode(request):
     # Generate or retrieve the secret key for the current user
@@ -1294,7 +1190,6 @@ def user_activity_report_view(request):
 def sales_report_view(request):
     data = get_sales_report()
     return render(request, 'reports/sales_report.html', {'data': data})
-
 
 def is_admin(user):
     return user.is_superuser

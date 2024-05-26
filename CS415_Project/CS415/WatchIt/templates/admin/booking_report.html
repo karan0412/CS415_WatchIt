@@ -1,0 +1,173 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+    <style>
+        /* Flexbox layout for filters */
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filters div {
+            display: flex;
+            flex-direction: column;
+        }
+        .filters label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .filters select,
+        .filters input {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            color: var(--text-color, #000); /* Text color */
+            background-color: var(--bg-color, #fff); /* Background color */
+        }
+        .filters select:focus,
+        .filters input:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            text-align: center;
+            margin-top: auto;
+        }
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+        .btn-secondary {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            text-align: center;
+            display: inline-block;
+            margin-top: 10px;
+            text-decoration: none;
+        }
+        .btn-secondary:hover {
+            background-color: #0056b3;
+        }
+        .btn-secondary a {
+            color: white;
+            text-decoration: none;
+        }
+
+        /* Dark mode support */
+        body.dark-mode {
+            --bg-color: #333;
+            --text-color: #f0f0f0;
+            --border-color: #555;
+        }
+        body.dark-mode .filters select,
+        body.dark-mode .filters input {
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+        body.dark-mode .btn-primary {
+            background-color: #3e8e41;
+        }
+        body.dark-mode .btn-primary:hover {
+            background-color: #2e7031;
+        }
+        body.dark-mode .btn-secondary {
+            background-color: #005bb5;
+        }
+        body.dark-mode .btn-secondary:hover {
+            background-color: #00448a;
+        }
+        body.dark-mode .btn-secondary {
+            color: white;
+        }
+    </style>
+{% endblock %}
+
+{% block extrahead %}
+    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+{% endblock %}
+
+{% block content %}
+    <h1>Booking Report</h1>
+    <form method="get" action=".">
+        <div class="filters">
+            <div>
+                <label for="id_date">Booking Date:</label>
+                <input type="date" id="id_date" name="booking_date" value="{{ request.GET.booking_date }}">
+            </div>
+            <div>
+                <label for="id_cinema_hall">Cinema Hall:</label>
+                <select id="id_cinema_hall" name="cinema_hall">
+                    <option value="">All</option>
+                    {% for hall in cinema_halls %}
+                        <option value="{{ hall.id }}" {% if request.GET.cinema_hall == hall.id|stringformat:"s" %}selected{% endif %}>{{ hall.cinema_type }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="id_user">User:</label>
+                <input type="text" id="id_user" name="user" value="{{ request.GET.user }}">
+            </div>
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </form>
+
+    <a href="?{{ request.GET.urlencode }}&download=1" class="btn btn-secondary">Download PDF Report</a>
+
+    <h2>Report</h2>
+    <p>Total Amount: {{ total_amount }}</p>
+    <table id="booking_table" class="display">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Movie</th>
+                <th>Cinema Hall</th>
+                <th>Showtime</th>
+                <th>Booking Date</th>
+                <th>Payment Amount</th>
+                <th>Number of Seats</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+                <tr>
+                    <td>{{ booking.id }}</td>
+                    <td>{{ booking.user }}</td>
+                    <td>{{ booking.movie }}</td>
+                    <td>{{ booking.cinema_hall }}</td>
+                    <td>{{ booking.showtime }}</td>
+                    <td>{{ booking.booking_date }}</td>
+                    <td>{{ booking.payment_amount }}</td>
+                    <td>{{ booking.num_seats }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        $(document).ready(function() {
+            $('#booking_table').DataTable();
+
+            // Detect dark mode
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.body.classList.add('dark-mode');
+            }
+        });
+    </script>
+{% endblock %}
