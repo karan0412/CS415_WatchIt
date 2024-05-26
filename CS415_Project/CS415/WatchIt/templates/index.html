@@ -38,8 +38,8 @@
         font-style: normal;
     }
     .logo{
-      height: 100%;
-      width: 100%;
+      height: 120%;
+      width: 120%;
     }
     .logo-link{
       width: 5%;
@@ -52,11 +52,12 @@
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="https://kit.fontawesome.com/703ce498ac.js" crossorigin="anonymous"></script>
 </head>
 <body style="background-color: black" class="custom-font">
 <nav class="navbar pt-4 pb-4 navbar-expand-lg navbar-dark sticky-top" style="background-color: black">
   <div class="container-fluid">
-    <a class="ms-3 logo-link" href="{% url 'Home' %}"><img class="logo" src="{% static 'logo.jpg' %}" alt="WatchIt Logo"></a>
+    <a class="ms-3 me-5 logo-link" href="{% url 'Home' %}"><img class="logo" src="{% static 'logo.jpg' %}" alt="WatchIt Logo"></a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDarkDropdown" aria-controls="navbarNavDarkDropdown" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -118,11 +119,43 @@
 </main>
 
 <!-- Footer -->
-<footer class="footer mt-auto py-5">
-    <div class="container text-center">
-      <span class="text-light">&copy; 2024 WatchIt. All rights reserved.</span>
-    </div>
+<footer class="footer mt-auto py-5 text-light">
+  <div class="container text-left">
+      <div class="row">
+          <div class="col-md-4 mb-3">
+              <h5>Follow Us</h5>
+              <a href="#" class="text-light mx-2" target="_blank"><i class="fab fa-facebook-f"></i></a>
+              <a href="#" class="text-light mx-2" target="_blank"><i class="fab fa-twitter"></i></a>
+              <a href="#" class="text-light mx-2" target="_blank"><i class="fab fa-instagram"></i></a>
+              <a href="#" class="text-light mx-2" target="_blank"><i class="fab fa-linkedin"></i></a>
+          </div>
+          <div class="col-md-4 mb-3">
+              <h5>Important Links</h5>
+              <ul class="list-unstyled">
+                  <li><a href="#" class="text-light">About Us</a></li>
+                  <li><a href="#" class="text-light">Contact Us</a></li>
+                  <li><a href="#" class="text-light">Privacy Policy</a></li>
+                  <li><a href="#" class="text-light">Terms of Service</a></li>
+              </ul>
+          </div>
+          <div class="col-md-4 mb-3">
+              <h5>Contact Us</h5>
+              <p>Email: support@watchit.com</p>
+              <p>Phone: (123) 456-7890</p>
+              <p>Address: 123 WatchIt Street, MovieTown, MT 56789</p>
+          </div>
+      </div>
+      <div class="row">
+          
+      </div>
+  </div>
+  <div class="col-12 mt-3 text-center">
+    <span>&copy; 2024 WatchIt. All rights reserved.</span>
+</div>
 </footer>
+
+<!-- Font Awesome -->
+
 
 </body>
 </html>
