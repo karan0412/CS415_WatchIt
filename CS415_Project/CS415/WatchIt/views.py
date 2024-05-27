@@ -77,6 +77,7 @@ token_generator = PasswordResetTokenGenerator()
 
 
 
+
 from reportlab.platypus import (
     SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, HRFlowable, KeepTogether
 )
@@ -112,6 +113,7 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # Token generator for password reset
 token_generator = PasswordResetTokenGenerator()
 
+
 @staff_member_required
 def booking_report_view(request):
     queryset = Booking.objects.all()
@@ -122,13 +124,24 @@ def booking_report_view(request):
     user = request.GET.get('user')
 
     if booking_date:
-        queryset = queryset.filter(booking_date=booking_date)
+        try:
+            date_obj = datetime.strptime(booking_date, '%Y-%m-%d')
+            # Make the datetime object timezone-aware
+            date_obj = timezone.make_aware(date_obj, timezone.get_current_timezone())
+            queryset = queryset.filter(booking_date__date=date_obj.date())
+        except ValueError:
+            # Handle incorrect date format
+            return HttpResponse('Invalid date format. Please use YYYY-MM-DD.')
+
     if cinema_hall_id:
         queryset = queryset.filter(cinema_hall__id=cinema_hall_id)
     if user:
         queryset = queryset.filter(user__username__icontains=user)
 
     total_amount = sum(booking.payment_amount for booking in queryset)
+
+    for booking in queryset:
+        booking.seat_labels = ', '.join(seat.seat_label for seat in booking.seats.all())
 
     if 'download' in request.GET:
         html_string = render_to_string('sales_report_pdf.html', {
@@ -368,21 +381,45 @@ def display_hall(request, cinema_hall_id, movie_id, showtime_id):
         'showtime': showtime,
     })
 
+from datetime import datetime
+from django.utils import timezone
+from .models import Tag, Movie, Showtime
+from django.shortcuts import render
+
 def movie_list(request):
     tags = Tag.objects.all()
     selected_tag_name = request.GET.get("tag")
+    
     if selected_tag_name:
         movies = Movie.objects.filter(tags__name=selected_tag_name).distinct()
     else:
         movies = Movie.objects.all()
     
     now = timezone.now().date()
+    
+    # Get distinct show dates for movies currently showing
+    show_dates = Showtime.objects.filter(movie__in=movies, showtime__gte=now).values_list('showtime__date', flat=True).distinct()
+    show_dates = sorted(show_dates)
+    
+    selected_date = request.GET.get("show_date")
+    formatted_date = None
+
+    if selected_date:
+        # Convert the selected_date from "May 28, 2024" format to "YYYY-MM-DD" format
+        formatted_date = datetime.strptime(selected_date, "%B %d, %Y").strftime("%Y-%m-%d")
+    
+    if formatted_date:
+        # Use the formatted_date in your queryset only if it's not None
+        movies = Movie.objects.filter(showtimes__showtime__date=formatted_date).distinct()
+    else:
+        movies = Movie.objects.all()
 
     return render(request, 'movie_list.html', {
         'movies': movies,
         'now': now,
-        'tags' : tags,
-        'selected_tag_name': selected_tag_name
+        'tags': tags,
+        'selected_tag_name': selected_tag_name,
+        'show_dates': show_dates
     })
 
 from collections import defaultdict
@@ -390,16 +427,95 @@ from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from .models import Movie, Showtime
 
+
+
+
 def movie_detail(request, movie_id):
     movie = get_object_or_404(Movie, pk=movie_id)
     showtimes_by_date = defaultdict(list)
+    show_dates = set()
     
-    # Grouping showtimes by date
+    # Grouping showtimes by date and collecting unique show dates
     for showtime in movie.showtimes.filter(showtime__gt=timezone.now()).order_by('showtime'):
         showtime_date = showtime.showtime.date()
         showtimes_by_date[showtime_date].append(showtime)
+        show_dates.add(showtime_date)
+
+    selected_date_str = request.GET.get('date', None)
+    if selected_date_str:
+        try:
+            selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            selected_date = min(show_dates, default=None)
+    else:
+        selected_date = min(show_dates, default=None)
     
-    return render(request, 'movie_detail.html', {'movie': movie, 'showtimes_by_date': dict(showtimes_by_date)})
+    context = {
+        'movie': movie,
+        'showtimes_by_date': dict(showtimes_by_date),
+        'show_dates': sorted(show_dates),
+        'selected_date': selected_date,
+        'showtimes': showtimes_by_date[selected_date] if selected_date in showtimes_by_date else None
+    }
+    return render(request, 'movie_detail.html', context)
+
+from django.http import JsonResponse
+
+
+
+def movie_showtimes(request, movie_id):
+    movie = get_object_or_404(Movie, pk=movie_id)
+    selected_date_str = request.GET.get('date', None)
+    
+    if selected_date_str:
+        try:
+            selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return JsonResponse({'error': 'Invalid date format'}, status=400)
+    else:
+        return JsonResponse({'error': 'No date provided'}, status=400)
+    
+    showtimes = movie.showtimes.filter(showtime__date=selected_date, showtime__gt=timezone.now()).order_by('showtime')
+    showtime_list = [
+        {
+            'id': showtime.id,
+            'showtime': showtime.showtime.isoformat(),
+            'cinema_hall_id': showtime.cinema_hall.id,
+            'movie_id': movie.id
+        }
+        for showtime in showtimes
+    ]
+    
+    return JsonResponse({'showtimes': showtime_list})
+
+
+
+from django.http import JsonResponse
+
+def movie_showtimes(request, movie_id):
+    movie = get_object_or_404(Movie, pk=movie_id)
+    selected_date_str = request.GET.get('date', None)
+    
+    if selected_date_str:
+        try:
+            selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return JsonResponse({'error': 'Invalid date format'}, status=400)
+    else:
+        return JsonResponse({'error': 'No date provided'}, status=400)
+    
+    showtimes = movie.showtimes.filter(showtime__date=selected_date, showtime__gt=timezone.now()).order_by('showtime')
+    showtime_list = [
+        {
+            'id': showtime.id,
+            'showtime': showtime.showtime.isoformat(),
+            'cinema_hall_id': showtime.cinema_hall.id,
+            'movie_id': movie.id
+        }
+        for showtime in showtimes
+    ]
+    
+    return JsonResponse({'showtimes': showtime_list})
 
 
 def redirect_to_payment(request, cinema_hall_id):
@@ -587,6 +703,7 @@ def process_payment(request):
 def booking_success(request):
     return render(request, 'booking_success.html')
 
+
 def generate_purchase_history(request, booking_id):
     # Get the booking instance
     booking = get_object_or_404(Booking, id=booking_id)
@@ -595,8 +712,23 @@ def generate_purchase_history(request, booking_id):
     showtime_instance = Showtime.objects.filter(movie=booking.movie, cinema_hall=booking.cinema_hall).first()
     showtime = showtime_instance.showtime.strftime("%Y-%m-%d %H:%M:%S") if showtime_instance else "N/A"
 
+    # Get the booked movie image URL
+    booked_movie_image_url = request.build_absolute_uri(booking.movie.image.url) if booking.movie.image else None
+
+    # Fetch some random movies for the images, excluding the booked movie
+    now_showing_movies = Movie.objects.exclude(id=booking.movie.id).order_by('?')[:3]
+
+    # Get absolute URL for image
+    for movie in now_showing_movies:
+        movie.image_url = request.build_absolute_uri(movie.image.url) if movie.image else None
+
     # Render HTML template with context
-    html = render_to_string('generating_pdf.html', {'booking': booking, 'showtime': showtime})
+    html = render_to_string('generating_pdf.html', {
+        'booking': booking,
+        'showtime': showtime,
+        'booked_movie_image_url': booked_movie_image_url,
+        'now_showing_movies': now_showing_movies
+    })
 
     # Create PDF
     response = HttpResponse(content_type='application/pdf')

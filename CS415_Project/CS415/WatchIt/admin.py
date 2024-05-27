@@ -146,7 +146,7 @@ class FeedbackAdmin(admin.ModelAdmin):
     list_filter = ('approved', 'reviewed')
     search_fields = ('subject', 'feedback')
 
-@staff_member_required
+
 def booking_report_view(request):
     queryset = Booking.objects.all()
 
@@ -156,7 +156,14 @@ def booking_report_view(request):
     user = request.GET.get('user')
 
     if booking_date:
-        queryset = queryset.filter(booking_date=booking_date)
+        try:
+            date_obj = datetime.strptime(booking_date, '%Y-%m-%d')
+            date_obj = make_aware(date_obj)  # Make the datetime object timezone-aware
+            queryset = queryset.filter(booking_date=date_obj)
+        except ValueError:
+            # Handle incorrect date format
+            return HttpResponse('Invalid date format. Please use YYYY-MM-DD.')
+
     if cinema_hall_id:
         queryset = queryset.filter(cinema_hall__id=cinema_hall_id)
     if user:
@@ -165,6 +172,9 @@ def booking_report_view(request):
     total_amount = sum(booking.payment_amount for booking in queryset)
 
     if 'download' in request.GET:
+        for booking in queryset:
+            booking.seat_labels = ', '.join(seat.seat_number for seat in booking.seats.all())
+
         html_string = render_to_string('sales_report_pdf.html', {
             'bookings': queryset,
             'total_amount': total_amount,
