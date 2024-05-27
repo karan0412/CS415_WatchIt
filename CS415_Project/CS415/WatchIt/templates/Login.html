@@ -9,10 +9,26 @@
 <link rel="stylesheet" href="{% static 'Login.css' %}">
 <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/alertify.min.css"/>
 <link rel="stylesheet" href="{% static 'css/alertify.css' %}">
+<link rel="stylesheet" href="{% static 'questionmark.css' %}">
 {% endblock %}
 
 {% block content %}
 
+<div class="question-mark" onclick="toggleBubbleMessage()">
+    <i class="fas fa-question-circle"></i>
+    <div id="bubbleMessage" class="bubble-message">
+        This is the Login Page
+        Please Enter Username and Password
+
+    </div>
+</div>
+
+<script>
+    function toggleBubbleMessage() {
+        var bubble = document.getElementById('bubbleMessage');
+        bubble.style.visibility = (bubble.style.visibility === 'visible') ? 'hidden' : 'visible';
+    }
+</script>
 
 <div class="card-container mb-5">
     <div class="bottom">

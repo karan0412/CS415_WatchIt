@@ -6,85 +6,99 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            color: #000;
-            background-color: #f4f4f4;
-            margin: 10px 20px; /* Narrower top margin */
+            color: #333;
+            background-color: #f5f5f5;
+            margin: 0;
             padding: 20px;
         }
-        .logo {
-            text-align: center;
+        header {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border-radius: 10px;
             margin-bottom: 20px;
         }
-        h1 {
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
             text-align: center;
-            color: #333;
-            margin-bottom: 20px;
+        }
+        h1 {
+            margin: 0;
+            color: #fff;
+            background-color: #180131;
+            width: 100%;
         }
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 20px;
+            overflow: hidden;
+            font-weight: bold;
         }
         th, td {
-            padding: 8px;
+            padding: 12px;
+            border: 1px solid #110238;
             text-align: left;
         }
         th {
-            background-color: #333;
-            color: #fff;
+            background-color: #405ada;
+            color: white;
+        }
+        td {
+            background-color: #fff;
         }
         .total {
             font-weight: bold;
-            background-color: #FFD700;
-            color: #000;
-            padding: 10px;
-            text-align: center;
-            border-radius: 8px;
-            margin-top: 20px;
+            font-size: larger;
         }
-        @media print {
-            @page {
-                size: landscape;
-                margin: 20mm; /* Uniform narrower margins for print */
-            }
-            body {
-                margin: 0; /* Remove default margin for print */
-            }
+        .total td {
+            background-color: #8092ec;
+            color: white;
+            text-align: left;
+            color: rgb(5, 5, 5);
         }
     </style>
 </head>
 <body>
-    <div class="logo">
-        <img src="{{ STATIC_URL }}movie_images/WIT.jpg" alt="Logo" width="150" height="150">
-    </div>
-    <h1>Sales Report - WatchIt</h1>
-    <table>
+    <header>
+        <div class="logo">
+            <img src="media/movie_images/logo.jpg" alt="Logo" class="logo">
+            <h1>Sales Report</h1>
+        </div>
+    </header>
+    
+    <table style="text-align: left;">
         <tr>
             <th>Booking ID</th>
-            <th>Username</th>
-            <th>Payment Details</th>
-            <th>Amount</th>
-            <th>Movie Title</th>
-            <th>Date</th>
-            <th>Cinema</th>
+            <th>User</th>
+            <th>Booking Date</th>
+            <th>Movie</th>
+            <th>Cinema Hall Type</th>
             <th>Showtime</th>
             <th>Seats</th>
+            <th>Payment Amount</th>
+            <th>Card Details</th>
         </tr>
         {% for booking in bookings %}
         <tr>
             <td>{{ booking.id }}</td>
             <td>{{ booking.user.username }}</td>
-            <td>**** **** **** {{ booking.card_details | slice:"-4:" }}</td>  <!-- Only shows the last 4 digits -->
-            <td>${{ booking.payment_amount }}</td>
-            <td>{{ booking.movie.title }}</td>
             <td>{{ booking.booking_date }}</td>
+            <td>{{ booking.movie.title }}</td>
             <td>{{ booking.cinema_hall.cinema_type }}</td>
             <td>{{ booking.showtime_display }}</td>
             <td>{{ booking.seat_labels }}</td>
+            <td>${{ booking.payment_amount }}</td>
+            <td>{{ booking.card_details }}</td>
         </tr>
         {% endfor %}
+        <tr class="total">
+            <td colspan="7">Total Amount</td>
+            <td colspan="2">${{ total_amount }}</td>
+        </tr>
     </table>
-    <div class="total">
-        Total Amount: ${{ total_amount }}
-    </div>
 </body>
 </html>

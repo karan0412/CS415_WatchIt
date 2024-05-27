@@ -49,7 +49,86 @@
         border: none;
         font-weight: 600;
     }
+
+    .btn-outline-light-dates {
+        background-color: #0B60B0; /* Dark background for buttons */
+        color: #fdfafa; /* White text for visibility */
+        border: none; /* White border for contrast */
+        margin: 5px; /* Spacing between buttons */
+        padding: 1% 2%; /* Padding for a comfortable clickable area */
+      
+        border-radius: 50px; /* Rounded corners for modern look */
+        height: 44%;
+     
+        transition: background-color 0.3s, color 0.3s; /* Smooth transition for hover effects */
+    }
+    
+    .btn-outline-light-dates:hover {
+        background-color: rgb(64, 58, 139); /* White background on hover */
+        color: rgb(253, 252, 252); /* Black text on hover */
+        border: none; /* Accent color border on hover */
+    }
+
+    .btn-outline-light-dates.active {
+        background-color: rgb(64, 58, 139); /* Accent color for active button */
+        color: white; /* White text for active button */
+        border: none; /* Accent color border for active button */
+    }
+
+    .btn-outline-light-dates.active::after {
+        content: '';
+        position: absolute;
+        bottom: -10px; /* Position the triangle just below the button */
+        left: 50%; /* Center the triangle horizontally */
+        transform: translateX(-50%); /* Offset the triangle to the left */
+        border-width: 10px 10px 0; /* Size of the triangle */
+        border-style: solid;
+        background-color: rgb(64, 58, 139) transparent transparent transparent; /* Color of the triangle */
+    }
+
+    .d-flex.flex-wrap.justify-content-center.mb-4 {
+        margin-top: 20px; /* Space above the button container */
+        margin-bottom: 20px; /* Space below the button container */
+    }
+    .question-mark {
+        position: fixed;
+        top: 20.37%; /* Adjusted from 220px based on an assumed viewport height of 1080px */
+        right: 9.38%; /* Adjusted from 180px based on an assumed viewport width of 1920px */
+        font-size: 32px; /* Font size usually remains in px for consistency */
+        color: rgb(216, 238, 20);
+        cursor: pointer;
+        z-index: 1050;
+    }
+    .bubble-message {
+        visibility: hidden;
+        position: fixed;
+        top: 260px;
+        right: 180px;
+        background-color: #333;
+        color: #fff;
+        border-radius: 10px;
+        padding: 10px 20px;
+        z-index: 1060;
+        font-size: 16px;
+        width: 200px;
+        text-align: center;
+    }
 </style>
+
+<div class="question-mark" onclick="toggleBubbleMessage()">
+    <i class="fas fa-question-circle"></i>
+    <div id="bubbleMessage" class="bubble-message">
+        Pick a movie of your choice. Filter by choice of genres, dates or see what's coming soon on WatchIt Cinemas
+    </div>
+</div>
+
+<script>
+    function toggleBubbleMessage() {
+        var bubble = document.getElementById('bubbleMessage');
+        bubble.style.visibility = (bubble.style.visibility === 'visible') ? 'hidden' : 'visible';
+    }
+</script>
+
 
 <h1>Watch With Us!</h1>
 <div class="container">
@@ -84,7 +163,20 @@
 
     <div class="tab-content">
         <div id="nowShowing" class="tab-pane fade show active">
+            <div class="d-flex flex-wrap justify-content-center mb-4">
+                {% for show_date in show_dates %}
+                <button type="button" class="btn-outline-light-dates m-2
+                {% if show_date == selected_date %} 
+                    active
+                {% endif %}"
+                onclick="filterByDate('{{ show_date }}')">
+                    {{ show_date }}
+                </button>
+                {% endfor %}
+            </div>
+            
             <div class="row justify-content-center">
+           
                 {% for movie in movies %}
                 {% if movie.release_date <= now %}
                 <div class="col-11 mb-5 mt-5">
@@ -106,6 +198,7 @@
                 {% endfor %}
             </div>
         </div>
+        
         <div id="comingSoon" class="tab-pane fade">
             <div class="row justify-content-center">
                 {% for movie in movies %}
@@ -132,6 +225,25 @@
     </div>
     
 </div>
+
+<script>
+    function filterByDate(selectedDate) {
+        const buttons = document.querySelectorAll('.btn-outline-light-dates');
+        buttons.forEach(button => {
+            button.classList.remove('active');
+        });
+
+        const clickedButton = document.querySelector(`.btn-outline-light-dates[data-date="${selectedDate}"]`);
+        if (clickedButton) {
+            clickedButton.classList.add('active');
+        }
+
+        const url = new URL(window.location.href);
+        url.searchParams.set('show_date', selectedDate);
+        window.location.href = url.toString();
+    }
+</script>
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock %}

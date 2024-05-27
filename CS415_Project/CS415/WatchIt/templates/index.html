@@ -54,6 +54,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <script src="https://kit.fontawesome.com/703ce498ac.js" crossorigin="anonymous"></script>
+    <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body style="background-color: black" class="custom-font">
 <nav class="navbar pt-4 pb-4 navbar-expand-lg navbar-dark sticky-top" style="background-color: black">
@@ -77,7 +78,7 @@
           <a class="nav-link" href="#findUs"><button class="link">Find Us</button></a>
       </li>
       <li class="nav-item mx-3">
-        <a class="nav-link text-light" href="{% url 'submit_feedback' %}">Feedback</a>
+        <a class="nav-link text-light" href="{% url 'submit_feedback' %}"><button class="link">Feedback</button></a>
       </li>
       {% comment %} <li class="nav-item mx-3">
         <a class="nav-link text-light" href="{% url 'career_application' %}">Careers</a>
@@ -88,7 +89,7 @@
             </li>
         {% else %}
         <li class="nav-item mx-3" id="signup-link">
-          <a class="nav-link text-light" href="{% url 'SignUp' %}"><button class="signup">Sign Up Now</button></a>
+          <a class="nav-link text-light" href="{% url 'SignUp' %}"><button class="signup link">Sign Up Now</button></a>
         </li>
         
         {% endif %}
@@ -102,7 +103,7 @@
                       Welcome, {{ request.user.username }}
                     </a>
                     <div class="dropdown-menu dropdown-menu-right bg-dark" aria-labelledby="navbarDropdownMenuLink">
-                        <a class="dropdown-item fw-semibold text-light" href="{% url 'dashboard' %}">Dashboard</a>
+                        <a class="dropdown-item fw-semibold text-light" href="{% url 'your_bookings' %}">Dashboard</a>
                         <a class="dropdown-item fw-semibold text-light" href="{% url 'LogoutUser' %}">Logout</a>
                     </div>
                 </div>
@@ -110,7 +111,7 @@
         {% else %}
 
         
-          <a class="nav-item nav-link text-light me-5 btn btn-danger" href="{% url 'Login' %}"><button class="userLink">Login</button></a>
+          <a class="nav-item nav-link text-light me-5 btn btn-danger" href="{% url 'Login' %}">Login</a>
         </li>
         
         {% endif %}

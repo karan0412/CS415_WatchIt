@@ -29,6 +29,26 @@
         background-color: #e0a800;
     }
 </style>
+
+{% load static %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet"> <!-- FontAwesome CSS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="{% static 'questionmark.css' %}">
+
+<div class="question-mark" onclick="toggleBubbleMessage()">
+    <i class="fas fa-question-circle"></i>
+    <div id="bubbleMessage" class="bubble-message">
+        This page contains your bookings you made in the past. Download receipt if needed.
+    </div>
+</div>
+
+<script>
+    function toggleBubbleMessage() {
+        var bubble = document.getElementById('bubbleMessage');
+        bubble.style.visibility = (bubble.style.visibility === 'visible') ? 'hidden' : 'visible';
+    }
+</script>
+
 <div class="container">
     <h1 class="my-4">Your Purchases History</h1>
     <div class="row">
