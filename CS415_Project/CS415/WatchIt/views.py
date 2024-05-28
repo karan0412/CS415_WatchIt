@@ -784,7 +784,8 @@ def edit_booking(request, booking_id):
     if booking.edited or booking.showtime.showtime.weekday() == 2 or timezone.now() > booking.showtime.showtime - timedelta(hours=2):
         return redirect('your_bookings')
 
-    movies = Movie.objects.all()
+    today = timezone.now().date()
+    movies = Movie.objects.filter(release_date__lte=today)
 
     if request.method == 'POST':
         selected_movie_id = request.POST.get('movie_id')
@@ -1420,6 +1421,7 @@ def is_admin(user):
     return user.is_superuser
 
 
+@login_required
 def submit_feedback(request):
     if request.method == 'POST':
         form = FeedbackForm(request.POST, request.FILES)
