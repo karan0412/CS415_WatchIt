@@ -170,6 +170,61 @@ token_generator = PasswordResetTokenGenerator()
 #     })
 from django.utils.timezone import make_aware
 
+# def booking_report_view(request):
+#     queryset = Booking.objects.all()
+
+#     # Apply filters
+#     booking_date = request.GET.get('booking_date')
+#     cinema_hall_id = request.GET.get('cinema_hall')
+#     user = request.GET.get('user')
+
+#     if booking_date:
+#         try:
+#             date_obj = datetime.strptime(booking_date, '%Y-%m-%d')
+#             date_obj = make_aware(date_obj)  # Make the datetime object timezone-aware
+#             queryset = queryset.filter(booking_date=date_obj)
+#         except ValueError:
+#             # Handle incorrect date format
+#             return HttpResponse('Invalid date format. Please use YYYY-MM-DD.')
+
+#     if cinema_hall_id:
+#         queryset = queryset.filter(cinema_hall__id=cinema_hall_id)
+#     if user:
+#         queryset = queryset.filter(user__username__icontains(user))
+
+#     total_amount = sum(booking.payment_amount for booking in queryset)
+
+#     # Handle CSV download
+#     if request.GET.get('download') == 'csv':
+#         for booking in queryset:
+#             booking.seat_labels = ', '.join(seat.seat_label for seat in booking.seats.all())
+
+#         response = HttpResponse(content_type='text/csv')
+#         response['Content-Disposition'] = 'attachment; filename="sales_report.csv"'
+
+#         writer = csv.writer(response)
+#         writer.writerow(['ID', 'User', 'Movie', 'Cinema Hall', 'Showtime', 'Booking Date', 'Payment Amount', 'Seats'])
+
+#         for booking in queryset:
+#             writer.writerow([
+#                 booking.id,
+#                 booking.user.username,
+#                 booking.movie.title,
+#                 booking.cinema_hall.cinema_type,
+#                 booking.showtime,
+#                 booking.booking_date,
+#                 booking.payment_amount,
+#                 booking.seat_labels
+#             ])
+
+#         return response
+
+#     return render(request, 'admin/booking_report.html', {
+#         'bookings': queryset,
+#         'cinema_halls': CinemaHall.objects.all(),
+#         'total_amount': total_amount,
+#     })
+
 def booking_report_view(request):
     queryset = Booking.objects.all()
 
@@ -203,8 +258,21 @@ def booking_report_view(request):
         response['Content-Disposition'] = 'attachment; filename="sales_report.csv"'
 
         writer = csv.writer(response)
+        
+        # Add company details and letterhead
+        writer.writerow(['Company Name: WatchIt'])
+        writer.writerow(['Address: 123 Laucala Bay Road, Suva'])
+        writer.writerow(['Phone: +679 999 0567'])
+        writer.writerow(['Email: info@watchit.com'])
+        writer.writerow([])  # Blank line for spacing
+        writer.writerow(['Booking Report'])
+        writer.writerow(['Generated on:', datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
+        writer.writerow([])  # Blank line for spacing
+        
+        # Add the table headers
         writer.writerow(['ID', 'User', 'Movie', 'Cinema Hall', 'Showtime', 'Booking Date', 'Payment Amount', 'Seats'])
 
+        # Add the data rows
         for booking in queryset:
             writer.writerow([
                 booking.id,
@@ -224,6 +292,7 @@ def booking_report_view(request):
         'cinema_halls': CinemaHall.objects.all(),
         'total_amount': total_amount,
     })
+
 
 def admin_dashboard(request):
     total_bookings = Booking.objects.count()
