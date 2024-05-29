@@ -127,7 +127,7 @@
         </div>
     </form>
 
-    <a href="?{{ request.GET.urlencode }}&download=1" class="btn btn-secondary">Download PDF Report</a>
+    <a href="?{% for key, value in request.GET.items %}{% if key != 'download' %}{{ key }}={{ value }}&{% endif %}{% endfor %}download=csv" class="btn btn-secondary">Download Report as CSV</a>
 
     <h2>Report</h2>
     <p>Total Amount: {{ total_amount }}</p>
