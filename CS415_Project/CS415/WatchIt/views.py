@@ -168,7 +168,9 @@ token_generator = PasswordResetTokenGenerator()
 #         'cinema_halls': CinemaHall.objects.all(),
 #         'total_amount': total_amount,
 #     })
+
 from django.utils.timezone import make_aware
+from .utils import generate_excel  # Import the utility function
 
 # def booking_report_view(request):
 #     queryset = Booking.objects.all()
@@ -194,30 +196,9 @@ from django.utils.timezone import make_aware
 
 #     total_amount = sum(booking.payment_amount for booking in queryset)
 
-#     # Handle CSV download
-#     if request.GET.get('download') == 'csv':
-#         for booking in queryset:
-#             booking.seat_labels = ', '.join(seat.seat_label for seat in booking.seats.all())
-
-#         response = HttpResponse(content_type='text/csv')
-#         response['Content-Disposition'] = 'attachment; filename="sales_report.csv"'
-
-#         writer = csv.writer(response)
-#         writer.writerow(['ID', 'User', 'Movie', 'Cinema Hall', 'Showtime', 'Booking Date', 'Payment Amount', 'Seats'])
-
-#         for booking in queryset:
-#             writer.writerow([
-#                 booking.id,
-#                 booking.user.username,
-#                 booking.movie.title,
-#                 booking.cinema_hall.cinema_type,
-#                 booking.showtime,
-#                 booking.booking_date,
-#                 booking.payment_amount,
-#                 booking.seat_labels
-#             ])
-
-#         return response
+#     # Handle Excel download
+#     if request.GET.get('download') == 'excel':
+#         return generate_excel(queryset)
 
 #     return render(request, 'admin/booking_report.html', {
 #         'bookings': queryset,
@@ -249,43 +230,9 @@ def booking_report_view(request):
 
     total_amount = sum(booking.payment_amount for booking in queryset)
 
-    # Handle CSV download
-    if request.GET.get('download') == 'csv':
-        for booking in queryset:
-            booking.seat_labels = ', '.join(seat.seat_label for seat in booking.seats.all())
-
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="sales_report.csv"'
-
-        writer = csv.writer(response)
-        
-        # Add company details and letterhead
-        writer.writerow(['Company Name: WatchIt'])
-        writer.writerow(['Address: 123 Laucala Bay Road, Suva'])
-        writer.writerow(['Phone: +679 999 0567'])
-        writer.writerow(['Email: info@watchit.com'])
-        writer.writerow([])  # Blank line for spacing
-        writer.writerow(['Booking Report'])
-        writer.writerow(['Generated on:', datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
-        writer.writerow([])  # Blank line for spacing
-        
-        # Add the table headers
-        writer.writerow(['ID', 'User', 'Movie', 'Cinema Hall', 'Showtime', 'Booking Date', 'Payment Amount', 'Seats'])
-
-        # Add the data rows
-        for booking in queryset:
-            writer.writerow([
-                booking.id,
-                booking.user.username,
-                booking.movie.title,
-                booking.cinema_hall.cinema_type,
-                booking.showtime,
-                booking.booking_date,
-                booking.payment_amount,
-                booking.seat_labels
-            ])
-
-        return response
+    # Handle Excel download
+    if request.GET.get('download') == 'excel':
+        return generate_excel(queryset)
 
     return render(request, 'admin/booking_report.html', {
         'bookings': queryset,
