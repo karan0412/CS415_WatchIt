@@ -10,4 +10,13 @@
     </div>
     <p>You can view your bookings at your dashboard <a href="{% url 'your_bookings' %}">here</a>.</p>
 </div>
+
+<script>
+    // Prevent the user from navigating back to the payment page
+    history.pushState(null, null, document.URL);
+    window.addEventListener('popstate', function () {
+        history.pushState(null, null, document.URL);
+        window.location.href = "{% url 'Home' %}";  // Redirect to the home page
+    });
+</script>
 {% endblock %}

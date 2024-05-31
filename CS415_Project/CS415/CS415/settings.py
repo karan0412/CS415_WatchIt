@@ -48,8 +48,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
-    'WatchIt',
 
+]
 
 
 AUTH_USER_MODEL = "WatchIt.User" 
