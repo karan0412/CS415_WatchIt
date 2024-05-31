@@ -39,11 +39,28 @@
         font-style: normal;
     }
     .logo{
-      height: 120%;
-      width: 120%;
+      height: 130%;
+      width: 180%;
     }
     .logo-link{
       width: 5%;
+    }
+    /* Loading screen styles */
+    #loading-screen {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        background-color: black;
+        z-index: 1000;
+    }
+    #loading-video {
+        width: 40%;
+        height: 40%;
     }
     
 </style>
@@ -57,14 +74,23 @@
     <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body style="background-color: black" class="custom-font">
-<nav class="navbar pt-4 pb-4 navbar-expand-lg navbar-dark sticky-top" style="background-color: black">
+
+<!-- Loading screen -->
+<div id="loading-screen">
+  <video id="loading-video" autoplay muted loop>
+      <source src="{% static 'loading.mp4' %}" type="video/mp4">
+      Your browser does not support the video tag.
+  </video>
+</div>
+
+<nav class="navbar pt-4 pb-4 navbar-expand-lg navbar-dark static-top" style="background-color: black">
   <div class="container-fluid">
     <a class="ms-3 me-5 logo-link" href="{% url 'Home' %}"><img class="logo" src="{% static 'logo.jpg' %}" alt="WatchIt Logo"></a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDarkDropdown" aria-controls="navbarNavDarkDropdown" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavDarkDropdown">
-      <ul class="navbar-nav me-3">
+      <ul class="navbar-nav me-3 ms-3">
         <li class="nav-item mx-3">
           <a class="nav-link text-light" href="{% url 'movie_list' %}"><button class="link">Movies</button></a>
         </li>
@@ -162,7 +188,15 @@
 </div>
 </footer>
 
-<!-- Font Awesome -->
+<script>
+  // Show the loading screen when the page starts loading
+  document.getElementById('loading-screen').style.display = 'flex';
+
+  // Hide the loading screen when the page has fully loaded
+  window.addEventListener('load', function() {
+      document.getElementById('loading-screen').style.display = 'none';
+  });
+</script>
 
 
 </body>
