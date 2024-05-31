@@ -56,7 +56,9 @@ urlpatterns = [
     # path('admin_tools/', include('admin_tools.urls')),
     # path('admin/user_chart/', views.generate_user_chart, name='user_chart_view'),
     path('user_activity_report/', views.user_activity_report_view, name='user_activity_report'),
+    path('view_log_entries/', views.view_log_entries, name='view_log_entries'),
     path('sales_report/', views.sales_report_view, name='sales_report'),
+
 
     path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin_dashboard/minute_sales/', views.minute_sales, name='admin_dashboard_minute_sales'),
@@ -73,8 +75,6 @@ urlpatterns = [
     path('booking_report_view/', views.booking_report_view, name='booking_report_view'),
 
 
-
-]
 
 
 if settings.DEBUG:

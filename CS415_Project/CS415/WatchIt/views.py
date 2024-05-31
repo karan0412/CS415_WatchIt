@@ -1,4 +1,8 @@
+
+import logging
+
 import csv
+
 import os
 import json
 import re
@@ -14,7 +18,7 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.contrib import messages
-
+from venv import logger
 from django.shortcuts import get_object_or_404, render, redirect
 import pyotp
 from xhtml2pdf import pisa
@@ -76,7 +80,7 @@ from decimal import Decimal
 from django.utils import timezone
 token_generator = PasswordResetTokenGenerator()
 
-
+logger = logging.getLogger('WatchIt.security')
 
 
 from reportlab.platypus import (
@@ -773,7 +777,8 @@ def process_payment(request):
     print("Invalid request method")
     return JsonResponse({'error': 'Invalid request method'})
 
-def booking_success(request):
+def booking_success(request,user):
+    logger.info(f"Payment was done by {user.username} for booking a movie")
     return render(request, 'booking_success.html')
 
 
@@ -1008,6 +1013,7 @@ def send_otp(request, user):
         EmailThread(email).start()
     
     # Store OTP and user ID in session for verification
+    logger.info(f" OTP was sent to {user.username}")
     request.session['otp'] = otp
     request.session['pre_otp_user_id'] = user.id
 
@@ -1036,6 +1042,7 @@ def enter_otp(request):
         
         if entered_otp == stored_otp:
             login(request, user)
+            logger.info(f" {user.username}'s OTP was Verified ")
             return redirect('Home')
         else:
             messages.error(request, 'OTP is Invalid. Please try Again')
@@ -1050,6 +1057,7 @@ def resend_otp(request):
 
     send_otp(request, user)
     messages.success(request, 'New OTP sent successfully!')
+    logger.info(f" New OTP sent to {user.username}")
     return redirect('enter_otp')
 
 def Home(request):
@@ -1123,6 +1131,7 @@ def SignUp (request):
 
             styled_message = mark_safe('<span style="color: black; font-weight:bold">VERIFY</span><br>We sent you an email to verify your account')
             messages.success(request, styled_message)
+            logger.info(f"Activation link sent to {user.username}")
             return redirect('Login_first')
 
             
@@ -1287,6 +1296,7 @@ def reset_password(request, uidb64, token):
         
     except (User.DoesNotExist, ValueError, TypeError, PasswordResetToken.DoesNotExist):
         messages.error(request, 'Your Password reset link may have already been used.')
+        logger.info(f"User {user.username} changed Password")
         return redirect('Login')
 
     # Handle password reset form submission
@@ -1494,6 +1504,26 @@ def sales_report_view(request):
     return render(request, 'reports/sales_report.html', {'data': data})
 
 
+def view_log_entries(request):
+    log_files = {'activities': 'user_activity.log', 'security': 'security.log'}
+    log_entries = {'activities': [], 'security': []}
+
+    for log_type, log_file in log_files.items():
+        log_file_path = os.path.join(settings.BASE_DIR, 'logs', log_file)
+        with open(log_file_path, 'r') as file:
+            for line in file:
+                parts = line.strip().split(' ')  # Split log entry into parts
+                timestamp = ' '.join(parts[:2])  # Extract timestamp
+                level = parts[2]  # Extract log level
+                message = ' '.join(parts[3:])  # Extract log message
+                log_entry = {'timestamp': timestamp, 'level': level, 'message': message}
+                log_entries[log_type].append(log_entry)  # Add log entry to respective list
+
+    # Pass log entries to template context
+    context = {'log_entries': log_entries}
+    return render(request, 'admin/user_activity.html', context)
+
+
 def is_admin(user):
     return user.is_superuser
 
@@ -1606,4 +1636,5 @@ def minute_registrations(request):
         'minute_registrations': minute_registrations_data,
     }
     return render(request, 'admin/minute_registrations.html', context)
+
 

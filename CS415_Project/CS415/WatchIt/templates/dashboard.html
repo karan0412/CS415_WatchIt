@@ -15,6 +15,14 @@
     <link rel="stylesheet" href="{% static 'dashboard.css' %}">
 </head>
 <body class="custom-font">
+
+    <div class="sidebar">
+        <h2>Dashboard</h2>
+        <a href="{% url 'Home' %}">Home</a>
+        <a href="{% url 'your_bookings' %}">Your Bookings</a>
+        <a href="{% url 'purchase_history' %}">Purchase History</a>
+        <a href="{% url 'movie_recommendations' %}">Movie Recommendations</a>
+
     <div class="d-lg-none m-3">
         <button class="btn btn-outline-light" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive" aria-controls="offcanvasResponsive">
             <i class="fas fa-bars"></i>
@@ -45,6 +53,7 @@
                 </ul>
             </div>
         </div>
+
     </div>
 
     <div class="sidebar d-none d-lg-block">
