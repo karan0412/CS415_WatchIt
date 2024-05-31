@@ -15,37 +15,6 @@
     <link rel="stylesheet" href="{% static 'dashboard.css' %}">
 </head>
 <body class="custom-font">
-    <div class="d-lg-none m-3">
-        <button class="btn btn-outline-light" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive" aria-controls="offcanvasResponsive">
-            <i class="fas fa-bars"></i>
-        </button>
-    </div>
-
-    <div class="offcanvas offcanvas-start bg-primary" tabindex="-1" data-bs-backdrop="false" id="offcanvasResponsive" aria-labelledby="offcanvasResponsiveLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title text-light" id="offcanvasSidebarLabel">Dashboard</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body bg-primary">
-            <ul class="list-group list-group-flush bg-primary">
-                <li class="list-group-item bg-primary"><a href="{% url 'Home' %}" class="links {% if request.resolver_match.url_name == 'Home' %}active-link{% endif %}"><i class="fa-solid fa-house me-2"></i>Home</a></li>
-                <li class="list-group-item bg-primary"><a href="{% url 'your_bookings' %}" class="links {% if request.resolver_match.url_name == 'your_bookings' %}active-link{% endif %}"><i class="fa-solid fa-ticket me-2"></i>Your Bookings</a></li>
-                <li class="list-group-item bg-primary"><a href="{% url 'purchase_history' %}" class="links {% if request.resolver_match.url_name == 'purchase_history' %}active-link{% endif %}"><i class="fa-solid fa-rectangle-list me-2"></i>Purchase History</a></li>
-                <li class="list-group-item bg-primary"><a href="{% url 'movie_recommendations' %}" class="links {% if request.resolver_match.url_name == 'movie_recommendations' %}active-link{% endif %}"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Movie Recommendations</a></li>
-                <li class="list-group-item bg-primary"><a href="{% url 'my_feedback' %}" class="links {% if request.resolver_match.url_name == 'my_feedback' %}active-link{% endif %}"><i class="fa-solid fa-comment me-2"></i>Feedback</a></li>
-            </ul>
-            <!-- User dropup menu -->
-            <div class="dropup" style="position: absolute; bottom: 20px; width: 100%;">
-                <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                    Hello, {{ request.user.username }}
-                </button>
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <li><a class="dropdown-item text-dark" href="{% url 'dashboard' %}">Dashboard</a></li>
-                    <li><a class="dropdown-item text-dark" href="{% url 'LogoutUser' %}">Logout</a></li>
-                </ul>
-            </div>
-        </div>
-    </div>
 
     <div class="sidebar d-none d-lg-block">
         <h2>Dashboard</h2>

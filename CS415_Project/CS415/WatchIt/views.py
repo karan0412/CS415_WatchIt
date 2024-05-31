@@ -1,4 +1,8 @@
+
+import logging
+
 import csv
+
 import os
 import json
 import re
@@ -14,7 +18,7 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.contrib import messages
-
+from venv import logger
 from django.shortcuts import get_object_or_404, render, redirect
 import pyotp
 from xhtml2pdf import pisa
@@ -76,7 +80,7 @@ from decimal import Decimal
 from django.utils import timezone
 token_generator = PasswordResetTokenGenerator()
 
-
+logger = logging.getLogger('WatchIt.security')
 
 
 from reportlab.platypus import (
@@ -114,97 +118,9 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # Token generator for password reset
 token_generator = PasswordResetTokenGenerator()
 
-
-# def booking_report_view(request):
-#     queryset = Booking.objects.all()
-
-#     # Apply filters
-#     booking_date = request.GET.get('booking_date')
-#     cinema_hall_id = request.GET.get('cinema_hall')
-#     user = request.GET.get('user')
-
-#     if booking_date:
-#         try:
-#             date_obj = datetime.strptime(booking_date, '%Y-%m-%d')
-#             date_obj = make_aware(date_obj)  # Make the datetime object timezone-aware
-#             queryset = queryset.filter(booking_date=date_obj)
-#         except ValueError:
-#             return HttpResponse('Invalid date format. Please use YYYY-MM-DD.')
-
-#     if cinema_hall_id:
-#         queryset = queryset.filter(cinema_hall__id=cinema_hall_id)
-#     if user:
-#         queryset = queryset.filter(user__username__icontains(user))
-
-#     total_amount = sum(booking.payment_amount for booking in queryset)
-
-#     # Handle CSV download
-#     if request.GET.get('download') == 'csv':
-#         for booking in queryset:
-#             booking.seat_labels = ', '.join(seat.seat_number for seat in booking.seats.all())
-
-#         response = HttpResponse(content_type='text/csv')
-#         response['Content-Disposition'] = 'attachment; filename="sales_report.csv"'
-
-#         writer = csv.writer(response)
-#         writer.writerow(['ID', 'User', 'Movie', 'Cinema Hall', 'Showtime', 'Booking Date', 'Payment Amount', 'Seats'])
-
-#         for booking in queryset:
-#             writer.writerow([
-#                 booking.id,
-#                 booking.user.username,
-#                 booking.movie.title,
-#                 booking.cinema_hall.cinema_type,
-#                 booking.showtime,
-#                 booking.booking_date,
-#                 booking.payment_amount,
-#                 booking.seat_labels
-#             ])
-
-#         return response
-
-#     return render(request, 'admin/booking_report.html', {
-#         'bookings': queryset,
-#         'cinema_halls': CinemaHall.objects.all(),
-#         'total_amount': total_amount,
-#     })
-
 from django.utils.timezone import make_aware
 from .utils import generate_excel  # Import the utility function
 
-# def booking_report_view(request):
-#     queryset = Booking.objects.all()
-
-#     # Apply filters
-#     booking_date = request.GET.get('booking_date')
-#     cinema_hall_id = request.GET.get('cinema_hall')
-#     user = request.GET.get('user')
-
-#     if booking_date:
-#         try:
-#             date_obj = datetime.strptime(booking_date, '%Y-%m-%d')
-#             date_obj = make_aware(date_obj)  # Make the datetime object timezone-aware
-#             queryset = queryset.filter(booking_date=date_obj)
-#         except ValueError:
-#             # Handle incorrect date format
-#             return HttpResponse('Invalid date format. Please use YYYY-MM-DD.')
-
-#     if cinema_hall_id:
-#         queryset = queryset.filter(cinema_hall__id=cinema_hall_id)
-#     if user:
-#         queryset = queryset.filter(user__username__icontains(user))
-
-#     total_amount = sum(booking.payment_amount for booking in queryset)
-
-#     # Handle Excel download
-#     if request.GET.get('download') == 'excel':
-#         return generate_excel(queryset)
-
-#     return render(request, 'admin/booking_report.html', {
-#         'bookings': queryset,
-#         'cinema_halls': CinemaHall.objects.all(),
-#         'total_amount': total_amount,
-#     })
 
 def booking_report_view(request):
     queryset = Booking.objects.all()
@@ -774,6 +690,7 @@ def process_payment(request):
     return JsonResponse({'error': 'Invalid request method'})
 
 def booking_success(request):
+    request.session.flush()
     return render(request, 'booking_success.html')
 
 
@@ -1008,6 +925,7 @@ def send_otp(request, user):
         EmailThread(email).start()
     
     # Store OTP and user ID in session for verification
+    logger.info(f" OTP was sent to {user.username}")
     request.session['otp'] = otp
     request.session['pre_otp_user_id'] = user.id
 
@@ -1036,6 +954,7 @@ def enter_otp(request):
         
         if entered_otp == stored_otp:
             login(request, user)
+            logger.info(f" {user.username}'s OTP was Verified ")
             return redirect('Home')
         else:
             messages.error(request, 'OTP is Invalid. Please try Again')
@@ -1050,6 +969,7 @@ def resend_otp(request):
 
     send_otp(request, user)
     messages.success(request, 'New OTP sent successfully!')
+    logger.info(f" New OTP sent to {user.username}")
     return redirect('enter_otp')
 
 def Home(request):
@@ -1123,6 +1043,7 @@ def SignUp (request):
 
             styled_message = mark_safe('<span style="color: black; font-weight:bold">VERIFY</span><br>We sent you an email to verify your account')
             messages.success(request, styled_message)
+            logger.info(f"Activation link sent to {user.username}")
             return redirect('Login_first')
 
             
@@ -1287,6 +1208,7 @@ def reset_password(request, uidb64, token):
         
     except (User.DoesNotExist, ValueError, TypeError, PasswordResetToken.DoesNotExist):
         messages.error(request, 'Your Password reset link may have already been used.')
+        logger.info(f"User {user.username} changed Password")
         return redirect('Login')
 
     # Handle password reset form submission
@@ -1494,6 +1416,26 @@ def sales_report_view(request):
     return render(request, 'reports/sales_report.html', {'data': data})
 
 
+def view_log_entries(request):
+    log_files = {'activities': 'user_activity.log', 'security': 'security.log'}
+    log_entries = {'activities': [], 'security': []}
+
+    for log_type, log_file in log_files.items():
+        log_file_path = os.path.join(settings.BASE_DIR, 'logs', log_file)
+        with open(log_file_path, 'r') as file:
+            for line in file:
+                parts = line.strip().split(' ')  # Split log entry into parts
+                timestamp = ' '.join(parts[:2])  # Extract timestamp
+                level = parts[2]  # Extract log level
+                message = ' '.join(parts[3:])  # Extract log message
+                log_entry = {'timestamp': timestamp, 'level': level, 'message': message}
+                log_entries[log_type].append(log_entry)  # Add log entry to respective list
+
+    # Pass log entries to template context
+    context = {'log_entries': log_entries}
+    return render(request, 'admin/user_activity.html', context)
+
+
 def is_admin(user):
     return user.is_superuser
 
@@ -1606,4 +1548,5 @@ def minute_registrations(request):
         'minute_registrations': minute_registrations_data,
     }
     return render(request, 'admin/minute_registrations.html', context)
+
 
