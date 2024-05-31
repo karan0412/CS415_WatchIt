@@ -1,3 +1,4 @@
+import csv
 import os
 import json
 import re
@@ -114,7 +115,97 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 token_generator = PasswordResetTokenGenerator()
 
 
-@staff_member_required
+# def booking_report_view(request):
+#     queryset = Booking.objects.all()
+
+#     # Apply filters
+#     booking_date = request.GET.get('booking_date')
+#     cinema_hall_id = request.GET.get('cinema_hall')
+#     user = request.GET.get('user')
+
+#     if booking_date:
+#         try:
+#             date_obj = datetime.strptime(booking_date, '%Y-%m-%d')
+#             date_obj = make_aware(date_obj)  # Make the datetime object timezone-aware
+#             queryset = queryset.filter(booking_date=date_obj)
+#         except ValueError:
+#             return HttpResponse('Invalid date format. Please use YYYY-MM-DD.')
+
+#     if cinema_hall_id:
+#         queryset = queryset.filter(cinema_hall__id=cinema_hall_id)
+#     if user:
+#         queryset = queryset.filter(user__username__icontains(user))
+
+#     total_amount = sum(booking.payment_amount for booking in queryset)
+
+#     # Handle CSV download
+#     if request.GET.get('download') == 'csv':
+#         for booking in queryset:
+#             booking.seat_labels = ', '.join(seat.seat_number for seat in booking.seats.all())
+
+#         response = HttpResponse(content_type='text/csv')
+#         response['Content-Disposition'] = 'attachment; filename="sales_report.csv"'
+
+#         writer = csv.writer(response)
+#         writer.writerow(['ID', 'User', 'Movie', 'Cinema Hall', 'Showtime', 'Booking Date', 'Payment Amount', 'Seats'])
+
+#         for booking in queryset:
+#             writer.writerow([
+#                 booking.id,
+#                 booking.user.username,
+#                 booking.movie.title,
+#                 booking.cinema_hall.cinema_type,
+#                 booking.showtime,
+#                 booking.booking_date,
+#                 booking.payment_amount,
+#                 booking.seat_labels
+#             ])
+
+#         return response
+
+#     return render(request, 'admin/booking_report.html', {
+#         'bookings': queryset,
+#         'cinema_halls': CinemaHall.objects.all(),
+#         'total_amount': total_amount,
+#     })
+
+from django.utils.timezone import make_aware
+from .utils import generate_excel  # Import the utility function
+
+# def booking_report_view(request):
+#     queryset = Booking.objects.all()
+
+#     # Apply filters
+#     booking_date = request.GET.get('booking_date')
+#     cinema_hall_id = request.GET.get('cinema_hall')
+#     user = request.GET.get('user')
+
+#     if booking_date:
+#         try:
+#             date_obj = datetime.strptime(booking_date, '%Y-%m-%d')
+#             date_obj = make_aware(date_obj)  # Make the datetime object timezone-aware
+#             queryset = queryset.filter(booking_date=date_obj)
+#         except ValueError:
+#             # Handle incorrect date format
+#             return HttpResponse('Invalid date format. Please use YYYY-MM-DD.')
+
+#     if cinema_hall_id:
+#         queryset = queryset.filter(cinema_hall__id=cinema_hall_id)
+#     if user:
+#         queryset = queryset.filter(user__username__icontains(user))
+
+#     total_amount = sum(booking.payment_amount for booking in queryset)
+
+#     # Handle Excel download
+#     if request.GET.get('download') == 'excel':
+#         return generate_excel(queryset)
+
+#     return render(request, 'admin/booking_report.html', {
+#         'bookings': queryset,
+#         'cinema_halls': CinemaHall.objects.all(),
+#         'total_amount': total_amount,
+#     })
+
 def booking_report_view(request):
     queryset = Booking.objects.all()
 
@@ -126,9 +217,8 @@ def booking_report_view(request):
     if booking_date:
         try:
             date_obj = datetime.strptime(booking_date, '%Y-%m-%d')
-            # Make the datetime object timezone-aware
-            date_obj = timezone.make_aware(date_obj, timezone.get_current_timezone())
-            queryset = queryset.filter(booking_date__date=date_obj.date())
+            date_obj = make_aware(date_obj)  # Make the datetime object timezone-aware
+            queryset = queryset.filter(booking_date=date_obj)
         except ValueError:
             # Handle incorrect date format
             return HttpResponse('Invalid date format. Please use YYYY-MM-DD.')
@@ -136,36 +226,19 @@ def booking_report_view(request):
     if cinema_hall_id:
         queryset = queryset.filter(cinema_hall__id=cinema_hall_id)
     if user:
-        queryset = queryset.filter(user__username__icontains=user)
+        queryset = queryset.filter(user__username__icontains(user))
 
     total_amount = sum(booking.payment_amount for booking in queryset)
 
-    for booking in queryset:
-        booking.seat_labels = ', '.join(seat.seat_label for seat in booking.seats.all())
-
-    if 'download' in request.GET:
-        html_string = render_to_string('sales_report_pdf.html', {
-            'bookings': queryset,
-            'total_amount': total_amount,
-        })
-
-        response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="sales_report.pdf"'
-
-        pisa_status = pisa.CreatePDF(
-            html_string, dest=response
-        )
-
-        if pisa_status.err:
-            return HttpResponse('We had some errors <pre>' + html_string + '</pre>')
-        return response
+    # Handle Excel download
+    if request.GET.get('download') == 'excel':
+        return generate_excel(queryset)
 
     return render(request, 'admin/booking_report.html', {
         'bookings': queryset,
         'cinema_halls': CinemaHall.objects.all(),
         'total_amount': total_amount,
     })
-
 
 
 def admin_dashboard(request):

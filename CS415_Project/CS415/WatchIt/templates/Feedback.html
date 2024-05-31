@@ -8,42 +8,55 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'SignUp.css' %}">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<style>
+    @media (max-width: 768px) {
+        .card-container {
+            padding: 0 15px;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="card-container mt-5 mb-5">
-    <div class="card bg-dark text-white">
-        <h3 class="text-center mb-4">Submit Your Feedback</h3>
-        
-        {% if messages %}
-            <div>
-                {% for message in messages %}
-                    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                {% endfor %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card bg-dark text-white mt-5 mb-5">
+                <div class="card-body">
+                    <h3 class="text-center mb-4">Submit Your Feedback</h3>
+                    
+                    {% if messages %}
+                        <div>
+                            {% for message in messages %}
+                                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <form method="post" action="{% url 'submit_feedback' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="form-group mb-3">
+                            <label for="feedback_subject">Subject of Change Request:</label>
+                            <input type="text" class="form-control" id="feedback_subject" name="subject" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="feedback_file">Attach File:</label>
+                            <input type="file" class="form-control-file" id="feedback_file" name="file">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="feedback_text">Your Feedback:</label>
+                            <textarea class="form-control" id="feedback_text" name="feedback" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-outline-light btn-block">Submit Feedback</button>
+                    </form>
+                </div>
             </div>
-        {% endif %}
-        
-        <form method="post" action="{% url 'submit_feedback' %}" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="form-group mb-3">
-                <label for="feedback_subject">Subject of Change Request:</label>
-                <input type="text" class="form-control" id="feedback_subject" name="subject" required>
-            </div>
-            <div class="form-group mb-3">
-                <label for="feedback_file">Attach File:</label>
-                <input type="file" class="form-control-file" id="feedback_file" name="file">
-            </div>
-            <div class="form-group mb-3">
-                <label for="feedback_text">Your Feedback:</label>
-                <textarea class="form-control" id="feedback_text" name="feedback" rows="5" required></textarea>
-            </div>
-            <button type="submit" class="btn btn-outline-light btn-block">Submit Feedback</button>
-        </form>
+        </div>
     </div>
 </div>
 {% endblock %}
