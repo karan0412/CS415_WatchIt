@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
     'WatchIt',
 
 ]
@@ -58,6 +59,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'WatchIt.middleware.ActivityLoggingMiddleware'
 ]
 
 ROOT_URLCONF = 'CS415.urls'
@@ -173,3 +175,52 @@ TWILIO_PHONE_NUMBER = '+14018122982'
 # TWILIO_ACCOUNT_SID = 'ACbab5a0fb84843f39a1c52f75d4eec69b'
 # TWILIO_AUTH_TOKEN = '0eb5dd22f89043e4f7daf7326a4e08ce'
 # TWILIO_PHONE_NUMBER = '+13856441298'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'user_activity.log',
+            'formatter': 'verbose',
+        },
+        'security_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'security.log',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'WatchIt': {
+            'handlers': ['file'],  # Only include the 'file' handler
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'WatchIt.security': {
+            'handlers': ['security_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+SECURE_SSL_REDIRECT = False
+SECURE_HSTS_SECONDS = 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+
+# Path to the SSL certificate and key
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SSL_CERTIFICATE = os.path.join(BASE_DIR, 'certs', 'localhost.crt')
+SSL_KEY = os.path.join(BASE_DIR, 'certs', 'localhost.key')
