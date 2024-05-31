@@ -1,4 +1,4 @@
-{% extends "admin/base_site.html" %}
+{% extends "admin/admin_dashboard.html" %}
 {% load static %}
 
 {% block extrastyle %}
@@ -24,8 +24,8 @@
             padding: 5px;
             border-radius: 4px;
             border: 1px solid #ccc;
-            color: var(--text-color, #000); /* Text color */
-            background-color: var(--bg-color, #fff); /* Background color */
+            color: #000; /* Text color */
+            background-color: #fff; /* Background color */
         }
         .filters select:focus,
         .filters input:focus {
@@ -66,43 +66,30 @@
             color: white;
             text-decoration: none;
         }
-
-        /* Dark mode support */
-        body.dark-mode {
-            --bg-color: #333;
-            --text-color: #f0f0f0;
-            --border-color: #555;
+        .back-button {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            cursor: pointer;
         }
-        body.dark-mode .filters select,
-        body.dark-mode .filters input {
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            background-color: var(--bg-color);
-        }
-        body.dark-mode .btn-primary {
-            background-color: #3e8e41;
-        }
-        body.dark-mode .btn-primary:hover {
-            background-color: #2e7031;
-        }
-        body.dark-mode .btn-secondary {
-            background-color: #005bb5;
-        }
-        body.dark-mode .btn-secondary:hover {
-            background-color: #00448a;
-        }
-        body.dark-mode .btn-secondary {
-            color: white;
+        .back-button i {
+            font-size: 24px;
+            margin-right: 10px;
         }
     </style>
 {% endblock %}
 
 {% block extrahead %}
-    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.5.1.js"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.js" charset="utf8"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js" charset="utf8"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 {% endblock %}
 
 {% block content %}
+    <div class="back-button" onclick="window.history.back();">
+        <i class="fas fa-arrow-left"></i> Back
+    </div>
+
     <h1>Booking Report</h1>
     <form method="get" action=".">
         <div class="filters">
@@ -164,11 +151,6 @@
     <script>
         $(document).ready(function() {
             $('#booking_table').DataTable();
-
-            // Detect dark mode
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                document.body.classList.add('dark-mode');
-            }
         });
     </script>
 {% endblock %}
