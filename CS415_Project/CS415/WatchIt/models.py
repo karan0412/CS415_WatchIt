@@ -22,6 +22,62 @@ from django.core.exceptions import ValidationError
 from datetime import timedelta
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db import models
+from django.utils import timezone
+
+
+# class Feedback(models.Model):
+#     subject = models.CharField(max_length=255)
+#     feedback = models.TextField()
+#     file = models.FileField(upload_to='feedback_files/', null=True, blank=True)
+#     approved = models.BooleanField(default=False)
+#     reviewed = models.BooleanField(default=False)
+
+#     def __str__(self):
+#         return self.subject
+
+# class Feedback(models.Model):
+#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+#     subject = models.CharField(max_length=200)
+#     feedback = models.TextField()
+#     file = models.FileField(upload_to='feedback_files/', null=True, blank=True)
+#     approved = models.BooleanField(default=False)
+#     reviewed = models.BooleanField(default=False)
+#     created_at = models.DateTimeField(auto_now_add=True)
+
+#     def __str__(self):
+#         return self.subject
+
+class Feedback(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    subject = models.CharField(max_length=255)
+    feedback = models.TextField()
+    file = models.FileField(upload_to='feedback_files/', null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    approved = models.BooleanField(default=False)
+    reviewed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.subject
+
+# class CareerApplication(models.Model):
+#     name = models.CharField(max_length=255)
+#     cv = models.FileField(upload_to='cv_files/')
+#     cover_letter = models.FileField(upload_to='cover_letter_files/')
+#     approved = models.BooleanField(default=False)
+#     reviewed = models.BooleanField(default=False)
+
+#     def __str__(self):
+#         return self.name
+
+# class Feedback(models.Model):
+#     subject = models.CharField(max_length=255)
+#     feedback = models.TextField()
+#     file = models.FileField(upload_to='feedback_files/', null=True, blank=True)  # Adjust the `upload_to` path as needed
+
+#     def __str__(self):
+#         return self.subject
+
 
 class User(AbstractUser):
     user_phone = models.CharField(max_length=15, blank=True, null=True)
@@ -73,8 +129,7 @@ class Movie(models.Model):
     def __str__(self):
         return self.title
 
-from django.db import models
-from django.utils import timezone
+
 
 class Showtime(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='showtimes', null=True, blank=True)

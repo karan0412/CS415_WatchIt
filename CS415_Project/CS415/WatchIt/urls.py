@@ -3,6 +3,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
 from .import views
+from .views import admin_dashboard
 
 
 urlpatterns = [
@@ -14,6 +15,7 @@ urlpatterns = [
     path('cinema/<int:cinema_hall_id>/<int:movie_id>/<int:showtime_id>/', views.display_hall, name='display_hall'),
     path('movies/', views.movie_list, name='movie_list'),
     path('movies/<int:movie_id>/', views.movie_detail, name='movie_detail'),
+    path('movies/<int:movie_id>/showtimes/', views.movie_showtimes, name='movie_showtimes'),
     #path('book_seats/', views.book_seats, name='book_seats'),
     path('selectTickets/<int:cinema_hall_id>/<int:movie_id>/<int:showtime_id>/', views.selectTickets, name='selectTickets'),
     path('payment/<int:cinema_hall_id>/', views.payment, name='payment'),
@@ -26,7 +28,7 @@ urlpatterns = [
     path('purchase_history/', views.list_purchase_history, name='purchase_history'),
     path('your_bookings/', views.your_bookings, name='your_bookings'),
     path('transaction_report/', views.transaction_report, name='transaction_report'),
-    path('transaction-report/pdf/', views.transaction_report_pdf, name='transaction_report_pdf'),
+    path('transaction_report/pdf/', views.transaction_report_pdf, name='transaction_report_pdf'),
     
     path('edit_booking/<int:booking_id>/', views.edit_booking, name='edit_booking'),
     path('edit_showtime/<int:booking_id>/<int:movie_id>/<int:cinema_hall_id>/', views.edit_showtime, name='edit_showtime'),
@@ -56,7 +58,23 @@ urlpatterns = [
     path('user_activity_report/', views.user_activity_report_view, name='user_activity_report'),
     path('view_log_entries/', views.view_log_entries, name='view_log_entries'),
     path('sales_report/', views.sales_report_view, name='sales_report'),
-]
+
+
+    path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('admin_dashboard/minute_sales/', views.minute_sales, name='admin_dashboard_minute_sales'),
+    path('admin_dashboard/minute_registrations/', views.minute_registrations, name='admin_dashboard_minute_registrations'),
+    path('submit_feedback/',views.submit_feedback, name='submit_feedback'),
+    # path('career_application/', views.career_application, name='career_application'),
+    # path('career_applications_list/', views.career_applications_list, name='career_applications_list'),
+    # path('approve_application/<int:application_id>/', views.approve_application, name='approve_application'),
+    # path('reject_application/<int:application_id>/', views.reject_application, name='reject_application'),
+    path('feedback_list/', views.feedback_list, name='feedback_list'),
+    path('approve_feedback/<int:feedback_id>/', views.approve_feedback, name='approve_feedback'),
+    path('reject_feedback/<int:feedback_id>/', views.reject_feedback, name='reject_feedback'),
+    path('my_feedback/', views.my_feedback, name='my_feedback'),
+    path('booking_report_view/', views.booking_report_view, name='booking_report_view'),
+
+
 
 
 if settings.DEBUG:

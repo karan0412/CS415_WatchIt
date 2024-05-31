@@ -1,4 +1,8 @@
+
 import logging
+
+import csv
+
 import os
 import json
 import re
@@ -23,7 +27,7 @@ from django.utils import timezone
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
 from django.db import transaction
@@ -41,7 +45,11 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, letter, landscape
 from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
-
+from django.db.models.functions import TruncMinute
+from django.db.models import Count, Sum
+from django.db.models.functions import Cast
+from django.db.models import FloatField
+from django.template.loader import get_template
 import os
 from datetime import timedelta
 from reportlab.lib.pagesizes import landscape, A4
@@ -74,12 +82,15 @@ token_generator = PasswordResetTokenGenerator()
 
 logger = logging.getLogger('WatchIt.security')
 
+
 from reportlab.platypus import (
     SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, HRFlowable, KeepTogether
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from .models import User, Seat, Booking, CinemaHall, Movie, Tag, Showtime, Deals, PasswordResetToken
 
+from .models import Feedback, User, Seat, Booking, CinemaHall, Movie, Tag, Showtime, Deals, PasswordResetToken
+
+from .models import User, Seat, Booking, CinemaHall, Movie, Tag, Showtime, Deals, PasswordResetToken
 from .recommend import get_recommendations
 from .utils import generate_token
 from validate_email import validate_email
@@ -89,6 +100,17 @@ import matplotlib.pyplot as plt
 from django.http import HttpResponse
 from io import BytesIO
 from .utils import get_user_activity_report, get_sales_report
+from django.shortcuts import render
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models.functions import TruncMinute
+from django.db.models import Count, Sum
+from django.db.models.functions import Cast
+from django.db.models import FloatField
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+from .forms import FeedbackForm  
+
+
 
 # Initialize stripe API key
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -97,7 +119,193 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 token_generator = PasswordResetTokenGenerator()
 
 
+# def booking_report_view(request):
+#     queryset = Booking.objects.all()
 
+#     # Apply filters
+#     booking_date = request.GET.get('booking_date')
+#     cinema_hall_id = request.GET.get('cinema_hall')
+#     user = request.GET.get('user')
+
+#     if booking_date:
+#         try:
+#             date_obj = datetime.strptime(booking_date, '%Y-%m-%d')
+#             date_obj = make_aware(date_obj)  # Make the datetime object timezone-aware
+#             queryset = queryset.filter(booking_date=date_obj)
+#         except ValueError:
+#             return HttpResponse('Invalid date format. Please use YYYY-MM-DD.')
+
+#     if cinema_hall_id:
+#         queryset = queryset.filter(cinema_hall__id=cinema_hall_id)
+#     if user:
+#         queryset = queryset.filter(user__username__icontains(user))
+
+#     total_amount = sum(booking.payment_amount for booking in queryset)
+
+#     # Handle CSV download
+#     if request.GET.get('download') == 'csv':
+#         for booking in queryset:
+#             booking.seat_labels = ', '.join(seat.seat_number for seat in booking.seats.all())
+
+#         response = HttpResponse(content_type='text/csv')
+#         response['Content-Disposition'] = 'attachment; filename="sales_report.csv"'
+
+#         writer = csv.writer(response)
+#         writer.writerow(['ID', 'User', 'Movie', 'Cinema Hall', 'Showtime', 'Booking Date', 'Payment Amount', 'Seats'])
+
+#         for booking in queryset:
+#             writer.writerow([
+#                 booking.id,
+#                 booking.user.username,
+#                 booking.movie.title,
+#                 booking.cinema_hall.cinema_type,
+#                 booking.showtime,
+#                 booking.booking_date,
+#                 booking.payment_amount,
+#                 booking.seat_labels
+#             ])
+
+#         return response
+
+#     return render(request, 'admin/booking_report.html', {
+#         'bookings': queryset,
+#         'cinema_halls': CinemaHall.objects.all(),
+#         'total_amount': total_amount,
+#     })
+
+from django.utils.timezone import make_aware
+from .utils import generate_excel  # Import the utility function
+
+# def booking_report_view(request):
+#     queryset = Booking.objects.all()
+
+#     # Apply filters
+#     booking_date = request.GET.get('booking_date')
+#     cinema_hall_id = request.GET.get('cinema_hall')
+#     user = request.GET.get('user')
+
+#     if booking_date:
+#         try:
+#             date_obj = datetime.strptime(booking_date, '%Y-%m-%d')
+#             date_obj = make_aware(date_obj)  # Make the datetime object timezone-aware
+#             queryset = queryset.filter(booking_date=date_obj)
+#         except ValueError:
+#             # Handle incorrect date format
+#             return HttpResponse('Invalid date format. Please use YYYY-MM-DD.')
+
+#     if cinema_hall_id:
+#         queryset = queryset.filter(cinema_hall__id=cinema_hall_id)
+#     if user:
+#         queryset = queryset.filter(user__username__icontains(user))
+
+#     total_amount = sum(booking.payment_amount for booking in queryset)
+
+#     # Handle Excel download
+#     if request.GET.get('download') == 'excel':
+#         return generate_excel(queryset)
+
+#     return render(request, 'admin/booking_report.html', {
+#         'bookings': queryset,
+#         'cinema_halls': CinemaHall.objects.all(),
+#         'total_amount': total_amount,
+#     })
+
+def booking_report_view(request):
+    queryset = Booking.objects.all()
+
+    # Apply filters
+    booking_date = request.GET.get('booking_date')
+    cinema_hall_id = request.GET.get('cinema_hall')
+    user = request.GET.get('user')
+
+    if booking_date:
+        try:
+            date_obj = datetime.strptime(booking_date, '%Y-%m-%d')
+            date_obj = make_aware(date_obj)  # Make the datetime object timezone-aware
+            queryset = queryset.filter(booking_date=date_obj)
+        except ValueError:
+            # Handle incorrect date format
+            return HttpResponse('Invalid date format. Please use YYYY-MM-DD.')
+
+    if cinema_hall_id:
+        queryset = queryset.filter(cinema_hall__id=cinema_hall_id)
+    if user:
+        queryset = queryset.filter(user__username__icontains(user))
+
+    total_amount = sum(booking.payment_amount for booking in queryset)
+
+    # Handle Excel download
+    if request.GET.get('download') == 'excel':
+        return generate_excel(queryset)
+
+    return render(request, 'admin/booking_report.html', {
+        'bookings': queryset,
+        'cinema_halls': CinemaHall.objects.all(),
+        'total_amount': total_amount,
+    })
+
+
+def admin_dashboard(request):
+    total_bookings = Booking.objects.count()
+
+    # Fetch minute-wise sales and convert Decimal to float for JavaScript compatibility
+    minute_sales = (Booking.objects
+                     .annotate(minute=TruncMinute('booking_date'))
+                     .values('minute')
+                     .annotate(total_sales=Sum('payment_amount'))
+                     .order_by('minute'))
+
+    minute_sales_data = [[sale['minute'].strftime('%H:%M'), float(sale['total_sales']) if sale['total_sales'] else 0] for sale in minute_sales]
+
+    # Fetch minute-wise user registrations and prepare data
+    minute_registrations = (User.objects
+                          .annotate(minute=TruncMinute('date_joined'))
+                          .values('minute')
+                          .annotate(count=Count('id'))
+                          .order_by('minute'))
+
+    minute_registrations_data = [[reg['minute'].strftime('%H:%M'), reg['count']] for reg in minute_registrations]
+
+    context = {
+        'total_bookings': total_bookings,
+        'minute_sales': minute_sales_data,
+        'minute_registrations': minute_registrations_data,
+    }
+    return render(request, 'admin/admin_dashboard.html', context)
+
+def minute_sales(request):
+    total_bookings = Booking.objects.count()
+
+    minute_sales = (Booking.objects
+                     .annotate(minute=TruncMinute('booking_date'))
+                     .values('minute')
+                     .annotate(total_sales=Sum('payment_amount'))
+                     .order_by('minute'))
+
+    minute_sales_data = [[sale['minute'].strftime('%H:%M'), float(sale['total_sales']) if sale['total_sales'] else 0] for sale in minute_sales]
+
+    context = {
+        'total_bookings': total_bookings,
+        'minute_sales': minute_sales_data,
+    }
+    return render(request, 'admin/minute_sales.html', context)
+
+def minute_registrations(request):
+    total_bookings = Booking.objects.count()
+
+    minute_registrations = (User.objects
+                          .annotate(minute=TruncMinute('date_joined'))
+                          .values('minute')
+                          .annotate(count=Count('id'))
+                          .order_by('minute'))
+
+    minute_registrations_data = [[reg['minute'].strftime('%H:%M'), reg['count']] for reg in minute_registrations]
+
+    context = {
+        'total_bookings': total_bookings,
+        'minute_registrations': minute_registrations_data,
+    }
+    return render(request, 'admin/minute_registrations.html', context)
 
 @login_required
 def transaction_report(request):
@@ -133,6 +341,7 @@ def transaction_report(request):
     return render(request, 'your_bookings.html', context)
 
 
+
 # views.py
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
@@ -158,123 +367,52 @@ def transaction_report_pdf(request):
     if end_date:
         bookings = bookings.filter(booking_date__lte=datetime.strptime(end_date, '%Y-%m-%d'))
 
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="transaction_report.pdf"'
-
-    doc = SimpleDocTemplate(response, pagesize=landscape(A4))
-    elements = []
-
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle(
-        'Title',
-        parent=styles['Title'],
-        alignment=TA_CENTER,
-        fontSize=24,
-        textColor=colors.black
-    )
-    subtitle_style = ParagraphStyle(
-        'Heading2',
-        parent=styles['Heading2'],
-        alignment=TA_CENTER,
-        fontSize=18,
-        textColor=colors.black
-    )
-    normal_style = ParagraphStyle(
-        'Normal',
-        parent=styles['BodyText'],
-        fontSize=10,
-        leading=12,
-        textColor=colors.black
-    )
-    payment_style = ParagraphStyle(
-        'Payment',
-        parent=styles['BodyText'],
-        fontSize=12,
-        leading=14,
-        textColor=colors.black,
-        fontName='Helvetica-Bold',
-        alignment=TA_RIGHT
-    )
-    movie_style = ParagraphStyle(
-        'Movie',
-        parent=styles['BodyText'],
-        fontSize=12,
-        leading=14,
-        textColor=colors.black,
-        fontName='Helvetica-Bold',
-        alignment=TA_CENTER
-    )
-
-    def add_background(canvas, doc):
-        canvas.saveState()
-        canvas.setFillColor(colors.white)
-        canvas.rect(0, 0, doc.pagesize[0], doc.pagesize[1], fill=1)
-        footer_text = 'Thank you for your purchase!'
-        canvas.setFont('Helvetica-Bold', 10)
-        canvas.setFillColor(colors.black)
-        canvas.drawCentredString(doc.pagesize[0] / 2.0, 0.5 * inch, footer_text)
-        canvas.restoreState()
-
-    try:
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        image_path = os.path.join(base_dir, 'movie_images', 'WIT.jpg')
-        event_image = Image(image_path, width=1.5 * inch, height=1.5 * inch)
-        event_image.hAlign = 'CENTER'
-        elements.append(event_image)
-        elements.append(Spacer(1, 20))
-    except Exception as e:
-        print(f"Error loading logo: {e}")
-        elements.append(Paragraph("Logo could not be loaded.", normal_style))
-
-    elements.append(Paragraph('Transaction Report', title_style))
-    elements.append(Spacer(1, 12))
-
-    if bookings:
-        booking = bookings[0]
-        user = booking.user.username if booking.user else 'N/A'
-        elements.append(Paragraph(f'User: {user}', subtitle_style))
-        elements.append(Spacer(1, 12))
-
-    data = [['Cinema Hall', 'Movie', 'Showtime', 'Seats', 'Payment Amount', 'Booking Date', 'Card Details']]
-    total_amount = 0
+    total_amount = sum(booking.payment_amount for booking in bookings)
+    booking_list = []
 
     for booking in bookings:
         seat_labels = ', '.join(seat.seat_label for seat in booking.seats.all())
         showtime = booking.showtime.showtime if booking.showtime else 'N/A'
         card_details = f"**** **** **** {booking.card_last4}" if booking.card_last4 else 'N/A'
-        total_amount += booking.payment_amount
-        data.append([
-            booking.cinema_hall.cinema_type if booking.cinema_hall else 'N/A',
-            booking.movie.title if booking.movie else 'N/A',
-            showtime,
-            seat_labels,
-            f"${booking.payment_amount}",
-            booking.booking_date.strftime('%Y-%m-%d %H:%M:%S') if booking.booking_date else 'N/A',
-            card_details
-        ])
+        booking_list.append({
+            'cinema_hall': booking.cinema_hall.cinema_type if booking.cinema_hall else 'N/A',
+            'movie': booking.movie.title if booking.movie else 'N/A',
+            'showtime': showtime,
+            'seat_labels': seat_labels,
+            'payment_amount': booking.payment_amount,
+            'booking_date': booking.booking_date.strftime('%Y-%m-%d %H:%M:%S') if booking.booking_date else 'N/A',
+            'card_details': card_details
+        })
 
-    elements.append(Paragraph(f'Total Amount: ${total_amount:.2f}', payment_style))
-    elements.append(Spacer(1, 12))
+    context = {
+        'user': request.user.username if request.user else 'N/A',
+        'total_amount': f"{total_amount:.2f}",
+        'bookings': booking_list,
+        'image_url': None
+    }
 
-    table = Table(data)
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FFD700')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-    ]))
+    try:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        image_path = os.path.join(base_dir, 'movie_images', 'WIT.jpg')
+        if os.path.exists(image_path):
+            context['image_url'] = image_path
+    except Exception as e:
+        print(f"Error loading logo: {e}")
 
-    elements.append(KeepTogether([table]))
-    doc.build(elements, onFirstPage=add_background, onLaterPages=add_background)
+    template = get_template('transaction_report.html')
+    html = template.render(context)
+    result = BytesIO()
+
+    pisa_status = pisa.CreatePDF(BytesIO(html.encode('UTF-8')), dest=result)
+
+    if pisa_status.err:
+        return HttpResponse('We had some errors with code %s' % pisa_status.err)
+
+    response = HttpResponse(result.getvalue(), content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="transaction_report.pdf"'
     return response
 
-
-
-# Create your views here.
+  
 def Home(request):
     today = timezone.now().date()
     movies = Movie.objects.filter(release_date__lte=today)  # Fetch movies with release_date today or in the past
@@ -282,18 +420,15 @@ def Home(request):
     movies_chunks = [movies[i:i+3] for i in range(0, len(movies), 3)]
     return render(request, 'Home.html', {'movies': movies, 'movies_chunks': movies_chunks, 'deals': deals,})
 
-
 @login_required
 def Loggedin(request):
     
     return render(request, 'LoggedIn.html')
 
-
 def LogoutUser(request):
     logout(request)
     messages.success(request, 'Logged out Successfully')
     return redirect('Home')
-
 
 def display_hall(request, cinema_hall_id, movie_id, showtime_id):
     
@@ -323,22 +458,45 @@ def display_hall(request, cinema_hall_id, movie_id, showtime_id):
         'showtime': showtime,
     })
 
+from datetime import datetime
+from django.utils import timezone
+from .models import Tag, Movie, Showtime
+from django.shortcuts import render
 
 def movie_list(request):
     tags = Tag.objects.all()
     selected_tag_name = request.GET.get("tag")
+    
     if selected_tag_name:
         movies = Movie.objects.filter(tags__name=selected_tag_name).distinct()
     else:
         movies = Movie.objects.all()
     
     now = timezone.now().date()
+    
+    # Get distinct show dates for movies currently showing
+    show_dates = Showtime.objects.filter(movie__in=movies, showtime__gte=now).values_list('showtime__date', flat=True).distinct()
+    show_dates = sorted(show_dates)
+    
+    selected_date = request.GET.get("show_date")
+    formatted_date = None
+
+    if selected_date:
+        # Convert the selected_date from "May 28, 2024" format to "YYYY-MM-DD" format
+        formatted_date = datetime.strptime(selected_date, "%B %d, %Y").strftime("%Y-%m-%d")
+    
+    if formatted_date:
+        # Use the formatted_date in your queryset only if it's not None
+        movies = Movie.objects.filter(showtimes__showtime__date=formatted_date).distinct()
+    else:
+        movies = Movie.objects.all()
 
     return render(request, 'movie_list.html', {
         'movies': movies,
         'now': now,
-        'tags' : tags,
-        'selected_tag_name': selected_tag_name
+        'tags': tags,
+        'selected_tag_name': selected_tag_name,
+        'show_dates': show_dates
     })
 
 from collections import defaultdict
@@ -346,16 +504,95 @@ from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from .models import Movie, Showtime
 
+
+
+
 def movie_detail(request, movie_id):
     movie = get_object_or_404(Movie, pk=movie_id)
     showtimes_by_date = defaultdict(list)
+    show_dates = set()
     
-    # Grouping showtimes by date
+    # Grouping showtimes by date and collecting unique show dates
     for showtime in movie.showtimes.filter(showtime__gt=timezone.now()).order_by('showtime'):
         showtime_date = showtime.showtime.date()
         showtimes_by_date[showtime_date].append(showtime)
+        show_dates.add(showtime_date)
+
+    selected_date_str = request.GET.get('date', None)
+    if selected_date_str:
+        try:
+            selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            selected_date = min(show_dates, default=None)
+    else:
+        selected_date = min(show_dates, default=None)
     
-    return render(request, 'movie_detail.html', {'movie': movie, 'showtimes_by_date': dict(showtimes_by_date)})
+    context = {
+        'movie': movie,
+        'showtimes_by_date': dict(showtimes_by_date),
+        'show_dates': sorted(show_dates),
+        'selected_date': selected_date,
+        'showtimes': showtimes_by_date[selected_date] if selected_date in showtimes_by_date else None
+    }
+    return render(request, 'movie_detail.html', context)
+
+from django.http import JsonResponse
+
+
+
+def movie_showtimes(request, movie_id):
+    movie = get_object_or_404(Movie, pk=movie_id)
+    selected_date_str = request.GET.get('date', None)
+    
+    if selected_date_str:
+        try:
+            selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return JsonResponse({'error': 'Invalid date format'}, status=400)
+    else:
+        return JsonResponse({'error': 'No date provided'}, status=400)
+    
+    showtimes = movie.showtimes.filter(showtime__date=selected_date, showtime__gt=timezone.now()).order_by('showtime')
+    showtime_list = [
+        {
+            'id': showtime.id,
+            'showtime': showtime.showtime.isoformat(),
+            'cinema_hall_id': showtime.cinema_hall.id,
+            'movie_id': movie.id
+        }
+        for showtime in showtimes
+    ]
+    
+    return JsonResponse({'showtimes': showtime_list})
+
+
+
+from django.http import JsonResponse
+
+def movie_showtimes(request, movie_id):
+    movie = get_object_or_404(Movie, pk=movie_id)
+    selected_date_str = request.GET.get('date', None)
+    
+    if selected_date_str:
+        try:
+            selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return JsonResponse({'error': 'Invalid date format'}, status=400)
+    else:
+        return JsonResponse({'error': 'No date provided'}, status=400)
+    
+    showtimes = movie.showtimes.filter(showtime__date=selected_date, showtime__gt=timezone.now()).order_by('showtime')
+    showtime_list = [
+        {
+            'id': showtime.id,
+            'showtime': showtime.showtime.isoformat(),
+            'cinema_hall_id': showtime.cinema_hall.id,
+            'movie_id': movie.id
+        }
+        for showtime in showtimes
+    ]
+    
+    return JsonResponse({'showtimes': showtime_list})
 
 
 def redirect_to_payment(request, cinema_hall_id):
@@ -371,7 +608,8 @@ def save_total_price_to_session(request):
     request.session['total_price'] = request.POST.get('total_price')
     return JsonResponse({'success': True})
 
-
+  
+from django.shortcuts import get_object_or_404, render, redirect
 
 
 def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
@@ -383,7 +621,7 @@ def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
     print("Movie ID:", movie_id)
     print("Showtime ID:", show)
 
-    is_wednesday = datetime.now().date().weekday() == 2
+    is_wednesday = show.showtime.weekday() == 2
 
     if request.method == 'POST':
         adult_tickets = int(request.POST.get('adult_quantity', 0))
@@ -426,9 +664,6 @@ def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
         'half_child_price': cinema_hall.child_price/2,
     })
 
-
-
-
 def payment(request, cinema_hall_id):
     movie_id = request.GET.get('movie_id')
     showtime_id = request.GET.get('showtime_id')
@@ -459,6 +694,8 @@ def payment(request, cinema_hall_id):
     })
 
 
+  
+@csrf_exempt
 def process_payment(request):
     if request.method == 'POST':
         try:
@@ -544,6 +781,7 @@ def booking_success(request,user):
     logger.info(f"Payment was done by {user.username} for booking a movie")
     return render(request, 'booking_success.html')
 
+
 def generate_purchase_history(request, booking_id):
     # Get the booking instance
     booking = get_object_or_404(Booking, id=booking_id)
@@ -552,8 +790,27 @@ def generate_purchase_history(request, booking_id):
     showtime_instance = Showtime.objects.filter(movie=booking.movie, cinema_hall=booking.cinema_hall).first()
     showtime = showtime_instance.showtime.strftime("%Y-%m-%d %H:%M:%S") if showtime_instance else "N/A"
 
+    # Get the booked movie image URL
+    booked_movie_image_url = request.build_absolute_uri(booking.movie.image.url) if booking.movie.image else None
+
+    # Fetch some random movies for the images, excluding the booked movie
+    now_showing_movies = Movie.objects.filter(
+        release_date__lte=timezone.now()
+            ).exclude(
+                id=booking.movie.id
+            ).order_by('?')[:3]
+
+    # Get absolute URL for image
+    for movie in now_showing_movies:
+        movie.image_url = request.build_absolute_uri(movie.image.url) if movie.image else None
+
     # Render HTML template with context
-    html = render_to_string('generating_pdf.html', {'booking': booking, 'showtime': showtime})
+    html = render_to_string('generating_pdf.html', {
+        'booking': booking,
+        'showtime': showtime,
+        'booked_movie_image_url': booked_movie_image_url,
+        'now_showing_movies': now_showing_movies
+    })
 
     # Create PDF
     response = HttpResponse(content_type='application/pdf')
@@ -583,10 +840,13 @@ def movie_recommendations(request):
 def your_bookings(request):
     current_time = timezone.localtime(timezone.now())
     your_bookings = Booking.objects.filter(user=request.user, showtime__showtime__gt=current_time).select_related('movie', 'cinema_hall', 'showtime')
+    
 
     bookings_with_edit_permission = []
     for booking in your_bookings:
-        can_edit = not booking.edited and current_time <= booking.showtime.showtime - timedelta(hours=2)
+        # Check if the booking was made for a Wednesday show
+        is_wednesday_show = booking.showtime.showtime.weekday() == 2
+        can_edit = not (booking.edited or is_wednesday_show) and current_time <= booking.showtime.showtime - timedelta(hours=2)
         bookings_with_edit_permission.append((booking, can_edit))
 
     return render(request, 'your_bookings.html', {'bookings_with_edit_permission': bookings_with_edit_permission})
@@ -602,10 +862,12 @@ def list_purchase_history(request):
 def edit_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
 
-    if booking.edited or timezone.now() > booking.showtime.showtime - timedelta(hours=2):
+    # Disallow editing if booking is for a Wednesday show
+    if booking.edited or booking.showtime.showtime.weekday() == 2 or timezone.now() > booking.showtime.showtime - timedelta(hours=2):
         return redirect('your_bookings')
 
-    movies = Movie.objects.all()
+    today = timezone.now().date()
+    movies = Movie.objects.filter(release_date__lte=today)
 
     if request.method == 'POST':
         selected_movie_id = request.POST.get('movie_id')
@@ -655,14 +917,16 @@ def edit_seats(request, booking_id, showtime_id, cinema_hall_id):
                 'showtime': showtime,
                 'seats': seats,
                 'message': message,
-                'num_seats': booking.num_seats
+                'num_seats': booking.num_seats,
+                'cinema_hall': showtime.cinema_hall,
             })
         return redirect('confirm_edit_booking', booking_id=booking_id, showtime_id=showtime_id, seats=','.join(selected_seat_ids))
 
     return render(request, 'edit_seats.html', {
         'showtime': showtime,
         'seats': seats,
-        'num_seats': booking.num_seats
+        'num_seats': booking.num_seats,
+        'cinema_hall': showtime.cinema_hall,
     })
 
 
@@ -698,7 +962,6 @@ def confirm_edit_booking(request, booking_id, showtime_id, seats):
         'showtime': showtime,
         'seats': selected_seats,
     })
-
 
 
 class EmailThread(threading.Thread):
@@ -813,7 +1076,6 @@ def Home(request):
 
     return render(request, 'Home.html', {'movies': movies, 'movies_chunks': movies_chunks, 'deals': deals})
 
-  
 @auth_user_should_not_access
 def SignUp (request):
     if request.method =='POST':
@@ -1061,7 +1323,6 @@ def reset_password(request, uidb64, token):
     else:
         return render(request, "reset_password_confirm.html")
 
-
 @login_required
 def QRcode(request):
     # Generate or retrieve the secret key for the current user
@@ -1242,6 +1503,7 @@ def sales_report_view(request):
     data = get_sales_report()
     return render(request, 'reports/sales_report.html', {'data': data})
 
+
 def view_log_entries(request):
     log_files = {'activities': 'user_activity.log', 'security': 'security.log'}
     log_entries = {'activities': [], 'security': []}
@@ -1260,3 +1522,119 @@ def view_log_entries(request):
     # Pass log entries to template context
     context = {'log_entries': log_entries}
     return render(request, 'admin/user_activity.html', context)
+
+
+def is_admin(user):
+    return user.is_superuser
+
+
+@login_required
+def submit_feedback(request):
+    if request.method == 'POST':
+        form = FeedbackForm(request.POST, request.FILES)
+        if form.is_valid():
+            feedback = form.save(commit=False)
+            feedback.user = request.user
+            feedback.save()
+            messages.success(request, 'Feedback successfully submitted!')
+            return redirect('my_feedback')  # Redirect to 'user_feedback_list'
+        else:
+            print(form.errors)  # Print form errors to the console
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = FeedbackForm()
+    return render(request, 'Feedback.html', {'form': form})
+
+def my_feedback(request):
+    feedbacks = Feedback.objects.filter(user=request.user)
+    return render(request, 'my_feedback.html', {'feedbacks': feedbacks})
+
+def feedback_list(request):
+    feedbacks = submit_feedback.objects.filter(reviewed=False)  # Show only unreviewed feedback
+    return render(request, 'feedback_list.html', {'feedbacks': feedbacks})
+
+  
+@login_required
+@user_passes_test(is_admin)
+def approve_feedback(request, feedback_id):
+    feedback = get_object_or_404(Feedback, id=feedback_id)
+    feedback.approved = True
+    feedback.reviewed = True
+    feedback.save()
+    messages.success(request, 'Feedback approved successfully!')
+    return redirect('admin_dashboard')
+
+@login_required
+@user_passes_test(is_admin)
+def reject_feedback(request, feedback_id):
+    feedback = get_object_or_404(Feedback, id=feedback_id)
+    feedback.approved = False
+    feedback.reviewed = True
+    feedback.save()
+    messages.success(request, 'Feedback rejected successfully!')
+    return redirect('admin_dashboard')
+
+  
+def admin_dashboard(request):
+    total_bookings = Booking.objects.count()
+
+    # Fetch minute-wise sales and convert Decimal to float for JavaScript compatibility
+    minute_sales = (Booking.objects
+                     .annotate(minute=TruncMinute('booking_date'))
+                     .values('minute')
+                     .annotate(total_sales=Sum('payment_amount'))
+                     .order_by('minute'))
+
+    minute_sales_data = [[sale['minute'].strftime('%H:%M'), float(sale['total_sales']) if sale['total_sales'] else 0] for sale in minute_sales]
+
+    # Fetch minute-wise user registrations and prepare data
+    minute_registrations = (User.objects
+                          .annotate(minute=TruncMinute('date_joined'))
+                          .values('minute')
+                          .annotate(count=Count('id'))
+                          .order_by('minute'))
+
+    minute_registrations_data = [[reg['minute'].strftime('%H:%M'), reg['count']] for reg in minute_registrations]
+
+    context = {
+        'total_bookings': total_bookings,
+        'minute_sales': minute_sales_data,
+        'minute_registrations': minute_registrations_data,
+    }
+    return render(request, 'admin/admin_dashboard.html', context)
+
+def minute_sales(request):
+    total_bookings = Booking.objects.count()
+
+    minute_sales = (Booking.objects
+                     .annotate(minute=TruncMinute('booking_date'))
+                     .values('minute')
+                     .annotate(total_sales=Sum('payment_amount'))
+                     .order_by('minute'))
+
+    minute_sales_data = [[sale['minute'].strftime('%H:%M'), float(sale['total_sales']) if sale['total_sales'] else 0] for sale in minute_sales]
+
+    context = {
+        'total_bookings': total_bookings,
+        'minute_sales': minute_sales_data,
+    }
+    return render(request, 'admin/minute_sales.html', context)
+
+def minute_registrations(request):
+    total_bookings = Booking.objects.count()
+
+    minute_registrations = (User.objects
+                          .annotate(minute=TruncMinute('date_joined'))
+                          .values('minute')
+                          .annotate(count=Count('id'))
+                          .order_by('minute'))
+
+    minute_registrations_data = [[reg['minute'].strftime('%H:%M'), reg['count']] for reg in minute_registrations]
+
+    context = {
+        'total_bookings': total_bookings,
+        'minute_registrations': minute_registrations_data,
+    }
+    return render(request, 'admin/minute_registrations.html', context)
+
+

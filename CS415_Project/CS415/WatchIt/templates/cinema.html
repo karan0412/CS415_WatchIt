@@ -68,11 +68,7 @@
 <body>
     <div class="container mt-5 mb-5">
         <h1 class="text-center">Select Your Seats</h1>
-        <div id="info">
-            <p>Cinema Hall ID: {{ cinema_hall.id }}</p>
-            <p>Movie ID: {{ movie.id }}</p>
-            <p>Movie ID: {{ showtime.id }}</p>
-        </div>
+    
         <div id="screen" class="mb-5">SCREEN</div>
         <div id="seats-container" class="my-5">
             {% for seat in seats %}

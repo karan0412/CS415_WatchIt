@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-%)+3a&lnyn+_7@x$^b!1nx6f!vq=y48o(9at-tswd(l+b$n7h&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-#ALLOWED_HOSTS = ['192.168.59.63']
+#ALLOWED_HOSTS = ['192.168.169.63']
 ALLOWED_HOSTS = []
 
 
@@ -38,6 +38,9 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'WatchIt',
+    "semantic_admin",
+    "semantic_forms",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -47,7 +50,8 @@ INSTALLED_APPS = [
     'django_extensions',
     'WatchIt',
 
-]
+
+
 AUTH_USER_MODEL = "WatchIt.User" 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -172,6 +176,7 @@ TWILIO_PHONE_NUMBER = '+14018122982'
 # TWILIO_PHONE_NUMBER = ''
 
 #karan
+
 # TWILIO_ACCOUNT_SID = 'ACbab5a0fb84843f39a1c52f75d4eec69b'
 # TWILIO_AUTH_TOKEN = '0eb5dd22f89043e4f7daf7326a4e08ce'
 # TWILIO_PHONE_NUMBER = '+13856441298'
@@ -224,3 +229,8 @@ CSRF_COOKIE_SECURE = False
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SSL_CERTIFICATE = os.path.join(BASE_DIR, 'certs', 'localhost.crt')
 SSL_KEY = os.path.join(BASE_DIR, 'certs', 'localhost.key')
+
+#TWILIO_ACCOUNT_SID = 'ACbab5a0fb84843f39a1c52f75d4eec69b'
+#TWILIO_AUTH_TOKEN = '0eb5dd22f89043e4f7daf7326a4e08ce'
+#TWILIO_PHONE_NUMBER = '+13856441298'
+
