@@ -226,7 +226,7 @@ def booking_report_view(request):
     if cinema_hall_id:
         queryset = queryset.filter(cinema_hall__id=cinema_hall_id)
     if user:
-        queryset = queryset.filter(user__username__icontains(user))
+        queryset = queryset.filter(user__username__icontains=user)
 
     total_amount = sum(booking.payment_amount for booking in queryset)
 

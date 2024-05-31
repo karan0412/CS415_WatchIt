@@ -159,7 +159,7 @@ class SeatAdmin(admin.ModelAdmin):
 #         return custom_urls + urls
     
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'movie', 'cinema_hall', 'showtime', 'booking_date', 'payment_amount', 'num_seats')
+    list_display = ('id', 'user', 'movie', 'cinema_hall', 'showtime', 'booking_date', 'payment_amount', 'num_seats', 'get_seat_labels')
     search_fields = ('user__username', 'movie__title')
     list_filter = ('booking_date', 'showtime')
     fields = ('user', 'movie', 'cinema_hall', 'showtime', 'booking_date', 'payment_amount', 'num_seats', 'seats', 'edited')
@@ -172,6 +172,8 @@ class BookingAdmin(admin.ModelAdmin):
             path('booking_report/', self.admin_site.admin_view(booking_report_view), name='booking-report'),
         ]
         return custom_urls + urls
+
+
 
 class FeedbackAdmin(admin.ModelAdmin):
     list_display = ('user', 'subject', 'created_at', 'approved', 'reviewed')

@@ -124,6 +124,7 @@
                 <input type="text" id="id_user" name="user" value="{{ request.GET.user }}">
             </div>
             <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="." class="btn btn-primary">Reset Filters</a>
         </div>
     </form>
 
@@ -154,7 +155,7 @@
                     <td>{{ booking.showtime }}</td>
                     <td>{{ booking.booking_date }}</td>
                     <td>{{ booking.payment_amount }}</td>
-                    <td>{{ booking.seat_labels }}</td>
+                    <td>{{ booking.get_seat_labels }}</td>
                 </tr>
             {% endfor %}
         </tbody>
