@@ -716,7 +716,11 @@ def generate_purchase_history(request, booking_id):
     booked_movie_image_url = request.build_absolute_uri(booking.movie.image.url) if booking.movie.image else None
 
     # Fetch some random movies for the images, excluding the booked movie
-    now_showing_movies = Movie.objects.exclude(id=booking.movie.id).order_by('?')[:3]
+    now_showing_movies = Movie.objects.filter(
+        release_date__lte=timezone.now()
+            ).exclude(
+                id=booking.movie.id
+            ).order_by('?')[:3]
 
     # Get absolute URL for image
     for movie in now_showing_movies:

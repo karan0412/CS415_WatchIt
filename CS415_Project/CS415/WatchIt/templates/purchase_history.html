@@ -51,6 +51,14 @@
 
 <div class="container">
     <h1 class="my-4">Your Purchases History</h1>
+    <!-- Generate Report Button -->
+    <form method="GET" action="{% url 'transaction_report_pdf' %}" class="mb-4">
+        <input type="hidden" name="movie_id" value="{{ request.GET.movie_id }}">
+        <input type="hidden" name="genre_id" value="{{ request.GET.genre_id }}">
+        <input type="hidden" name="start_date" value="{{ request.GET.start_date }}">
+        <input type="hidden" name="end_date" value="{{ request.GET.end_date }}">
+        <button type="submit" class="btn btn-outline-light">Generate Report</button>
+    </form>
     <div class="row">
         {% for booking in purchase_histories %}
         <div class="col-md-4 mb-4">

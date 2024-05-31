@@ -64,7 +64,7 @@
     <div class="row">
         {% if bookings_with_edit_permission %}
             {% for booking, can_edit in bookings_with_edit_permission %}
-            <div class="col-md-4 mb-4">
+            <div class="col-md-4 ">
                 <div class="card text-white h-100">
                     <img src="{{ booking.movie.image.url }}" class="card-img-top fixed-image" alt="{{ booking.movie.title }}">
                     <div class="card-body d-flex flex-column">
@@ -87,18 +87,21 @@
                  <!-- Edit Booking Modal -->
                 <div class="modal fade" id="editBookingModal{{ booking.id }}" tabindex="-1" aria-labelledby="editBookingModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-lg">
-                        <div class="modal-content bg-dark">
+                        <div class="modal-content bg-danger">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="editBookingModalLabel">Edit Booking Options</h5>
+                                <h3 class="modal-title" id="editBookingModalLabel">Edit Booking Options</h3>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                                  
                                 </button>
                             </div>
                             <div class="modal-body">
-                                <!-- Buttons to choose edit type -->
-                                <a href="{% url 'edit_seats' booking.id booking.showtime.id booking.cinema_hall.id %}" class="btn btn-secondary">Change Seats</a>
-                                <a href="{% url 'edit_showtime' booking.id booking.movie.id booking.cinema_hall.id %}" class="btn btn-secondary">Change Showtime</a>
-                                <a href="{% url 'edit_booking' booking.id %}" class="btn btn-secondary">Change Movie</a>
+                                <h5>You can only change your booking once!</h5>
+                            </div>
+                            <div class="modal-body">
+                                
+                                <a href="{% url 'edit_seats' booking.id booking.showtime.id booking.cinema_hall.id %}" class="btn btn-outline-light">Change Seats</a>
+                                <a href="{% url 'edit_showtime' booking.id booking.movie.id booking.cinema_hall.id %}" class="btn btn-outline-light">Change Showtime</a>
+                                <a href="{% url 'edit_booking' booking.id %}" class="btn btn-outline-light">Change Movie</a>
                                
                             </div>
                         </div>
