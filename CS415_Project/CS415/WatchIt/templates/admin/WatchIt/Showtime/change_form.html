@@ -40,5 +40,25 @@
 
 {% block content %}
     {{ block.super }}
-    <!-- Custom template is loading -->
+    <h2>Showtime: {{ original.movie.title }} at {{ original.showtime }}</h2>
+    <div>
+        <h3>Cinema Hall: {{ original.cinema_hall.cinema_type }}</h3>
+        <h4>Seats:</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Seat Label</th>
+                    <th>Availability</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for seat in original.seats.all %}
+                    <tr>
+                        <td>{{ seat.seat_label }}</td>
+                        <td>{{ seat.availability }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 {% endblock %}
