@@ -74,7 +74,7 @@ urlpatterns = [
     path('my_feedback/', views.my_feedback, name='my_feedback'),
     path('booking_report_view/', views.booking_report_view, name='booking_report_view'),
 
-
+]
 
 
 if settings.DEBUG:
