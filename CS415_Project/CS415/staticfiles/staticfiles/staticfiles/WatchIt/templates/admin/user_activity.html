@@ -1,0 +1,102 @@
+{% extends "admin/admin_dashboard.html" %}
+
+{% block dashboard_content %}
+
+<style>
+    .log-entries {
+        margin-top: 20px;
+    }
+
+    .log-entry {
+        margin-bottom: 10px;
+        padding: 10px;
+        background-color: #f0f0f0;
+        border: 1px solid #ddd;
+    }
+
+    .log-entry p {
+        margin: 0;
+    }
+    .log-entry .log-time {
+        font-weight: bold;
+        color: rgb(69, 164, 79); /* Adjust color based on log level */
+    }
+    .log-entry .log-level {
+        color: rgb(106, 144, 180); /* Adjust color based on log level */
+    }
+    .log-entry .log-message {
+        font-weight: bold;
+        color: rgb(0, 0, 0); /* Adjust color based on log level */
+    }
+    /* Style for option when hovered */
+    #log-type option{
+        padding: 15px; 
+        height: 15%; 
+        font-size: 16px; 
+        border: 1px solid #ccc; 
+        border-radius: 0;
+    }
+
+    #log-type{
+        padding: 10px; 
+        height: 15%; 
+        font-size: 16px; 
+        border: 1px solid #ccc; 
+        border-radius: 0;
+    }
+</style>
+
+<!-- Dropdown to select log type -->
+<select id="log-type">
+    <option value="activities">User activities</option>
+    <option value="security">Security Audit</option>
+</select>
+
+
+<!-- Container for log entries -->
+<div id="activities-log" class="log-entries">
+    {% for log_entry in log_entries.activities %}
+    <div class="log-entry">
+        <p>
+            <strong class="log-time">[{{ log_entry.timestamp }}]</strong> 
+            <span class="log-level">[{{ log_entry.level }}] </span>
+            <span class="log-message">[{{ log_entry.message }}] </span>
+        </p>
+    </div>
+    {% endfor %}
+</div>
+
+
+<div id="security-log" class="log-entries">
+    {% for log_entry in log_entries.security %}
+    <div class="log-entry">
+        <p>
+            <strong class="log-time">[{{ log_entry.timestamp }}]</strong> 
+            <span class="log-level">[{{ log_entry.level }}] </span>
+            <span class="log-message">[{{ log_entry.message }}] </span>
+        </p>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    // Function to toggle between log types
+    document.getElementById('log-type').addEventListener('change', function() {
+        var logType = this.value;
+        if (logType === 'activities') {
+            document.getElementById('activities-log').style.display = 'block';
+            document.getElementById('security-log').style.display = 'none';
+        }
+        else if (logType === 'security') {
+            document.getElementById('activities-log').style.display = 'none';
+            document.getElementById('security-log').style.display = 'block';
+    }
+});
+
+    // Initialize the display setting
+    document.getElementById('activities-log').style.display = 'block';
+    document.getElementById('security-log').style.display = 'none';
+
+</script>
+
+{% endblock %}

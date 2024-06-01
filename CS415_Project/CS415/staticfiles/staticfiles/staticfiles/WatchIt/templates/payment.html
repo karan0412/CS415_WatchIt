@@ -1,0 +1,195 @@
+{% extends 'index.html' %}
+{% block content %}
+
+<style>
+    .payment-container {
+        background: #f9f9f9;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        max-width: 600px;
+        margin: 40px auto;
+    }
+    .header {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .detail {
+        margin-bottom: 10px;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+    .btn-confirm {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        width: 100%;
+    }
+    .btn-confirm:hover {
+        background-color: #45a049;
+    }
+    .StripeElement {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        background-color: white;
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+        transition: box-shadow 0.15s ease-in-out, border-color 0.15s ease-in-out;
+    }
+    .StripeElement--focus {
+        border-color: #4CAF50;
+        box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+    }
+    .StripeElement--invalid {
+        border-color: #e3342f;
+        box-shadow: 0 0 8px rgba(227, 52, 47, 0.6);
+    }
+    .StripeElement--webkit-autofill {
+        background-color: #fefde5 !important;
+    }
+    #card-errors {
+        color: #e3342f;
+        margin-top: 10px;
+        font-size: 14px;
+    }
+    .progress {
+        height: 20px;
+        margin-top: 20px;
+        background-color: #e0e0e0;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .progress-bar {
+        background-color: #4CAF50;
+        transition: width 0.4s ease-in-out;
+        height: 100%;
+    }
+</style>
+
+<div class="payment-container">
+    <div class="header">Finalize Your Payment</div>
+    <div class="detail"><strong>Cinema Type:</strong> {{ cinema_type }}</div>
+    <div class="detail"><strong>Movie Title:</strong> {{ movie_title }}</div>
+    <div class="detail"><strong>Show:</strong> {{ show }}</div>
+    <div class="detail"><strong>Movie Duration:</strong> {{ movie_duration }} minutes</div>
+    <div class="detail"><strong>Total Price:</strong> ${{ total_price }}</div>
+    <div class="detail"><strong>Selected Seats:</strong>
+        <div id="seat-list">
+            {% for seat in selected_seats %}
+                <span class="seat-label" data-id="{{ seat.id }}">{{ seat.seat_label }}</span>{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="progress">
+        <div id="payment-progress" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">Processing...</div>
+    </div>
+
+    <form id="payment-form">
+        <div class="form-group">
+            <label for="card-element">Credit or debit card</label>
+            <div id="card-element" class="StripeElement"></div>
+            <div id="card-errors" role="alert"></div>
+        </div>
+        <button type="button" class="btn-confirm" onclick="submitPayment()">Submit Payment</button>
+    </form>
+    <div id="form-response" style="margin-top: 10px; font-size: 14px; color: red;"></div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+    var stripePublicKey = '{{ stripe_public_key }}';
+    console.log("Stripe Public Key from template:", stripePublicKey);
+
+    var stripe = Stripe(stripePublicKey);
+    var elements = stripe.elements();
+    var card = elements.create('card');
+    card.mount('#card-element');
+
+    card.addEventListener('change', function(event) {
+        var displayError = document.getElementById('card-errors');
+        if (event.error) {
+            displayError.textContent = event.error.message;
+        } else {
+            displayError.textContent = '';
+        }
+    });
+
+    function submitPayment() {
+        var progressElem = document.getElementById('payment-progress');
+        progressElem.style.width = "0%"; // Reset progress on new submission
+        stripe.createPaymentMethod({
+            type: 'card',
+            card: card,
+        }).then(function(result) {
+            if (result.error) {
+                var errorElement = document.getElementById('card-errors');
+                errorElement.textContent = result.error.message;
+                progressElem.style.width = "0%";
+                progressElem.textContent = 'Failed to process payment.';
+            } else {
+                updateProgressBar(30); // Assume creating payment method takes 30% of the time
+
+                var paymentMethodId = result.paymentMethod.id;
+                var data = {
+                    payment_method_id: paymentMethodId,
+                    cinema_hall_id: "{{ cinema_hall_id }}",
+                    movie_id: "{{ movie_id }}",
+                    total_price: "{{ total_price }}",
+                    showtime_id: "{{ showtime_id }}",
+                    total_tickets: "{{ total_tickets }}",
+                    seats: []
+                };
+
+                $('#seat-list .seat-label').each(function() {
+                    data.seats.push($(this).data('id'));
+                });
+
+                console.log("Data to be sent to server:", data);
+
+                $.ajax({
+                    url: "/process-payment/",
+                    method: "POST",
+                    data: JSON.stringify(data),
+                    contentType: "application/json",
+                    beforeSend: function() {
+                        updateProgressBar(50); // Reaching server assumed at 50%
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            updateProgressBar(100);
+                            setTimeout(function() {
+                                window.location.href = "/booking-success/";
+                            }, 1000); // Redirect after 1 second of full progress
+                        } else {
+                            $('#form-response').text(response.error);
+                            progressElem.style.width = "0%";
+                            progressElem.textContent = 'Payment failed.';
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.log("AJAX error:", error);
+                        $('#form-response').text('An error occurred while processing the payment. Please try again.');
+                        progressElem.style.width = "0%";
+                        progressElem.textContent = 'Error processing payment.';
+                    }
+                });
+            }
+        });
+    }
+
+    function updateProgressBar(percent) {
+        var progressElem = document.getElementById('payment-progress');
+        progressElem.style.width = percent + "%";
+        progressElem.textContent = percent < 100 ? "Processing..." : "Payment successful!";
+    }
+</script>
+{% endblock %}

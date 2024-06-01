@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase History</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            padding: 10px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            text-align: center;
+        }
+
+        .title {
+            margin: 0;
+            background-color: #0e044a;
+            color: white;
+            padding: 10px;
+        }
+
+        .title-movie {
+            color: #000000;
+            margin-top: 10px;
+            font-size: xx-large;
+            font-style: italic;
+        }
+
+        .title-movie .movie_table td {
+            font-family: 'Arial', sans-serif;
+            font-size: 12px;
+        }
+
+        .inner-table tr td {
+            padding: 2px;
+            align-items: center;
+        }
+        .inner-table tr td:first-child {
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .inner-table tr td:nth-child(2) {
+            font-weight: bold;
+            text-align: left;
+            /* Align text to the left */
+        }
+
+        .title-movie .movie_table td:first-child {
+            font-weight: bold;
+            /* Make the first line bold */
+        }
+
+        .title p {
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .info table {
+            width: 100%;
+            margin-bottom: 20px;
+            border-collapse: collapse;
+        }
+
+        .info th,
+        .info td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .terms {
+            font-size: 12px;
+            color: #ffffff;
+            background-color: #d7dcde;
+            padding: 10px;
+        }
+
+        .conditions {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .terms b {
+            color: rgb(0, 0, 0);
+        }
+
+
+        .movie-title {
+            font-size: medium;
+            margin-bottom: 0;
+        }
+
+
+
+        .movie {
+            width: 200px;
+            height: 200px;
+            border-radius: 20%;
+            display: inline-block;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .movie_table img {
+            float: right;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header with logo and border -->
+    <div class="header" style="align-items: center;">
+        <img src="media/movie_images/logo.jpg" alt="Logo" class="logo">
+        <h1 class="title">Purchase History</h1>
+    </div>
+
+    <div class="ticket">
+        <div class="title-movie">
+            <table class="movie_table">
+                <tr>
+                    <td>
+                        <table class="inner-table">
+                            <tr>
+                                <td>USER </td>
+                                <td>{{ booking.user.username }}</td>
+                            </tr>
+                            <tr>
+                                <td>TITLE </td>
+                                <td>{{ booking.movie.title }}</td>
+                            </tr>
+                            <tr>
+                                <td>CINEMA </td>
+                                <td>{{ booking.cinema_hall.cinema_type }}</td>
+                            </tr>
+                            <tr>
+                                <td>SEATS </td>
+                                <td>{{ booking.get_seat_labels }}</td>
+                            </tr>
+                            <tr>
+                                <td>DATE </td>
+                                <td>{{ booking.booking_date }}</td>
+                            </tr>
+                            <tr>
+                                <td>TIME </td>
+                                <td>{{ showtime }}</td>
+                            </tr>
+                            <tr>
+                                <td>TOTAL <br>AMOUNT </td>
+                                <td>${{ booking.payment_amount|floatformat:"2" }}</td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td>
+                        <img class="movie" src="{{ booked_movie_image_url }}" alt="{{ booking.movie.title }}">
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Terms and conditions -->
+    <div class="terms">
+        <p><b>Acceptance of Terms</b></p>
+    </div>
+
+    </div class="conditions">
+    <b>Ticket Purchase</b><br />
+    Once purchased, tickets cannot be transferred or refunded.<br />
+    Customers are responsible for checking the details of their booking (film, time, and date) before confirming the
+    purchase.<br /><br />
+    <b>Payment Methods</b><br />
+    We accept credit and debit cards and cash at the box office.<br />
+    <b>Pricing and Fees</b><br />
+    Ticket prices are subject to change without notice. Payment must be made in full at the time of booking.<br />
+    Additional fees may apply for online bookings, premium seats, or special screenings.<br /><br />
+    <b>Discounts and Offers</b><br />
+    Discounts, vouchers, and promotional offers are subject to specific terms and conditions and may not be combined
+    unless stated otherwise.<br />
+    </div>
+
+    
+    <script>
+        // Function to trigger download when page loads
+        window.onload = function () {
+            var filename = "purchase_history_{{ booking.id }}.pdf";
+            var link = document.createElement('a');
+            link.href = "{{ request.path }}";
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+    </script>
+</body>
+
+</html>

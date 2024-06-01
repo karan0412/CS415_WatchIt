@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sales Report - WatchIt</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+            color: #fff;
+            background-color: #180131;
+            width: 100%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            overflow: hidden;
+            font-weight: bold;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #110238;
+            text-align: left;
+        }
+        th {
+            background-color: #405ada;
+            color: white;
+        }
+        td {
+            background-color: #fff;
+        }
+        .total {
+            font-weight: bold;
+            font-size: larger;
+        }
+        .total td {
+            background-color: #8092ec;
+            color: white;
+            text-align: left;
+            color: rgb(5, 5, 5);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="media/movie_images/logo_report.jpg" alt="Logo" class="logo">
+            <h1>Sales Report</h1>
+        </div>
+    </header>
+    
+    <table style="text-align: left;">
+        <tr>
+            <th>Booking ID</th>
+            <th>User</th>
+            <th>Booking Date</th>
+            <th>Movie</th>
+            <th>Cinema Hall Type</th>
+            <th>Showtime</th>
+            <th>Seats</th>
+            <th>Payment Amount</th>
+            <th>Card Details</th>
+        </tr>
+        {% for booking in bookings %}
+        <tr>
+            <td>{{ booking.id }}</td>
+            <td>{{ booking.user.username }}</td>
+            <td>{{ booking.booking_date }}</td>
+            <td>{{ booking.movie.title }}</td>
+            <td>{{ booking.cinema_hall.cinema_type }}</td>
+            <td>{{ booking.showtime }}</td>
+            <td>{{ booking.get_seat_labels }}</td>
+            <td>${{ booking.payment_amount }}</td>
+            <td>{{ booking.card_last4 }}</td>
+        </tr>
+        {% endfor %}
+        <tr class="total">
+            <td colspan="7">Total Amount</td>
+            <td colspan="2">${{ total_amount }}</td>
+        </tr>
+    </table>
+</body>
+</html>

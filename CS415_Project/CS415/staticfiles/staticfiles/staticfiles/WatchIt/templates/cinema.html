@@ -1,0 +1,123 @@
+{% extends 'index.html' %}
+
+{% block title %}
+<title>Select Seats</title>
+{% endblock %}  
+{% block content %}
+    <style>
+        body {
+            background-color: #121212; /* Dark background for the whole page */
+            color: #e0e0e0; /* Light text color for contrast */
+            font-family: Arial, sans-serif;
+        }
+        #screen {
+            width: 80%;
+            height: 40px;
+            background-color: #333;
+            color: #fff;
+            margin: 20px auto 10px;
+            text-align: center;
+            padding: 10px 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(255,255,255,0.1); /* Lighter shadow for dark mode */
+        }
+        #seats-container {
+            display: grid;
+            grid-template-columns: repeat({{ cinema_hall.num_cols }}, 40px);
+            grid-gap: 5px;
+            justify-content: center;
+            margin: auto;
+            width: fit-content;
+            padding-bottom: 20px;
+        }
+        .seat {
+            width: 40px;
+            height: 40px;
+            background-color: #4CAF50; /* Bright color for seats to stand out */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .selected {
+            background-color: #FF5722; /* Highlight selected seats distinctly */
+        }
+        .unavailable {
+            background-color: #424242; /* Darker grey for unavailable seats */
+            cursor: not-allowed;
+        }
+        button.btn-primary {
+            background-color: #333;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(255,255,255,0.1); /* Light shadow for contrast */
+            cursor: pointer;
+            color: #fff; /* White text on buttons for readability */
+        }
+        button.btn-primary:hover {
+            background-color: #444; /* Slightly lighter on hover for feedback */
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5 mb-5">
+        <h1 class="text-center">Select Your Seats</h1>
+    
+        <div id="screen" class="mb-5">SCREEN</div>
+        <div id="seats-container" class="my-5">
+            {% for seat in seats %}
+            <div class="seat {% if not seat.availability %}unavailable{% endif %}"
+                 data-id="{{ seat.id }}"
+                 title="{{ seat.seat_label }}">
+                {{ seat.seat_label }}
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center">
+            <button class="btn btn-primary" onclick="bookSeats()">Confirm Selection</button>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var totalTicketsAllowed = parseInt('{{ total_tickets }}');
+            var selectedSeats = [];
+            const seats = document.querySelectorAll('.seat:not(.unavailable)');
+        
+            seats.forEach(function (seat) {
+                seat.addEventListener('click', function () {
+                    if (this.classList.contains('selected')) {
+                        this.classList.remove('selected');
+                        selectedSeats = selectedSeats.filter(id => id !== this.getAttribute('data-id'));
+                    } else if (selectedSeats.length < totalTicketsAllowed) {
+                        this.classList.add('selected');
+                        selectedSeats.push(this.getAttribute('data-id'));
+                    }
+                });
+            });
+        
+            window.bookSeats = function() {
+                if (selectedSeats.length === totalTicketsAllowed) {
+                    var cinemaHallId = '{{ cinema_hall.id }}';  // Ensure this variable is set correctly from Django context
+                    var movieId = '{{ movie.id }}';  // Similarly ensure movie_id is set correctly
+                    var showtimeId = '{{ showtime.id }}';
+                    var redirectUrl = `/payment/${cinemaHallId}/?seats=${selectedSeats.join(',')}&movie_id=${movieId}&showtime_id=${showtimeId}&total_tickets=${totalTicketsAllowed}`;
+                    window.location.href = redirectUrl;
+                } else {
+                    alert('Please select exactly ' + totalTicketsAllowed + ' seats.');
+                }
+            };
+        });
+        
+        </script>
+        
+
+    {% endblock %}

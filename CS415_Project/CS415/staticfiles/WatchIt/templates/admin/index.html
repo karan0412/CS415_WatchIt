@@ -1,0 +1,13 @@
+{% extends "admin/index.html" %}
+
+
+{% load i18n static %}
+
+{% block content %}
+{{ block.super }}
+<div style="text-align: center; margin-top: 20px;">
+    <a href="{% url 'admin_dashboard_minute_sales' %}" class="button" style="padding: 10px 20px; background-color: #007BFF; color: white; text-decoration: none; border-radius: 5px;">
+        Go to Dashboard
+    </a>
+</div>
+{% endblock %}

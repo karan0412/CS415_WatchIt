@@ -1,0 +1,53 @@
+
+body{
+        font-family: "Quicksand", sans-serif;
+        font-optical-sizing: auto;
+        font-style: normal;
+}
+.navbar-dark .navbar-nav .nav-link {
+    color: #ffffff; /* Navbar link color remains white for contrast */
+    
+}
+.navbar-dark .navbar-brand {
+    color: #ffffff; /* Brand color remains white */
+}
+.navbar-dark {
+ /* Dark gray background for the navbar */
+    padding-top: 1rem; /* Increase top padding */
+    padding-bottom: 1rem; /* Increase bottom padding */
+}
+
+.navbar {
+    position: relative; /* Needed to position the pseudo-element correctly */
+}
+
+.navbar::after {
+    content: ""; /* Required for pseudo-elements */
+    position: absolute;
+    bottom: 0; /* Align at the bottom of the navbar */
+    left: 50%; /* Start from the center */
+    width: 100%; /* Set the width of the 'border' */
+    transform: translateX(-50%); /* Center the pseudo-element */
+}
+.footer{
+    background-color: #4E4FEB;
+}
+.link{
+    background-color: #068FFF;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 25px;
+    font-weight: 600;
+    color: white;
+}
+.link:hover{
+    background-color: #0B60B0;
+}
+
+.user{
+    padding: 5px;
+    border-radius: 30px;
+    background-color: #4E4FEB;
+    font-weight: 600;
+}
+

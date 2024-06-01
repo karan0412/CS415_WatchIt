@@ -45,7 +45,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
+
 ]
+
 
 AUTH_USER_MODEL = "WatchIt.User" 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -138,6 +140,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 
 STATICFILES_DIRS =  BASE_DIR, 'static'
 

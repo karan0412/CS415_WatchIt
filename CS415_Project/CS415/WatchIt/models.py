@@ -1,3 +1,4 @@
+from venv import logger
 from django.db import models
 from django.contrib.auth.models import User
 from string import ascii_uppercase
@@ -26,28 +27,6 @@ from django.db import models
 from django.utils import timezone
 
 
-# class Feedback(models.Model):
-#     subject = models.CharField(max_length=255)
-#     feedback = models.TextField()
-#     file = models.FileField(upload_to='feedback_files/', null=True, blank=True)
-#     approved = models.BooleanField(default=False)
-#     reviewed = models.BooleanField(default=False)
-
-#     def __str__(self):
-#         return self.subject
-
-# class Feedback(models.Model):
-#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-#     subject = models.CharField(max_length=200)
-#     feedback = models.TextField()
-#     file = models.FileField(upload_to='feedback_files/', null=True, blank=True)
-#     approved = models.BooleanField(default=False)
-#     reviewed = models.BooleanField(default=False)
-#     created_at = models.DateTimeField(auto_now_add=True)
-
-#     def __str__(self):
-#         return self.subject
-
 class Feedback(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     subject = models.CharField(max_length=255)
@@ -59,24 +38,6 @@ class Feedback(models.Model):
 
     def __str__(self):
         return self.subject
-
-# class CareerApplication(models.Model):
-#     name = models.CharField(max_length=255)
-#     cv = models.FileField(upload_to='cv_files/')
-#     cover_letter = models.FileField(upload_to='cover_letter_files/')
-#     approved = models.BooleanField(default=False)
-#     reviewed = models.BooleanField(default=False)
-
-#     def __str__(self):
-#         return self.name
-
-# class Feedback(models.Model):
-#     subject = models.CharField(max_length=255)
-#     feedback = models.TextField()
-#     file = models.FileField(upload_to='feedback_files/', null=True, blank=True)  # Adjust the `upload_to` path as needed
-
-#     def __str__(self):
-#         return self.subject
 
 
 class User(AbstractUser):
@@ -131,6 +92,57 @@ class Movie(models.Model):
 
 
 
+# class Showtime(models.Model):
+#     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='showtimes', null=True, blank=True)
+#     cinema_hall = models.ForeignKey(CinemaHall, on_delete=models.CASCADE, related_name='showtimes')
+#     showtime = models.DateTimeField()
+#     seats_generated = models.BooleanField(default=False)
+
+#     @property
+#     def is_future_showtime(self):
+#         return self.showtime > timezone.now()
+
+#     def local_showtime(self):
+#         # Convert showtime to the local time
+#         return timezone.localtime(self.showtime)
+
+#     def __str__(self):
+#         return f"{self.movie.title} at {self.local_showtime()}" 
+
+#     def clean(self):
+#         if not self.movie or not self.movie.duration:
+#             raise ValidationError("Movie and its duration are required to schedule a showtime.")
+        
+#         end_time = self.showtime + timedelta(minutes=self.movie.duration + 30)
+#         overlapping_showtimes = Showtime.objects.filter(
+#             cinema_hall=self.cinema_hall,
+#             showtime__lt=end_time,
+#             showtime__gt=self.showtime - timedelta(minutes=self.movie.duration + 30)
+#         ).exclude(id=self.id)
+        
+#         if overlapping_showtimes.exists():
+#             raise ValidationError("There is already a movie scheduled during this time.")
+
+
+#     def save(self, *args, **kwargs):
+#         self.clean()  # Validating before saving
+#         creating = self._state.adding
+#         super().save(*args, **kwargs)
+#         if creating and not self.seats_generated:
+#             self.generate_seats()
+#             self.seats_generated = True
+#             super().save(update_fields=['seats_generated'])
+
+#     def generate_seats(self):
+#         # Seat generation logic adapted for Showtime
+#         seats = []
+#         for row in range(1, self.cinema_hall.num_rows + 1):
+#             row_letter = ascii_uppercase[row - 1]
+#             for col in range(1, self.cinema_hall.num_cols + 1):
+#                 seat_label = f"{row_letter}{col}"
+#                 seats.append(Seat(showtime=self, seat_label=seat_label, availability=True))
+#         Seat.objects.bulk_create(seats)
+
 class Showtime(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='showtimes', null=True, blank=True)
     cinema_hall = models.ForeignKey(CinemaHall, on_delete=models.CASCADE, related_name='showtimes')
@@ -142,22 +154,51 @@ class Showtime(models.Model):
         return self.showtime > timezone.now()
 
     def local_showtime(self):
-        # Convert showtime to the local time
         return timezone.localtime(self.showtime)
 
     def __str__(self):
-        return f"{self.movie.title} at {self.local_showtime()}" 
+        return f"{self.movie.title} at {self.local_showtime()}" if self.movie else f"Showtime at {self.local_showtime()}"
+
+    # def clean(self):
+    #     super().clean()
+
+    #     if not self.showtime:
+    #         raise ValidationError("Showtime must be set.")
+
+    #     if not self.movie:
+    #         raise ValidationError("A movie must be selected.")
+
+    #     if self.movie:
+    #         print(f"Cleaning Showtime: {self.showtime}, Movie ID: {self.movie.id}")
+
+    #         if self.movie.duration is None:
+    #             raise ValidationError("The selected movie does not have a duration set.")
+
+    #         end_time = self.showtime + timedelta(minutes=self.movie.duration + 30)
+    #         print(f"Calculated End Time: {end_time}")
+    #         self.end_time = end_time
+    #     else:
+    #         raise ValidationError("Movie selection is invalid or not provided.")
 
     def clean(self):
-        # Check for overlapping showtimes in the same cinema hall
-        end_time = self.showtime + timedelta(minutes=self.movie.duration + 30)
-        overlapping_showtimes = Showtime.objects.filter(
-            cinema_hall=self.cinema_hall,
-            showtime__lt=end_time,
-            showtime__gt=self.showtime - timedelta(minutes=self.movie.duration + 30)
-        ).exclude(id=self.id)
-        if overlapping_showtimes.exists():
-            raise ValidationError("There is already a movie scheduled during this time.")
+        super().clean()
+
+        if not self.showtime:
+            raise ValidationError("Showtime must be set.")
+
+        if not self.movie:
+            raise ValidationError("A movie must be selected.")
+        
+        print(f"Cleaning Showtime: {self.showtime}, Movie: {self.movie}")
+        if self.movie:
+            if self.movie.duration is None:
+                raise ValidationError("The selected movie does not have a duration set.")
+            end_time = self.showtime + timedelta(minutes=self.movie.duration + 30)
+            print(f"Calculated End Time: {end_time}")
+            self.end_time = end_time
+        else:
+            raise ValidationError("Movie selection is invalid or not provided.")
+
 
     def save(self, *args, **kwargs):
         self.clean()  # Validating before saving
@@ -169,7 +210,6 @@ class Showtime(models.Model):
             super().save(update_fields=['seats_generated'])
 
     def generate_seats(self):
-        # Seat generation logic adapted for Showtime
         seats = []
         for row in range(1, self.cinema_hall.num_rows + 1):
             row_letter = ascii_uppercase[row - 1]
@@ -177,7 +217,6 @@ class Showtime(models.Model):
                 seat_label = f"{row_letter}{col}"
                 seats.append(Seat(showtime=self, seat_label=seat_label, availability=True))
         Seat.objects.bulk_create(seats)
-
 
 class Seat(models.Model):
     showtime = models.ForeignKey(Showtime, related_name='seats', on_delete=models.CASCADE, null=True, blank=True)
@@ -213,8 +252,6 @@ class Booking(models.Model):
         seats.update(availability=True)
         super().delete(*args, **kwargs)
 
-
-#models.py
 
 
 class PasswordResetToken(models.Model):

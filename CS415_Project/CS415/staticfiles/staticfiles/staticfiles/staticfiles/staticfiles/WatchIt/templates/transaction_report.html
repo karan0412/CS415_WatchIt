@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            text-decoration: underline;
+            text-align: center;
+            font-size: 16px;
+            color: black;
+            text-align: right;
+            margin: 12px 0;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            margin: 12px 0;
+
+        }
+
+        table {
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            width: 200px;
+            height: 100px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0;
+            color: #fff;
+            background-color: #180131;
+            width: 100%;
+        }
+
+        th {
+            background-color: #405ada;
+            color: white;
+            font-weight: bold;
+            padding: 12px;
+            border: 1px solid #110238;
+        }
+
+        table tr td {
+            padding: 12px;
+            border: 1px solid #110238;
+            text-align: left;
+        }
+
+        td {
+            padding: 10px;
+            text-align: center;
+            border: none;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total {
+            font-style: oblique;
+            font-size: larger;
+        }
+
+        .footer-statement {
+            font-style: oblique;
+            font-size: larger;
+            text-align: center;
+        }
+
+        .box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+        }
+
+        .text {
+            flex-shrink: 0;
+            font-size: 16px;
+            background-color: #c2c2c3;
+            color:#110238;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">
+            <img src="static/logo2.jpg" alt="Logo" class="logo">
+            <h1>Transaction Report</h1>
+        </div>
+    </header>
+    <div class="box">
+        <div class="text">
+            {% if user %}
+            User : {{ user }}
+            {% endif %}
+            <br>
+            Total Amount : ${{ total_amount }}
+        </div>
+    </div>
+
+
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Cinema Hall</th>
+                            <th>Movie</th>
+                            <th>Showtime</th>
+                            <th>Seats</th>
+                            <th>Payment Amount</th>
+                            <th>Booking Date</th>
+                            <th>Card Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                        <tr>
+                            <td>{{ booking.cinema_hall }}</td>
+                            <td>{{ booking.movie }}</td>
+                            <td>{{ booking.showtime }}</td>
+                            <td>{{ booking.seat_labels }}</td>
+                            <td>${{ booking.payment_amount }}</td>
+                            <td>{{ booking.booking_date }}</td>
+                            <td>{{ booking.card_details }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="footer-statement">
+                    This transaction report is generated for your records. For any queries, contact us at
+                    support@watchit.com. Thank you for choosing WatchIt!
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

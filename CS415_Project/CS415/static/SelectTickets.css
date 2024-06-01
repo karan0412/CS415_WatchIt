@@ -1,6 +1,6 @@
 /* Existing CSS styles */
 body {
-    background: #ddd;
+   
     min-height: 100vh;
     vertical-align: middle;
     display: flex;
@@ -33,11 +33,10 @@ body {
 }
 
 .cart {
-    background-color: #fff;
     padding: 4vh 5vh;
     border-bottom-left-radius: 1rem;
     border-top-left-radius: 1rem;
-    color: white; /* Ensure text is readable */
+    background: linear-gradient(135deg, #073a6e, #0B60B0, #3799e5);
 }
 
 @media(max-width: 767px) {
@@ -49,7 +48,7 @@ body {
 }
 
 .summary {
-    background-color: #ddd;
+    background-color: #F0EDCF;
     border-top-right-radius: 1rem;
     border-bottom-right-radius: 1rem;
     padding: 4vh;
@@ -73,6 +72,7 @@ body {
 
 .row {
     margin: 0;
+    
 }
 
 .title b {
@@ -168,6 +168,7 @@ input:focus::-webkit-input-placeholder {
 a {
     color: black;
 }
+
 
 a:hover {
     color: black;
