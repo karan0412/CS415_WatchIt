@@ -1,0 +1,83 @@
+{% extends "admin/admin_dashboard.html" %}
+
+{% block dashboard_content %}
+<style>
+    background-color: black;
+</style>
+<section id="minute-registrations-section" class="col-12 mb-4">
+    <div class="widget p-4 shadow-sm bg-white rounded">
+        <h2>Minute-wise User Registrations</h2>
+        <div id="minute-registrations-chart"></div>
+    </div>
+</section>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const minuteRegistrationsData = {{ minute_registrations|safe }};
+
+    Highcharts.chart('minute-registrations-chart', {
+        chart: {
+            type: 'column',
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            borderRadius: 5,
+            height: 400
+        },
+        title: {
+            text: 'Minute-wise User Registrations',
+            style: {
+                color: '#333333',
+                fontSize: '20px'
+            }
+        },
+        xAxis: {
+            categories: minuteRegistrationsData.map(data => data[0]),
+            labels: {
+                style: {
+                    color: '#666666',
+                    fontSize: '12px'
+                }
+            }
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: 'Registrations',
+                style: {
+                    color: '#666666',
+                    fontSize: '14px'
+                }
+            },
+            labels: {
+                style: {
+                    fontSize: '12px'
+                }
+            }
+        },
+        series: [{
+            name: 'Registrations',
+            data: minuteRegistrationsData.map(data => data[1]),
+            color: '#28a745',
+            pointPadding: 0.3,
+            borderWidth: 0,
+            dataLabels: {
+                enabled: true,
+                rotation: -90,
+                color: '#FFFFFF',
+                align: 'right',
+                format: '{point.y}', // one decimal
+                y: 10, // 10 pixels down from the top
+                style: {
+                    fontSize: '13px',
+                    fontFamily: 'Verdana, sans-serif'
+                }
+            }
+        }],
+        tooltip: {
+            valueSuffix: ' users'
+        },
+        credits: {
+            enabled: false
+        }
+    });
+});
+</script>
+{% endblock %}

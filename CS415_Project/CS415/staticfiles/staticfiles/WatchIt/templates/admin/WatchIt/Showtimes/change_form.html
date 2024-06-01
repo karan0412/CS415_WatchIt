@@ -1,0 +1,44 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui-calendar/0.0.8/calendar.min.css">
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui-calendar/0.0.8/calendar.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('.ui.calendar.datetime').calendar({
+            type: 'datetime',
+            formatter: {
+                datetime: function (date, settings) {
+                    if (!date) return '';
+                    var day = date.getDate();
+                    var month = date.getMonth() + 1;
+                    var year = date.getFullYear();
+                    var hour = date.getHours();
+                    var minute = date.getMinutes();
+                    return year + '-' + (month < 10 ? '0' + month : month) + '-' + (day < 10 ? '0' + day : day) + ' ' + (hour < 10 ? '0' + hour : hour) + ':' + (minute < 10 ? '0' + minute : minute);
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+{{ block.super }}
+<div class="field">
+    <label for="id_showtime">Showtime:</label>
+    <div class="ui calendar datetime">
+        <div class="ui input left icon">
+            <i class="calendar icon"></i>
+            <input type="text" name="showtime" value="{{ form.showtime.value }}" id="id_showtime">
+        </div>
+    </div>
+</div>
+{% endblock %}

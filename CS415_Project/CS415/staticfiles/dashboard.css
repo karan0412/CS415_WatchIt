@@ -1,0 +1,58 @@
+body {
+    background: black;
+    color: #ffffff;
+    font-family: 'Arial', sans-serif;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+.custom-font {
+    font-family: "Quicksand", sans-serif;
+}
+.sidebar {
+    width: 250px;
+    background-color: #4E4FEB;
+    padding: 15px;
+    position: fixed;
+    height: 100%;
+}
+.sidebar h2 {
+    color: #EEEEEE;
+}
+.active-link {
+    background-color: #000000;
+    border-radius: 20px;
+}
+.links {
+    display: block;
+    color: #ffffff;
+    text-decoration: none;
+    padding: 10px;
+    margin: 10px 0;
+    transition: background 0.5s;
+    font-weight: 500;
+}
+.links:hover {
+    background-color: #000000;
+    border-radius: 20px;
+}
+
+.main-content {
+    margin-left: 15%;
+    padding: 20px;
+    
+}
+
+button {
+    border: none;
+}
+@media only screen and (max-width: 1200px) {
+    .main-content {
+        margin-left: 10%;
+        padding: 20px;
+    }
+  }
+
+
+
+

@@ -1,0 +1,122 @@
+{% extends "dashboard.html" %}
+
+{% block content %}
+<style>
+    .fixed-image {
+        height: 200px;
+        object-fit: cover;
+        border-radius: 15px;
+        position: relative;
+    }
+    .card {
+        border-radius: 15px;
+        background: black;
+        box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
+    }
+    .card-body {
+        display: flex;
+        flex-direction: column;
+    }
+    .card-title {
+        font-size: 1.25rem;
+    }
+    .btn-warning {
+        background-color: #ffc107;
+        border: none;
+    }
+    .btn-warning:hover {
+        background-color: #e0a800;
+    }
+
+</style>
+
+{% load static %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet"> <!-- FontAwesome CSS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="{% static 'questionmark.css' %}">
+
+<div class="question-mark" onclick="toggleBubbleMessage()">
+    <i class="fas fa-question-circle"></i>
+    <div id="bubbleMessage" class="bubble-message">
+        This page contains bookings of the upcoming shows. 
+    </div>
+</div>
+
+<script>
+    function toggleBubbleMessage() {
+        var bubble = document.getElementById('bubbleMessage');
+        bubble.style.visibility = (bubble.style.visibility === 'visible') ? 'hidden' : 'visible';
+    }
+</script>
+
+<div class="container">
+    <h1 class="my-4">Your Bookings</h1>
+
+    <!-- Generate Report Button -->
+    <form method="GET" action="{% url 'transaction_report_pdf' %}" class="mb-4">
+        <input type="hidden" name="movie_id" value="{{ request.GET.movie_id }}">
+        <input type="hidden" name="genre_id" value="{{ request.GET.genre_id }}">
+        <input type="hidden" name="start_date" value="{{ request.GET.start_date }}">
+        <input type="hidden" name="end_date" value="{{ request.GET.end_date }}">
+        <button type="submit" class="btn btn-outline-light">Generate Report</button>
+    </form>
+
+    <div class="row">
+        {% if bookings_with_edit_permission %}
+            {% for booking, can_edit in bookings_with_edit_permission %}
+            <div class="col-md-4 ">
+                <div class="card text-white h-100">
+                    <img src="{{ booking.movie.image.url }}" class="card-img-top fixed-image" alt="{{ booking.movie.title }}">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ booking.movie.title }}</h5>
+                        <p class="card-text"><strong>Cinema Hall:</strong> {{ booking.cinema_hall.cinema_type }}</p>
+                        <p class="card-text"><strong>Showtime:</strong> {{ booking.showtime.showtime }}</p>
+                        <p class="card-text"><strong>Booking Date:</strong> {{ booking.booking_date }}</p>
+                        <p class="card-text"><strong>Seats:</strong> {{ booking.get_seat_labels }}</p>
+                        <p class="card-text"><strong>Payment Amount:</strong> ${{ booking.payment_amount }}</p>
+                        <p class="card-text"><strong>Card Details:</strong> **** **** **** {{ booking.card_last4 }}</p>
+                        <p class="text-light mt-auto"><a href="{% url 'generate_purchase_history' booking.id %}">Download PDF</a></p>
+                        {% if can_edit %}
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editBookingModal{{ booking.id }}">
+                            Edit Booking
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                 <!-- Edit Booking Modal -->
+                <div class="modal fade" id="editBookingModal{{ booking.id }}" tabindex="-1" aria-labelledby="editBookingModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content bg-danger">
+                            <div class="modal-header">
+                                <h3 class="modal-title" id="editBookingModalLabel">Edit Booking Options</h3>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                                 
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <h5>You can only change your booking once!</h5>
+                            </div>
+                            <div class="modal-body">
+                                
+                                <a href="{% url 'edit_seats' booking.id booking.showtime.id booking.cinema_hall.id %}" class="btn btn-outline-light">Change Seats</a>
+                                <a href="{% url 'edit_showtime' booking.id booking.movie.id booking.cinema_hall.id %}" class="btn btn-outline-light">Change Showtime</a>
+                                <a href="{% url 'edit_booking' booking.id %}" class="btn btn-outline-light">Change Movie</a>
+                               
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>No upcoming bookings found.</p>
+        {% endif %}
+    </div>
+</div>
+
+
+
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'base_generic.html' %}
+
+{% block content %}
+<h1>User Activity Report</h1>
+<table>
+    <tr>
+        <th>Date</th>
+        <th>Registrations</th>
+    </tr>
+    {% for item in data %}
+    <tr>
+        <td>{{ item.date_registered }}</td>
+        <td>{{ item.count }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

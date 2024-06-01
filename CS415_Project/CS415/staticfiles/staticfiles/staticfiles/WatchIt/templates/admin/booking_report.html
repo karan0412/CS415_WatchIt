@@ -1,0 +1,156 @@
+{% extends "admin/admin_dashboard.html" %}
+{% load static %}
+
+{% block extrastyle %}
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+    <style>
+        /* Flexbox layout for filters */
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filters div {
+            display: flex;
+            flex-direction: column;
+        }
+        .filters label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .filters select,
+        .filters input {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            color: #000; /* Text color */
+            background-color: #fff; /* Background color */
+        }
+        .filters select:focus,
+        .filters input:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            text-align: center;
+            margin-top: auto;
+        }
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+        .btn-secondary {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            text-align: center;
+            display: inline-block;
+            margin-top: 10px;
+            text-decoration: none;
+        }
+        .btn-secondary:hover {
+            background-color: #0056b3;
+        }
+        .btn-secondary a {
+            color: white;
+            text-decoration: none;
+        }
+        .back-button {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+        .back-button i {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+    </style>
+{% endblock %}
+
+{% block extrahead %}
+    <script src="https://code.jquery.com/jquery-3.5.1.js" charset="utf8"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js" charset="utf8"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+    <div class="back-button" onclick="window.history.back();">
+        <i class="fas fa-arrow-left"></i> Back
+    </div>
+
+    <h1>Booking Report</h1>
+    <form method="get" action=".">
+        <div class="filters">
+            <div>
+                <label for="id_date">Booking Date:</label>
+                <input type="date" id="id_date" name="booking_date" value="{{ request.GET.booking_date }}">
+            </div>
+            <div>
+                <label for="id_cinema_hall">Cinema Hall:</label>
+                <select id="id_cinema_hall" name="cinema_hall">
+                    <option value="">All</option>
+                    {% for hall in cinema_halls %}
+                        <option value="{{ hall.id }}" {% if request.GET.cinema_hall == hall.id|stringformat:"s" %}selected{% endif %}>{{ hall.cinema_type }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="id_user">User:</label>
+                <input type="text" id="id_user" name="user" value="{{ request.GET.user }}">
+            </div>
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="." class="btn btn-primary">Reset Filters</a>
+        </div>
+    </form>
+
+    <a href="?{% for key, value in request.GET.items %}{% if key != 'download' %}{{ key }}={{ value }}&{% endif %}{% endfor %}download=excel" class="btn btn-secondary">Download Report as Excel</a>
+
+    <h2>Report</h2>
+    <p>Total Amount: {{ total_amount }}</p>
+    <table id="booking_table" class="display">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Movie</th>
+                <th>Cinema Hall</th>
+                <th>Showtime</th>
+                <th>Booking Date</th>
+                <th>Payment Amount</th>
+                <th>Seats</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+                <tr>
+                    <td>{{ booking.id }}</td>
+                    <td>{{ booking.user }}</td>
+                    <td>{{ booking.movie }}</td>
+                    <td>{{ booking.cinema_hall }}</td>
+                    <td>{{ booking.showtime }}</td>
+                    <td>{{ booking.booking_date }}</td>
+                    <td>{{ booking.payment_amount }}</td>
+                    <td>{{ booking.get_seat_labels }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        $(document).ready(function() {
+            $('#booking_table').DataTable();
+        });
+    </script>
+{% endblock %}

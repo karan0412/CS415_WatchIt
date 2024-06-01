@@ -1,0 +1,89 @@
+{% extends "admin/admin_dashboard.html" %}
+
+{% block dashboard_content %}
+
+
+
+
+<section id="minute-sales-section" class="col-12 mb-4">
+    <div class="widget p-4 shadow-sm bg-white rounded">
+        <h2>Minute-wise Sales</h2>
+        <div id="minute-sales-chart"></div>
+    </div>
+</section>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const minuteSalesData = {{ minute_sales|safe }};
+
+    Highcharts.chart('minute-sales-chart', {
+        chart: {
+            type: 'line',
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            borderRadius: 5,
+            height: 400
+        },
+        title: {
+            text: 'Minute-wise Sales Data',
+            style: {
+                color: '#333333',
+                fontSize: '20px'
+            }
+        },
+        xAxis: {
+            categories: minuteSalesData.map(data => data[0]),
+            labels: {
+                style: {
+                    color: '#666666',
+                    fontSize: '12px'
+                }
+            }
+        },
+        yAxis: {
+            title: {
+                text: 'Sales ($)',
+                style: {
+                    color: '#666666',
+                    fontSize: '14px'
+                }
+            },
+            labels: {
+                formatter: function () {
+                    return '$' + this.value;
+                },
+                style: {
+                    fontSize: '12px'
+                }
+            }
+        },
+        series: [{
+            name: 'Sales',
+            data: minuteSalesData.map(data => data[1]),
+            color: '#007bff',
+            lineWidth: 3,
+            marker: {
+                radius: 5
+            }
+        }],
+        tooltip: {
+            shared: true,
+            crosshairs: true,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            style: {
+                color: '#FFFFFF'
+            }
+        },
+        credits: {
+            enabled: false
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'middle',
+            itemStyle: {
+                fontSize: '14px'
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

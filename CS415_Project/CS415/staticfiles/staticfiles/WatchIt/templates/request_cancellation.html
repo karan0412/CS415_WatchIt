@@ -1,0 +1,11 @@
+{% extends "dashboard.html" %}
+
+{% block content %}
+  <h2>Cancel Booking</h2>
+  <p>Booking for: {{ booking.movie.title }}</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-danger">Submit Cancellation Request</button>
+  </form>
+{% endblock %}

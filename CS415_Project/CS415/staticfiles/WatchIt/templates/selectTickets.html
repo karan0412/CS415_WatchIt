@@ -1,0 +1,147 @@
+{% extends 'index.html' %}
+
+{% block title %}
+<title>Select Tickets</title>
+{% endblock %}
+    {% block css %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'SelectTickets.css' %}">
+    {% endblock %}
+  
+{% block content %}
+{% if is_wednesday %}
+<div class="alert alert-info discount text-cente mt-4" style="margin: 0 auto; width: fit-content;">
+    Get 50% off on every ticket!
+</div>
+{% endif %}
+    <div class="box mt-5 mb-5">
+        <div class="row">
+            <div class="col-md-8 cart text-dark">
+                <div class="title">
+                    <div class="row">
+                        <div class="col">
+                            <h4><b>Select Tickets</b></h4>
+                            {% for message in messages %}
+                            <h3 id="error-message" style="color:red; margin-left: 16%; margin-top: 2%;"
+                            {% if message.tags %} class="{{ message.tags }}" {% endif %}>
+                                {{ message }}
+                            </h3>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+               
+                <form method="POST" action="{% url 'selectTickets' cinema_hall_id=cinema_hall.id movie_id=movie.id showtime_id=show.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="adult_quantity" id="adult_quantity_input" value="0">
+                    <input type="hidden" name="child_quantity" id="child_quantity_input" value="0">
+                    <div class="row border-top border-bottom border-dark">
+                        <div class="row main align-items-center">
+                            <div class="col quantity">
+                                <div class="col ">Adult</div>
+                                {% if is_wednesday %}
+                                <div class="col adult-price">${{ half_adult_price }}</div>
+                                {% else %}
+                                <div class="col adult-price">${{ cinema_hall.adult_price }}</div>
+                                {% endif %}
+                                
+                                
+                                <a href="#" id="adult-minus">-</a>
+                                <span id="adult-quantity" class="border">0</span>
+                                <a href="#" id="adult-plus">+</a>
+                                <div class="col subtotal">Subtotal: <span class="adult-subtotal">0.00</span></div>
+                            </div>
+                        </div>
+                            <div class="col quantity">
+                                <div class="col ">Child</div>
+                                {% if is_wednesday %}
+                                <div class="col child-price">${{ half_child_price }}</div>
+                                {% else %}
+                                <div class="col child-price">${{ cinema_hall.child_price }}</div>
+                                {% endif %}
+                                
+                                
+                                <a href="#" id="child-minus">-</a>
+                                <span id="child-quantity" class="border">0</span>
+                                <a href="#" id="child-plus">+</a>
+                                <div class="col subtotal">Subtotal:  <span class="child-subtotal">0.00</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 summary">
+                        <div>
+                            <h5><b>Summary</b></h5>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col">Adult Tickets : <span id="adult-quantity-summary" class="border">0</span></div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col">Child Tickets : <span id="child-quantity-summary" class="border">0</span></div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col total">TOTAL PRICE : $ <span id="total-price">0.00</span></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Select Seats</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+        // JavaScript to display and hide the error message
+        document.addEventListener('DOMContentLoaded', function () {
+            var errorMessage = document.getElementById('error-message');
+            if (errorMessage) {
+                errorMessage.style.display = 'block'; // Show the error message
+                setTimeout(function () {
+                    errorMessage.style.display = 'none';
+                }, 5000); // Hide the error message after 5 seconds
+            }
+        });
+
+        $(document).ready(function () {
+            // Quantity buttons functionality
+            $('#adult-plus, #adult-minus, #child-plus, #child-minus').click(function (event) {
+                event.preventDefault();
+                var id = $(this).attr('id');
+                var isPlus = id.includes('plus');
+                var quantitySpan = $('#' + id.split('-')[0] + '-quantity');
+                var quantity = parseInt(quantitySpan.text());
+                if (isPlus && quantity < 10) {
+                    quantity++;
+                } else if (!isPlus && quantity > 0) {
+                    quantity--;
+                }
+                quantitySpan.text(quantity);
+                $('#' + id.split('-')[0] + '_quantity_input').val(quantity);
+                $('#' + id.split('-')[0] + '-quantity-summary').text(quantity); 
+
+                updateTotalPrice(); // Call updateTotalPrice() here
+            });
+        
+            // Function to update total price
+            function updateTotalPrice() {
+                var adultPrice = parseFloat($('.adult-price').text().replace('$', ''));
+                var adultQuantity = parseInt($('#adult-quantity').text());
+                var childPrice = parseFloat($('.child-price').text().replace('$', ''));
+                var childQuantity = parseInt($('#child-quantity').text());
+                console.log(adultPrice, adultQuantity, childPrice, childQuantity); // Debug output
+                var totalAdult = adultPrice * adultQuantity;
+                var totalChild = childPrice * childQuantity;
+                var totalPrice = totalAdult + totalChild;
+                $('.adult-subtotal').text('$' + totalAdult.toFixed(2));
+                $('.child-subtotal').text('$' + totalChild.toFixed(2));
+                $('#total-price').text(totalPrice.toFixed(2));
+            }
+        
+            // Call updateTotalPrice() on page load to initialize the subtotals
+            updateTotalPrice();
+        });
+    </script>
+
+{% endblock %}
