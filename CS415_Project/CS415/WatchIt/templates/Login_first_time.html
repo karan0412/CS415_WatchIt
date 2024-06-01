@@ -21,20 +21,23 @@
         
         <form method="post" action="{% url 'Login_first' %}">
             <h3 class="text-center mb-4">Login</h3>
-            {% csrf_token %}
-            <div class="form-group mb-3 inputbox">
-                
-                <input type="text" class="input ps-3" id="uname" name="uname" required>
-                <label for="uname">Username:</label>
-                <i></i>
-            </div>
-            <div class="form-group mb-3 inputbox">
-                <input type="password" class="input ps-3" id="pwd" name="pwd" required>
-                <label for="pwd">Password:</label>
-                
-                <i></i>
-                
-            </div>
+            
+                {% csrf_token %}
+                <div class="form-group mb-3 mx-5">
+                    <label for="uname">Username:</label>
+                    <input type="text" class="form-control" id="uname" name="uname" required>
+                </div>
+                <div class="form-group mb-3 mx-5">
+                    <label for="pwd">Password:</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="pwd" name="pwd"  required pattern="(?=.*\d)(?=.*[a-z]).{8,}" title="Must contain at least one number and one lowercase letter, and at least 8 or more characters" required>
+                        <div class="input-group-append">
+                            <span class="eye" id="togglePassword">
+                                <i class="fa fa-eye" id="eyeIcon"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
 
             <button type="submit" class="btn btn-outline-light btn-block mt-3">Login</button>
             <a href ="forget_password" class="forgot_password" style="text-decoration: none;
@@ -48,6 +51,24 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 
 <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/alertify.min.js"></script>
+
+<script>
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordField = document.getElementById('pwd');
+    const eyeIcon = document.getElementById('eyeIcon');
+
+    togglePassword.addEventListener('click', function () {
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            eyeIcon.classList.remove('fa-eye');
+            eyeIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            eyeIcon.classList.remove('fa-eye-slash');
+            eyeIcon.classList.add('fa-eye');
+        }
+    });
+</script>
 
 <script>
     

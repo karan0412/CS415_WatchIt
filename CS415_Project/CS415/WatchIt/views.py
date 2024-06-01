@@ -666,7 +666,7 @@ def process_payment(request):
     return JsonResponse({'error': 'Invalid request method'})
 
 def booking_success(request):
-    request.session.flush()
+
     return render(request, 'booking_success.html')
 
 
