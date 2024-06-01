@@ -6,7 +6,8 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.http import HttpResponse
-
+from django.shortcuts import get_object_or_404, redirect
+from django.http import HttpResponseForbidden
 from .forms import MovieForm, ShowtimeForm
 
 from .views import booking_report_view
@@ -62,24 +63,7 @@ class SeatInline(admin.TabularInline):
     can_delete = False
 
 
-# class ShowtimeAdmin(admin.ModelAdmin):
-#     form = ShowtimeForm
-#     list_display = ('movie_thumbnail', 'movie', 'cinema_hall_type', 'local_showtime')
-#     search_fields = ('movie__title', 'cinema_hall__cinema_type')
-#     list_filter = ('showtime',)
-#     inlines = [SeatInline]
-#     change_form_template = 'admin/WatchIt/Showtime/change_form.html'  # Add this line
 
-
-#     def movie_thumbnail(self, obj):
-#         if obj.movie and obj.movie.image:
-#             return format_html('<img src="{}" width="100" height="75" />', obj.movie.image.url)
-#         return "No Image"
-#     movie_thumbnail.short_description = 'Movie Thumbnail'
-
-#     def cinema_hall_type(self, obj):
-#         return obj.cinema_hall.cinema_type
-#     cinema_hall_type.short_description = 'Cinema Type'
 
 class ShowtimeAdmin(admin.ModelAdmin):
     form = ShowtimeForm
@@ -98,6 +82,25 @@ class ShowtimeAdmin(admin.ModelAdmin):
     def cinema_hall_type(self, obj):
         return obj.cinema_hall.cinema_type
     cinema_hall_type.short_description = 'Cinema Type'
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                '<int:object_id>/delete/',
+                self.admin_site.admin_view(self.delete_view),
+                name='delete_showtime',
+            ),
+        ]
+        return custom_urls + urls
+
+    def delete_view(self, request, object_id, extra_context=None):
+        showtime = get_object_or_404(models.Showtime, pk=object_id)
+        if not request.user.is_superuser:
+            return HttpResponseForbidden("You don't have permission to delete this showtime.")
+        showtime.seats.all().delete()
+        showtime.delete()
+        return redirect('admin/WatchIt/Showtime/change_form.html')
 
 
 

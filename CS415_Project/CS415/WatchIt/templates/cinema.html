@@ -2,12 +2,13 @@
 
 {% block title %}
 <title>Select Seats</title>
-{% endblock %}  
+{% endblock %}
+
 {% block content %}
     <style>
         body {
-            background-color: #121212; /* Dark background for the whole page */
-            color: #e0e0e0; /* Light text color for contrast */
+            background-color: #121212;
+            color: #e0e0e0;
             font-family: Arial, sans-serif;
         }
         #screen {
@@ -19,7 +20,7 @@
             text-align: center;
             padding: 10px 0;
             border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(255,255,255,0.1); /* Lighter shadow for dark mode */
+            box-shadow: 0 4px 6px rgba(255,255,255,0.1);
         }
         #seats-container {
             display: grid;
@@ -33,7 +34,7 @@
         .seat {
             width: 40px;
             height: 40px;
-            background-color: #4CAF50; /* Bright color for seats to stand out */
+            background-color: #4CAF50;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -44,10 +45,10 @@
             transition: background-color 0.3s ease;
         }
         .selected {
-            background-color: #FF5722; /* Highlight selected seats distinctly */
+            background-color: #FF5722;
         }
         .unavailable {
-            background-color: #424242; /* Darker grey for unavailable seats */
+            background-color: #424242;
             cursor: not-allowed;
         }
         button.btn-primary {
@@ -56,16 +57,14 @@
             padding: 10px 20px;
             font-size: 16px;
             border-radius: 5px;
-            box-shadow: 0 4px 6px rgba(255,255,255,0.1); /* Light shadow for contrast */
+            box-shadow: 0 4px 6px rgba(255,255,255,0.1);
             cursor: pointer;
-            color: #fff; /* White text on buttons for readability */
+            color: #fff;
         }
         button.btn-primary:hover {
-            background-color: #444; /* Slightly lighter on hover for feedback */
+            background-color: #444;
         }
     </style>
-</head>
-<body>
     <div class="container mt-5 mb-5">
         <h1 class="text-center">Select Your Seats</h1>
     
@@ -106,8 +105,8 @@
         
             window.bookSeats = function() {
                 if (selectedSeats.length === totalTicketsAllowed) {
-                    var cinemaHallId = '{{ cinema_hall.id }}';  // Ensure this variable is set correctly from Django context
-                    var movieId = '{{ movie.id }}';  // Similarly ensure movie_id is set correctly
+                    var cinemaHallId = '{{ cinema_hall.id }}';
+                    var movieId = '{{ movie.id }}';
                     var showtimeId = '{{ showtime.id }}';
                     var redirectUrl = `/payment/${cinemaHallId}/?seats=${selectedSeats.join(',')}&movie_id=${movieId}&showtime_id=${showtimeId}&total_tickets=${totalTicketsAllowed}`;
                     window.location.href = redirectUrl;
@@ -116,8 +115,5 @@
                 }
             };
         });
-        
-        </script>
-        
-
-    {% endblock %}
+    </script>
+{% endblock %}

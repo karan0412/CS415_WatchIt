@@ -46,6 +46,22 @@ body {
 button {
     border: none;
 }
+#loading-screen {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: black;
+    z-index: 1000;
+}
+#loading-video {
+    width: 40%;
+    height: 40%;
+}
 @media only screen and (max-width: 1200px) {
     .main-content {
         margin-left: 10%;

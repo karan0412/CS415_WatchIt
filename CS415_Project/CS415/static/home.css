@@ -1,0 +1,101 @@
+.carousel-inner img {
+    width: 100%;
+    height: 40rem;
+}
+@media (max-width: 1200px) {
+  .carousel-inner img {
+      height: 35rem; /* Height for medium screens */
+  }
+}
+
+@media (max-width: 992px) {
+  .carousel-inner img {
+      height: 30rem; /* Height for smaller screens */
+  }
+}
+
+@media (max-width: 768px) {
+  .carousel-inner img {
+      height: 25rem; /* Height for extra small screens */
+  }
+}
+
+@media (max-width: 576px) {
+  .carousel-inner img {
+      height: 20rem; /* Height for extra extra small screens */
+  }
+}
+
+.now img {
+    width: 100%;
+    height: 10rem; /* Default height for larger screens */
+}
+
+@media (max-width: 1200px) {
+    .now img {
+        height: 8rem; /* Height for medium screens */
+    }
+}
+
+@media (max-width: 992px) {
+    .now img {
+        height: 6rem; /* Height for smaller screens */
+    }
+}
+
+@media (max-width: 768px) {
+    .now img {
+        height: 5rem; /* Height for extra small screens */
+    }
+}
+
+@media (max-width: 576px) {
+    .now img {
+        height: 4rem; /* Height for extra extra small screens */
+    }
+}
+
+.trailer-container {
+    width: 70%;
+    margin: auto; /* Centers the container */
+}
+
+
+
+.carousel-inner iframe {
+  width: 100%; /* iframe takes the width of its parent */
+  height: 100%; /* iframe takes the height of its parent */
+}
+
+.deal-image {
+  max-width: 100%; /* Ensures the image is responsive and fits within its column */
+  height: auto; /* Maintains the aspect ratio */
+  margin-right: 15px; /* Adds some spacing between the image and the text */
+}
+
+.deal-text {
+  padding-left: 15px; /* Adds some spacing on the left of the text */
+}
+.map-responsive {
+  overflow: hidden;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  position: relative;
+  height: 0;
+}
+.map-responsive iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.overlay {
+  position: absolute;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+  color: #fff; /* White text color */
+  width: 100%;
+  text-align: center;
+  padding: 5% 0; /* Padding to give some space inside the box */
+} 
