@@ -1,5 +1,6 @@
 {% extends "dashboard.html" %}
 
+
 {% block content %}
 <style>
     .fixed-image {
@@ -30,26 +31,43 @@
 
 </style>
 
-{% load static %}
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet"> <!-- FontAwesome CSS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-<link rel="stylesheet" href="{% static 'questionmark.css' %}">
-
-<div class="question-mark" onclick="toggleBubbleMessage()">
-    <i class="fas fa-question-circle"></i>
-    <div id="bubbleMessage" class="bubble-message">
-        This page contains bookings of the upcoming shows. 
-    </div>
-</div>
-
-<script>
-    function toggleBubbleMessage() {
-        var bubble = document.getElementById('bubbleMessage');
-        bubble.style.visibility = (bubble.style.visibility === 'visible') ? 'hidden' : 'visible';
-    }
-</script>
-
 <div class="container">
+
+    <div class="box" style="float: right;"> 
+        <div class="box1"> 
+            <div class="box2"> 
+                <div class="box3"> 
+                    <div class="details"> 
+                        <div class="name"> 
+                            Your Bookings
+                        </div> 
+                        <div class="coursename"> 
+                            This page displays a list of all your bookings. <br>
+                            You can view details, change booking details, download your booking receipts for all and each individual bookings.
+                        </div> 
+                    </div> 
+                </div> 
+            </div> 
+        </div> 
+        <div class="text11"> 
+            <a class="icon"> 
+                <div class="layer"> 
+                    <span></span> 
+                    <span></span> 
+                    <span></span> 
+                    <span></span> 
+                    <span></span> 
+                    <span></span> 
+                    <span></span> 
+                    <span></span> 
+                    <span style="background-color: rgb(151, 179, 234); text-align: center;">
+                        i
+                    </span> 
+                </div> 
+            </a> 
+        </div>
+    </div>
+
     <h1 class="my-4">Your Bookings</h1>
 
     <!-- Generate Report Button -->
@@ -117,6 +135,6 @@
     </div>
 </div>
 
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
 {% endblock %}
