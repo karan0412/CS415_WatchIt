@@ -36,3 +36,4 @@ INFO 2024-06-01 12:12:44,747 signals User karan04 logged in from IP 127.0.0.1
 INFO 2024-06-01 12:12:44,747 views  karan04's OTP was Verified 
 INFO 2024-06-01 20:11:24,664 signals User karan04 logged out from IP 127.0.0.1
 
+INFO 2024-06-01 20:31:04,891 signals User karan logged in from IP 127.0.0.1
