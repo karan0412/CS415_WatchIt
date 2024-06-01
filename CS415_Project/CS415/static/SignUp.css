@@ -24,7 +24,6 @@
     background: black;
     padding: 20px;
     border-radius: 10px;
-
 }
 
 .box::before, .box::after, .borderline::before, .borderline::after {

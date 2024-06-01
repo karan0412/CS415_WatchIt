@@ -1,0 +1,100 @@
+{% extends 'index.html' %}
+
+
+{% block title %}
+<title>Login</title>
+{% endblock %}
+{% block css %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'Login.css' %}">
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/alertify.min.css"/>
+<link rel="stylesheet" href="{% static 'css/alertify.css' %}">
+<link rel="stylesheet" href="{% static 'questionmark.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="question-mark" onclick="toggleBubbleMessage()">
+    <i class="fas fa-question-circle"></i>
+    <div id="bubbleMessage" class="bubble-message">
+        This is the Login Page
+        Please Enter Username and Password
+
+    </div>
+</div>
+
+<script>
+    function toggleBubbleMessage() {
+        var bubble = document.getElementById('bubbleMessage');
+        bubble.style.visibility = (bubble.style.visibility === 'visible') ? 'hidden' : 'visible';
+    }
+</script>
+
+<div class="card-container mb-5">
+    <div class="bottom">
+    <div class="box">
+        <span class="borderline"></span>
+        
+        <form method="post" action="{% url 'Login' %}">
+            <h3 class="text-center mb-4">Login</h3>
+            {% csrf_token %}
+            <div class="form-group mb-3 inputbox">
+                <input type="text" class="input ps-3" id="uname" name="uname" required>
+                <label for="uname">Username:</label>
+                <i></i>
+            </div>
+            <div class="form-group inputbox">
+                <input type="password" class="input ps-3" id="pwd" name="pwd" required>
+                <label for="pwd">Password:</label>
+                <i></i>
+                
+            </div>
+            {% if not is_first_login %}
+
+                <br>
+                <label for="pwd">Receive OTP via :</label>
+                
+           
+                <div class="hidden-toggles">
+			
+				    <input type="radio" id="coloration-low" class="hidden-toggles__input" name="otp_method" value="via_sms">
+				    <label for="coloration-low" class="hidden-toggles__label">SMS</label>
+				
+				    <input type="radio" id="coloration-medium" class="hidden-toggles__input" checked name="otp_method" value="via_email">
+				    <label for="coloration-medium" class="hidden-toggles__label">Email</label>
+                </div>
+            {% endif %}
+                
+
+            <button type="submit" class="btn btn-outline-light btn-block mt-3">Login</button>
+            <a href ="forget_password" class="forgot_password" style="text-decoration: none;
+            color:rgb(243, 212, 8); margin-top: 1px; font-size:small;">Forgot password ?</a>
+        </form>
+    </div>
+</div>
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<script src="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/alertify.min.js"></script>
+
+<script>
+    
+{% for message in messages %}
+    {% if message.tags == 'error' %}
+        alertify.set('notifier', 'position', 'top-right');
+        alertify.error('{{ message|safe }}');
+    {% elif message.tags == 'success' %}
+        alertify.set('notifier', 'position', 'top-right');
+        alertify.success('{{ message|safe }}');
+    {% elif message.tags == 'warning' %}
+        alertify.set('notifier', 'position', 'top-right');
+        alertify.success('{{ message|safe }}');
+    {% endif %}
+{% endfor %}
+
+
+</script>
+
+{% endblock %}

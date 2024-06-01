@@ -1,0 +1,26 @@
+
+
+    
+    .question-mark {
+        position: fixed;
+        top: 5.37%; /* Adjusted from 220px based on an assumed viewport height of 1080px */
+        right: 9.38%; /* Adjusted from 180px based on an assumed viewport width of 1920px */
+        font-size: 32px; /* Font size usually remains in px for consistency */
+        color: rgb(216, 238, 20);
+        cursor: pointer;
+        z-index: 1050;
+    }
+    .bubble-message {
+        visibility: hidden;
+        position: fixed;
+        top: 100px;
+        right: 180px;
+        background-color: #333;
+        color: #fff;
+        border-radius: 10px;
+        padding: 10px 20px;
+        z-index: 1060;
+        font-size: 16px;
+        width: 200px;
+        text-align: center;
+    }

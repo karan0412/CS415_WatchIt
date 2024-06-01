@@ -1,0 +1,22 @@
+{% extends 'index.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="alert alert-success" role="alert">
+        <h4 class="alert-heading">Well done!</h4>
+        <p>Your booking has been successfully processed. Thank you for choosing our service.</p>
+        <hr>
+
+    </div>
+    <p>You can view your bookings at your dashboard <a href="{% url 'your_bookings' %}">here</a>.</p>
+</div>
+
+<script>
+    // Prevent the user from navigating back to the payment page
+    history.pushState(null, null, document.URL);
+    window.addEventListener('popstate', function () {
+        history.pushState(null, null, document.URL);
+        window.location.href = "{% url 'Home' %}";  // Redirect to the home page
+    });
+</script>
+{% endblock %}

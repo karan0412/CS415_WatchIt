@@ -1,0 +1,241 @@
+{% extends 'index.html' %}
+
+{% block title %}
+<title>WatchIt - Home</title>
+{% endblock %}
+{% block css %}
+{% load static %}
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/alertify.min.css"/>
+<link rel="stylesheet" href="{% static 'css/alertify.css' %}">
+{% endblock %}
+
+{% block content %}
+<style>
+  .carousel-inner img {
+    width: 100%;
+    height: 40rem;
+}
+.now img{
+    width: 100;
+    height: 10rem;
+}
+
+.trailer-container {
+  width: 70%;
+  margin: auto; /* Centers the container */
+}
+
+.carousel-inner iframe {
+  width: 100%; /* iframe takes the width of its parent */
+  height: 100%; /* iframe takes the height of its parent */
+}
+
+.deal-image {
+  max-width: 100%; /* Ensures the image is responsive and fits within its column */
+  height: auto; /* Maintains the aspect ratio */
+  margin-right: 15px; /* Adds some spacing between the image and the text */
+}
+
+.deal-text {
+  padding-left: 15px; /* Adds some spacing on the left of the text */
+}
+.map-responsive {
+  overflow: hidden;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  position: relative;
+  height: 0;
+}
+.map-responsive iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.overlay {
+  position: absolute;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+  color: #fff; /* White text color */
+  width: 100%;
+  text-align: center;
+  padding: 5% 0; /* Padding to give some space inside the box */
+} 
+</style>
+
+<!-- Carousel placeholder for latest movies slideshow -->
+<div id="latestMoviesCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
+  <div class="carousel-inner">
+    {% if movies %}
+      {% for movie in movies %}
+      <div class="carousel-item {% if forloop.first %}active{% endif %}">
+        <div style="position: relative; overflow: hidden;"> <!-- Container for image and overlay -->
+          <img src="{{ movie.image.url }}" class="d-block w-100" alt="{{ movie.title }}">
+          <div class="overlay">
+            
+            <a href="{% url 'movie_detail' movie.id %}"><i class="fa-solid fa-circle-chevron-right fa-2xl" style="color: #ffffff;"></i></a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="d-flex justify-content-center align-items-center" style="height: 300px;">
+          <p class="text-center">No movies currently available.</p>
+      </div>
+    {% endif %}
+  </div>
+  <button class="carousel-control-prev" type="button" data-bs-target="#latestMoviesCarousel" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#latestMoviesCarousel" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+  </button>
+</div>
+
+
+
+<div id="movieTrailersCarousel" class="carousel slide mb-5">
+  <h2 class="text-center my-5">Trailers on the Go</h2>
+  <div class="carousel-inner">
+    {% if movies %}
+      {% for movie in movies %}
+      <div class="carousel-item {% if forloop.first %}active{% endif %}">
+        <div class="trailer-container">
+          <div class="d-flex justify-content-center align-items-center trailer" style="height: 500px;">
+            <!-- Using iframe to embed video -->
+            {% if movie.trailer %}
+            <iframe src="{{ movie.trailer }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            {% else %}
+            <p class="text-center">Trailer not available</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="d-flex justify-content-center align-items-center" style="height: 300px;">
+        <p class="text-center">No trailers currently available.</p>
+      </div>
+    {% endif %}
+  </div>
+  {% if movies %}
+  <button class="carousel-control-prev" type="button" data-bs-target="#movieTrailersCarousel" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#movieTrailersCarousel" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+  </button>
+  {% endif %}
+</div>
+
+
+<!-- Movies section with carousel -->
+<div class="container mt-5" id="nowShowing">
+  <h2 class="text-light mb-3 text-center">Now Showing</h2>
+  <div id="nowShowingCarousel" class="carousel slide">
+    <div class="carousel-inner now">
+      {% if movies_chunks %}
+        {% for chunk in movies_chunks %}
+          <div class="carousel-item {% if forloop.first %}active{% endif %}">
+            <div class="row justify-content-center">
+              {% for movie in chunk %}
+                <div class="col-3 mb-3">
+                  <a href="{% url 'movie_detail' movie.id %}"><img class="nowShowing" src="{{ movie.image.url }}" alt="{{ movie.title }}"></a>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="carousel-item active">
+          <div class="col">
+            <p class="text-center">No movies currently showing.</p>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+    {% if movies_chunks %}
+    <button class="carousel-control-prev" type="button" data-bs-target="#nowShowingCarousel" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#nowShowingCarousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    </button>
+    {% endif %}
+  </div>
+</div>
+
+
+
+<!-- Special deals section with alternating image and text, centered 
+<div class="container mt-4" id="dealsSection">
+  <h2 class="text-center text-light mb-3">Our Deals</h2>
+  <div class="row justify-content-center">
+      {% for deal in deals %}
+      <div class="col-lg-7 my-3 mb-5 d-flex">
+          <div class="{% cycle 'order-lg-1' 'order-lg-2' %} col-12 col-md-5">
+              <img src="{{ deal.image.url }}" alt="{{ deal.Meal }}" class="img-fluid deal-image">
+          </div>
+          <div class="{% cycle 'order-lg-2' 'order-lg-1' %} col-12 col-md-8 d-flex align-items-center justify-content-center">
+                <div class="deal-text text-center">
+                  <h3>{{ deal.Meal }}</h3>
+                  <p>{{ deal.description }}</p>
+                  <p class="text-muted">${{ deal.Price }}</p>
+              </div>
+          </div>
+      </div>
+      {% if not forloop.last %}
+      <div class="w-100"></div> 
+      {% endif %}
+      {% endfor %}
+  </div>
+</div>
+-->
+
+<div class="container mt-4 mb-5" id="findUs">
+  <h2 class="text-center text-light mb-3">Find Us Here</h2>
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8">
+      <!-- Embedded Google Map -->
+      <div class="map-responsive">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d1895.689793479037!2d178.4458998!3d-18.1464197!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x6e1bddd1c191590b%3A0x86f0258f43152cea!2sLaucala%20Bay%20Rd%2C%20Suva!5e0!3m2!1sen!2sfj!4v1714432713959!5m2!1sen!2sfj" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Optional JavaScript; choose one of the two! -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Example JavaScript to toggle login/logout links; adapt as needed for your authentication system
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const isLoggedIn = false; // Replace with actual check
+        if (isLoggedIn) {
+            document.getElementById('login-link').classList.add('d-none');
+            document.getElementById('signup-link').classList.add('d-none');
+            document.getElementById('logout-link').classList.remove('d-none');
+        }
+    });
+</script>
+
+<script src="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/alertify.min.js"></script>
+
+
+<script>
+  {% for message in messages %}
+      {% if message.tags == 'error' %}
+          alertify.set('notifier', 'position', 'top-right');
+          alertify.error('{{ message|safe }}');
+      {% elif message.tags == 'success' %}
+          alertify.set('notifier', 'position', 'top-right');
+          alertify.success('{{ message|safe }}');
+      {% endif %}
+  {% endfor %}
+  </script>
+
+{% endblock %}

@@ -1,0 +1,59 @@
+
+
+
+
+
+/* .admin-dashboard {
+    font-family: 'Arial', sans-serif;
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-widgets {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.widget {
+    background: #f9f9f9;
+    border: 1px solid #e1e1e1;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.widget h2 {
+    color: #333;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+#monthly-sales-chart, #user-registrations-chart {
+    height: 400px;
+}
+
+/* Highcharts specific styling */
+/* .highcharts-figure, .highcharts-data-table table {
+    min-width: 320px; 
+    max-width: 800px;
+    margin: 1em auto;
+}
+
+.highcharts-background {
+    fill: #f9f9f9;
+}
+
+.highcharts-title {
+    font-size: 18px;
+    fill: #333;
+}
+
+.highcharts-subtitle {
+    font-size: 15px;
+    fill: #666;
+} */ 
+

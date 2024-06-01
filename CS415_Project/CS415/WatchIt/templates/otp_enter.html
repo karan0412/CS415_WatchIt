@@ -3,58 +3,73 @@
 {% block title %}
 <title>Enter OTP</title>
 {% endblock %}
+
 {% block css %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'SignUp.css' %}">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/alertify.min.css" />
 <link rel="stylesheet" href="{% static 'css/alertify.css' %}">
-{% endblock %}
-
-{% block content %}
 <style>
-    /* Additional CSS for OTP input boxes */
     .otp-input {
-        width: 40px;
-        /* Adjust the width as needed */
+        width: 100%;
+        max-width: 40px; /* Set max-width suitable for all screens, adjust below if needed */
         height: 40px;
         text-align: center;
-        margin: 0 5px;
+        margin: 5px;
         display: inline-block;
         font-size: 18px;
-        border: 1px solid white;
+        border: 1px solid #ddd;
         border-radius: 10px;
+        background-color: #fff;
     }
     .otp-container {
         display: flex;
         justify-content: center;
         align-items: center;
+        flex-wrap: wrap;
+        padding: 10px;
     }
-    a
-    {
+    .card-container {
+        padding: 10px;
+        max-width: 360px;
+        margin: 20px auto;
+        width: 90%;
+    }
+    button {
+        width: 100%;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    a {
         text-decoration: none;
         color: white;
     }
-    a:hover
-    {
-        text-decoration: none;
-        color: white;
+    a:hover {
+        text-decoration: underline;
     }
-    button{
-        margin-top: 10%;
-        margin-bottom: 10%;
+
+    /* Media query for devices larger than 768px */
+    @media (min-width: 768px) {
+        .otp-input {
+            max-width: 60px; /* Larger max-width for larger screens */
+            margin: 5px 10px; /* Increased horizontal margin */
+        }
+        .card-container {
+            max-width: 600px; /* Larger max-width for better proportion on larger screens */
+        }
     }
 </style>
+{% endblock %}
 
+{% block content %}
 <div class="card-container mt-5 mb-5">
-    <div class="card bg-dark">
+    <div class="card bg-dark text-white">
         <h3 class="text-center mb-4">OTP Verification</h3>
-
         <form method="post" class="text-center">
             {% csrf_token %}
-
             <div class="form-group mb-3 otp-container">
-                <label for="otp" class="sr-only">Enter OTP :</label>
+                <label for="otp" class="sr-only">Enter OTP:</label>
                 <!-- Create six input boxes for OTP digits -->
                 <input type="text" class="otp-input" id="otp1" name="otp1" maxlength="1" required>
                 <input type="text" class="otp-input" id="otp2" name="otp2" maxlength="1" required>
@@ -63,10 +78,8 @@
                 <input type="text" class="otp-input" id="otp5" name="otp5" maxlength="1" required>
                 <input type="text" class="otp-input" id="otp6" name="otp6" maxlength="1" required>
             </div>
-
-            <button type="submit" class="btn btn-outline-light btn-block">Verify</button>
-            Didn't receive the OTP ?
-            <a href="{% url 'resend_otp' %}">Resend OTP</a>
+            <button type="submit" class="btn btn-outline-light">Verify</button>
+            <div>Didn't receive the OTP? <a href="{% url 'resend_otp' %}">Resend OTP</a></div>
         </form>
     </div>
 </div>
@@ -74,23 +87,19 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/alertify.min.js"></script>
-
 <script>
     {% for message in messages %}
-    {% if message.tags == 'error' %}
     alertify.set('notifier', 'position', 'top-right');
-    alertify.error('{{ message|safe }}');
-    {% elif message.tags == 'success' %}
-    alertify.set('notifier', 'position', 'top-right');
-    alertify.success('{{ message|safe }}');
-    {% endif %}
+    if (message.tags == 'error') {
+        alertify.error('{{ message|safe }}');
+    } else if (message.tags == 'success') {
+        alertify.success('{{ message|safe }}');
+    }
     {% endfor %}
 </script>
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const otpInputs = document.querySelectorAll('.otp-input');
-
         otpInputs.forEach((input, index) => {
             input.addEventListener('input', (e) => {
                 if (e.target.value.length === 1 && index < otpInputs.length - 1) {
@@ -98,8 +107,6 @@
                 }
             });
         });
-
-        // Focus on the first OTP input box initially
         otpInputs[0].focus();
     });
 </script>

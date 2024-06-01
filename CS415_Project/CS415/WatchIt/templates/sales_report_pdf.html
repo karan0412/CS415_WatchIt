@@ -18,7 +18,6 @@
             border-radius: 10px;
             margin-bottom: 20px;
         }
-        
         .logo {
             width: 80px;
             height: 80px;
@@ -65,7 +64,7 @@
 <body>
     <header>
         <div class="logo">
-            <img src="media/movie_images/logo_report.jpg" alt="Logo" class="logo">
+            <img src="media/movie_images/logo2.jpg" alt="Logo" class="logo">
             <h1>Sales Report</h1>
         </div>
     </header>
@@ -89,10 +88,10 @@
             <td>{{ booking.booking_date }}</td>
             <td>{{ booking.movie.title }}</td>
             <td>{{ booking.cinema_hall.cinema_type }}</td>
-            <td>{{ booking.showtime_display }}</td>
-            <td>{{ booking.seat_labels }}</td>
+            <td>{{ booking.showtime }}</td>
+            <td>{{ booking.get_seat_labels }}</td>
             <td>${{ booking.payment_amount }}</td>
-            <td>{{ booking.card_details }}</td>
+            <td>{{ booking.card_last4 }}</td>
         </tr>
         {% endfor %}
         <tr class="total">

@@ -1,0 +1,23 @@
+ /* Customize success notification */
+ .alertify-notifier .ajs-message.ajs-success {
+    background-color: #93c6ab;
+    border-left: 10px solid #0ba410; /* Adjust the width and color of the border */
+    color: black;
+    border-radius:7px;
+}
+
+  /* Customize error notification */
+  .alertify-notifier .ajs-message.ajs-error {
+    background-color: #dcb0ad;
+    border-left: 10px solid #ed0707;
+    color: black;
+    border-radius: 7px;
+}
+
+  /* Customize warning notification */
+  .alertify-notifier .ajs-message.ajs-warning {
+    background-color: #e1c790;
+    border-left: 10px solid #f7c205;
+    color: black;
+    border-radius: 7px;
+  }

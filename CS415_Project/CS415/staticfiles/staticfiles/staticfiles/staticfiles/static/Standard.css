@@ -1,0 +1,36 @@
+.cinema-hall {
+    display: grid;
+    grid-template-columns: repeat(18, 1fr); /* 18 columns */
+    gap: 5px;
+    padding: 20px;
+}
+.seat {
+    width: 30px;
+    height: 30px;
+    background-color: #ddd;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 0.7em;
+}
+.seat.taken {
+    background-color: #555;
+    cursor: not-allowed;
+}
+.seat.selected {
+    background-color: #6f6;
+}
+.confirm-button {
+    /* Your styles here */
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.seat.taken {
+    background-color: gray; /* Or any color that indicates the seat is taken */
+    pointer-events: none; /* Disables clicking */
+    cursor: default;
+}
