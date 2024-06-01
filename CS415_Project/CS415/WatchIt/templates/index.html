@@ -18,16 +18,13 @@
 {% endblock %}
 
 <style>
-
     html, body {
-        
         height: 100%; /* Full height for the html and body to enable flexbox sizing */
         margin: 0; /* Removes default margin */
     }
     body {
         display: flex; /* Enables flexbox */
         flex-direction: column; /* Stacks elements vertically */
-  
     }
     main {
         flex: 1; /* Takes up all available space */
@@ -38,13 +35,7 @@
         font-optical-sizing: auto;
         font-style: normal;
     }
-    .logo{
-      height: 130%;
-      width: 180%;
-    }
-    .logo-link{
-      width: 5%;
-    }
+    
     /* Loading screen styles */
     #loading-screen {
         display: flex;
@@ -56,22 +47,21 @@
         top: 0;
         left: 0;
         background-color: black;
-        z-index: 1000;
+        z-index: 2000;
     }
     #loading-video {
         width: 40%;
         height: 40%;
     }
-    
 </style>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-    <script src="https://kit.fontawesome.com/703ce498ac.js" crossorigin="anonymous"></script>
-    <script src="https://js.stripe.com/v3/"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<script src="https://kit.fontawesome.com/703ce498ac.js" crossorigin="anonymous"></script>
+<script src="https://js.stripe.com/v3/"></script>
 </head>
 <body style="background-color: black" class="custom-font">
 
@@ -85,44 +75,43 @@
 
 <nav class="navbar pt-4 pb-4 navbar-expand-lg navbar-dark static-top" style="background-color: black">
   <div class="container-fluid">
-    <a class="ms-3 me-5 logo-link" href="{% url 'Home' %}"><img class="logo" src="{% static 'logo.jpg' %}" alt="WatchIt Logo"></a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDarkDropdown" aria-controls="navbarNavDarkDropdown" aria-expanded="false" aria-label="Toggle navigation">
+    <div class="ms-3 me-4">
+      <a class="logo-link" href="{% url 'Home' %}"><img class="logo" src="{% static 'logo.jpg' %}" alt="WatchIt Logo"></a>
+    </div>
+   
+    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
       <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="collapse navbar-collapse" id="navbarNavDarkDropdown">
-      <ul class="navbar-nav me-3 ms-3">
-        <li class="nav-item mx-3">
-          <a class="nav-link text-light" href="{% url 'movie_list' %}"><button class="link">Movies</button></a>
-        </li>
-        <li class="nav-item mx-3">
-          <a class="nav-link" href="#nowShowing"><button class="link">Now Showing</button></a>
-      </li>
-      <li class="nav-item mx-3">
-          <a class="nav-link" href="#dealsSection"><button class="link">Our Deals</button></a>
-      </li>
-      <li class="nav-item mx-3">
-          <a class="nav-link" href="#findUs"><button class="link">Find Us</button></a>
-      </li>
-      <li class="nav-item mx-3">
-        <a class="nav-link text-light" href="{% url 'submit_feedback' %}"><button class="link">Feedback</button></a>
-      </li>
-      {% comment %} <li class="nav-item mx-3">
-        <a class="nav-link text-light" href="{% url 'career_application' %}">Careers</a>
-      </li> {% endcomment %}
-
-      {% if request.user.is_authenticated %}
+    <div class="offcanvas offcanvas-end bg-black" tabindex="-1" id="offcanvasNavbar" data-bs-scroll="true" data-bs-backdrop="false" aria-labelledby="offcanvasNavbarLabel">
+      <div class="offcanvas-header">
+ 
+        <button class="btn btn-outline-light" data-bs-dismiss="offcanvas" aria-label="Close">Close</button>
+      </div>
+      <div class="offcanvas-body">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item mx-3">
-            </li>
-        {% else %}
-        <li class="nav-item mx-3" id="signup-link">
-          <a class="nav-link text-light" href="{% url 'SignUp' %}"><button class="signup link">Sign Up Now</button></a>
-        </li>
-        
-        {% endif %}
+            <a class="nav-link text-light" href="{% url 'movie_list' %}"><button class="link">Movies</button></a>
+          </li>
+          <li class="nav-item mx-3">
+            <a class="nav-link" href="#nowShowing"><button class="link">Now Showing</button></a>
+          </li>
+          <li class="nav-item mx-3">
+            <a class="nav-link" href="#findUs"><button class="link">Find Us</button></a>
+          </li>
+          <li class="nav-item mx-3">
+            <a class="nav-link text-light" href="{% url 'submit_feedback' %}"><button class="link">Feedback</button></a>
+          </li>
+          {% if request.user.is_authenticated %}
+         
+          {% else %}
+          <li class="nav-item mx-3" id="signup-link">
+            <a class="nav-link text-light" href="{% url 'SignUp' %}"><button class="signup link">Sign Up Now</button></a>
+          </li>
+          {% endif %}
+        </ul>
+        <ul class="navbar-nav ms-auto">
 
-    </ul>
-    <ul class="navbar-nav ms-auto">
-        {% if request.user.is_authenticated %}
+          {% if request.user.is_authenticated %}
           <li class="nav-item mx-3 ">
                 <div class="nav-item dropdown me-5 user">
                     <a class="nav-link dropdown-toggle text-light" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -135,13 +124,13 @@
                 </div>
               
         {% else %}
-
-        
-          <a class="nav-item nav-link text-light me-5 btn btn-danger" href="{% url 'Login' %}">Login</a>
-        </li>
-        
-        {% endif %}
-      </ul>
+          
+          <li class="nav-item mx-3">
+            <a class="nav-link text-light me-5 btn btn-danger" href="{% url 'Login' %}">Login</a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
     </div>
   </div>
 </nav>
@@ -179,13 +168,10 @@
               <p>Address: 123 WatchIt Street, MovieTown, MT 56789</p>
           </div>
       </div>
-      <div class="row">
-          
-      </div>
   </div>
   <div class="col-12 mt-3 text-center">
     <span>&copy; 2024 WatchIt. All rights reserved.</span>
-</div>
+  </div>
 </footer>
 
 <script>
@@ -197,7 +183,6 @@
       document.getElementById('loading-screen').style.display = 'none';
   });
 </script>
-
 
 </body>
 </html>
