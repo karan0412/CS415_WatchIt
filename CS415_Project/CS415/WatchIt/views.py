@@ -370,62 +370,70 @@ def display_hall(request, cinema_hall_id, movie_id, showtime_id):
         'showtime': showtime,
     })
 
-from datetime import datetime
-from django.utils import timezone
-from .models import Tag, Movie, Showtime
-from django.shortcuts import render
-
 def movie_list(request):
     tags = Tag.objects.all()
     selected_tag_name = request.GET.get("tag")
-    
-    if selected_tag_name:
-        movies = Movie.objects.filter(tags__name=selected_tag_name).distinct()
-    else:
-        movies = Movie.objects.all()
-    
-    now = timezone.now().date()
-    
-    # Get distinct show dates for movies currently showing
-    show_dates = Showtime.objects.filter(movie__in=movies, showtime__gte=now).values_list('showtime__date', flat=True).distinct()
-    show_dates = sorted(show_dates)
-    
     selected_date = request.GET.get("show_date")
     formatted_date = None
 
-    if selected_date:
-        # Convert the selected_date from "May 28, 2024" format to "YYYY-MM-DD" format
-        formatted_date = datetime.strptime(selected_date, "%B %d, %Y").strftime("%Y-%m-%d")
-    
-    if formatted_date:
-        # Use the formatted_date in your queryset only if it's not None
-        movies = Movie.objects.filter(showtimes__showtime__date=formatted_date).distinct()
+    now = timezone.now().date()
+
+    if selected_tag_name:
+        show_dates = Showtime.objects.filter(showtime__gte=now, movie__tags__name=selected_tag_name).values_list('showtime__date', flat=True).distinct()
     else:
-        movies = Movie.objects.all()
+        show_dates = Showtime.objects.filter(showtime__gte=now).values_list('showtime__date', flat=True).distinct()
+    show_dates = sorted(show_dates)
+
+    if not selected_date or selected_date == 'None':
+        if show_dates:
+            selected_date = show_dates[0].strftime("%B %d, %Y")
+
+    if selected_date and selected_date != 'None':
+        formatted_date = timezone.datetime.strptime(selected_date.strip(), "%B %d, %Y").strftime("%Y-%m-%d")
+        if selected_tag_name:
+            movies = Movie.objects.filter(tags__name=selected_tag_name, showtimes__showtime__date=formatted_date).distinct()
+            if not movies.exists():
+                for date in show_dates:
+                    formatted_date = date.strftime("%Y-%m-%d")
+                    movies = Movie.objects.filter(tags__name=selected_tag_name, showtimes__showtime__date=formatted_date).distinct()
+                    if movies.exists():
+                        selected_date = date.strftime("%B %d, %Y")
+                        break
+        else:
+            movies = Movie.objects.filter(showtimes__showtime__date=formatted_date).distinct()
+    else:
+        if selected_tag_name:
+            movies = Movie.objects.filter(tags__name=selected_tag_name).distinct()
+        else:
+            movies = Movie.objects.all()
+
+    coming_soon_movies = Movie.objects.filter(release_date__gt=now)
+
+    # If a tag is selected, filter coming soon movies by that tag
+    if selected_tag_name:
+        coming_soon_movies = coming_soon_movies.filter(tags__name=selected_tag_name)
 
     return render(request, 'movie_list.html', {
         'movies': movies,
         'now': now,
         'tags': tags,
         'selected_tag_name': selected_tag_name,
-        'show_dates': show_dates
+        'show_dates': show_dates,
+        'selected_date': selected_date,
+        'coming_soon_movies': coming_soon_movies
     })
 
 from collections import defaultdict
-from django.shortcuts import get_object_or_404, render
-from django.utils import timezone
-from .models import Movie, Showtime
-
-
-
 
 def movie_detail(request, movie_id):
     movie = get_object_or_404(Movie, pk=movie_id)
     showtimes_by_date = defaultdict(list)
     show_dates = set()
     
+    now = timezone.now()
+
     # Grouping showtimes by date and collecting unique show dates
-    for showtime in movie.showtimes.filter(showtime__gt=timezone.now()).order_by('showtime'):
+    for showtime in movie.showtimes.filter(showtime__gt=now).order_by('showtime'):
         showtime_date = showtime.showtime.date()
         showtimes_by_date[showtime_date].append(showtime)
         show_dates.add(showtime_date)
@@ -450,8 +458,6 @@ def movie_detail(request, movie_id):
 
 from django.http import JsonResponse
 
-
-
 def movie_showtimes(request, movie_id):
     movie = get_object_or_404(Movie, pk=movie_id)
     selected_date_str = request.GET.get('date', None)
@@ -476,36 +482,6 @@ def movie_showtimes(request, movie_id):
     ]
     
     return JsonResponse({'showtimes': showtime_list})
-
-
-
-from django.http import JsonResponse
-
-def movie_showtimes(request, movie_id):
-    movie = get_object_or_404(Movie, pk=movie_id)
-    selected_date_str = request.GET.get('date', None)
-    
-    if selected_date_str:
-        try:
-            selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
-        except ValueError:
-            return JsonResponse({'error': 'Invalid date format'}, status=400)
-    else:
-        return JsonResponse({'error': 'No date provided'}, status=400)
-    
-    showtimes = movie.showtimes.filter(showtime__date=selected_date, showtime__gt=timezone.now()).order_by('showtime')
-    showtime_list = [
-        {
-            'id': showtime.id,
-            'showtime': showtime.showtime.isoformat(),
-            'cinema_hall_id': showtime.cinema_hall.id,
-            'movie_id': movie.id
-        }
-        for showtime in showtimes
-    ]
-    
-    return JsonResponse({'showtimes': showtime_list})
-
 
 def redirect_to_payment(request, cinema_hall_id):
     selected_seat_ids = request.POST.getlist('seats[]')
@@ -690,7 +666,7 @@ def process_payment(request):
     return JsonResponse({'error': 'Invalid request method'})
 
 def booking_success(request):
-    request.session.flush()
+
     return render(request, 'booking_success.html')
 
 
