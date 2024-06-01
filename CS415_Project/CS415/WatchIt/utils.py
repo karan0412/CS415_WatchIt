@@ -63,11 +63,11 @@ def generate_excel(queryset):
     ws.column_dimensions['I'].width = 40
 
     # Add company logo
-    logo_path = os.path.join(settings.MEDIA_ROOT, 'movie_images', 'logo.jpg')  # Replace 'logo.jpg' with your logo filename
+    logo_path = os.path.join(settings.MEDIA_ROOT, 'movie_images', 'logo2.jpg')  # Replace 'logo.jpg' with your logo filename
     if os.path.exists(logo_path):
         logo = Image(logo_path)
-        logo.width = 80  # Set the width of the logo
-        logo.height = 80  # Set the height of the logo
+        logo.width = 100  # Set the width of the logo
+        logo.height = 100  # Set the height of the logo
         ws.add_image(logo, 'A1')
     else:
         ws['A1'] = "Logo not found"
@@ -105,7 +105,7 @@ def generate_excel(queryset):
         showtime_display = booking.showtime.showtime.strftime("%Y-%m-%d %H:%M:%S")  # Format the showtime to a string
         row = [
             booking.id,
-            booking.user.username,
+            booking.user.username if booking.user else 'Guest User',
             booking.movie.title,
             booking.cinema_hall.cinema_type,
             showtime_display,  # Convert showtime to string
