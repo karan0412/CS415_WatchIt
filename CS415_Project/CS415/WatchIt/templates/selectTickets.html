@@ -16,7 +16,7 @@
 {% endif %}
     <div class="box mt-5 mb-5">
         <div class="row">
-            <div class="col-md-8 cart text-dark">
+            <div class="col-md-8 cart text-light">
                 <div class="title">
                     <div class="row">
                         <div class="col">
@@ -35,7 +35,7 @@
                     {% csrf_token %}
                     <input type="hidden" name="adult_quantity" id="adult_quantity_input" value="0">
                     <input type="hidden" name="child_quantity" id="child_quantity_input" value="0">
-                    <div class="row border-top border-bottom border-dark">
+                    <div class="row border-top border-bottom border-light">
                         <div class="row main align-items-center">
                             <div class="col quantity">
                                 <div class="col ">Adult</div>
@@ -46,9 +46,9 @@
                                 {% endif %}
                                 
                                 
-                                <a href="#" id="adult-minus">-</a>
-                                <span id="adult-quantity" class="border">0</span>
-                                <a href="#" id="adult-plus">+</a>
+                                <a href="#" id="adult-minus" class="text-danger">-</a>
+                                <span id="adult-quantity" class="border-bottom">0</span>
+                                <a href="#" id="adult-plus" class="text-success">+</a>
                                 <div class="col subtotal">Subtotal: <span class="adult-subtotal">0.00</span></div>
                             </div>
                         </div>
@@ -61,9 +61,9 @@
                                 {% endif %}
                                 
                                 
-                                <a href="#" id="child-minus">-</a>
-                                <span id="child-quantity" class="border">0</span>
-                                <a href="#" id="child-plus">+</a>
+                                <a href="#" id="child-minus" class="text-danger">-</a>
+                                <span id="child-quantity" class="border-bottom">0</span>
+                                <a href="#" id="child-plus" class="text-success">+</a>
                                 <div class="col subtotal">Subtotal:  <span class="child-subtotal">0.00</span></div>
                             </div>
                         </div>
@@ -84,7 +84,7 @@
                         <div class="row">
                             <div class="col total">TOTAL PRICE : $ <span id="total-price">0.00</span></div>
                         </div>
-                        <button type="submit" class="btn btn-primary btn-block">Select Seats</button>
+                        <button type="submit" class="btn btn-outline-dark btn-block">Select Seats</button>
                     </div>
                 </form>
             </div>
