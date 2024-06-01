@@ -1,81 +1,136 @@
 {% extends 'index.html' %}
 {% block content %}
- 
-    <style>
-        .payment-container {
-            background: gray;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            padding: 20px;
-            max-width: 600px;
-            margin: 40px auto;
-        }
-        .header {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-        .detail {
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-        .btn-confirm {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .btn-confirm:hover {
-            background-color: #45a049;
-        }
-        .StripeElement {
-            box-sizing: border-box;
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            background-color: white;
-            box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
-            transition: box-shadow 0.15s ease-in-out, border-color 0.15s ease-in-out;
-        }
-        .StripeElement--focus {
-            border-color: #4CAF50;
-            box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
-        }
-        .StripeElement--invalid {
-            border-color: #e3342f;
-            box-shadow: 0 0 8px rgba(227, 52, 47, 0.6);
-        }
-        .StripeElement--webkit-autofill {
-            background-color: #fefde5 !important;
-        }
-        #card-errors {
-            color: #e3342f;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-        .progress {
-            height: 20px;
-            margin-top: 20px;
-        }
-        .progress-bar {
-            background-color: #4CAF50; /* Green to match your button */
-            transition: width 0.4s ease-in-out;
-        }
-    </style>
+
+<style>
+    .payment-container {
+        background: rgba(50, 50, 50, 0.9); /* Dark background with slight transparency */
+        border: 2px solid transparent;
+        border-radius: 25px; /* Increased border-radius for more rounded corners */
+        box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+        padding: 30px;
+        max-width: 600px;
+        margin: 40px auto;
+        color: white; /* Ensured text color is white for contrast */
+        font-family: 'Arial', sans-serif; /* Modern, readable font */
+        position: relative; /* Added relative positioning */
+        overflow: hidden; /* Ensure pseudo-element stays within container */
+    }
+    .payment-container::before {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        right: -5px;
+        bottom: -5px;
+        border-radius: 30px; /* Match border-radius of container */
+        background: linear-gradient(145deg, #007BFF, #004085); /* Gradient background */
+        z-index: -1;
+        transition: all 0.3s ease; /* Smooth transition */
+        border: 2px solid transparent; /* Creates the border effect */
+    }
+    .payment-container:hover::before {
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }    
+    .header {
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    .detail {
+        margin-bottom: 20px;
+        font-size: 18px;
+        text-align: left; /* Align text to the left for better structure */
+        display: flex;
+        align-items: center;
+    }
+    .detail img { /* Example for icons */
+        margin-right: 10px;
+        width: 24px;
+    }
+    .detail i {
+        margin-right: 10px;
+    }
+    .detail .label {
+        margin-right: 10px; /* Added space between label and value */
+    }
+    .btn-confirm {
+        background: linear-gradient(145deg, #0062cc, #004085); /* Gradient effect */
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 18px;
+        display: block;
+        margin: 20px auto; /* Center button */
+        transition: background 0.3s ease;
+    }
+    .btn-confirm:hover {
+        background: linear-gradient(145deg, #004085, #002752); /* Darker gradient on hover */
+    }
+    .StripeElement {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ccc; /* Subtle border */
+        border-radius: 8px;
+        background-color: #fff;
+        transition: box-shadow 0.15s ease-in-out, border-color 0.15s ease-in-out;
+    }
+    .StripeElement--focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 8px rgba(128, 189, 255, 0.6);
+    }
+    .StripeElement--invalid {
+        border-color: #e3342f;
+        box-shadow: 0 0 8px rgba(227, 52, 47, 0.6);
+    }
+    .StripeElement--webkit-autofill {
+        background-color: #fefde5 !important;
+    }
+    #card-errors {
+        color: #f86c6b;
+        margin-top: 10px;
+        font-size: 14px;
+        text-align: center;
+    }
+    .progress {
+        display: none; /* Initially hide the progress bar */
+        height: 20px;
+        margin-top: 20px;
+        background-color: #f0f0f0; /* Neutral background color */
+        border-radius: 8px; /* Ensure same border-radius as progress-bar */
+        overflow: hidden; /* Ensure no overflow is visible */
+        position: relative; /* Position relative to contain progress bar */
+    }
+    
+    .progress-bar {
+        background-color: #007BFF; /* Blue color for the progress bar */
+        transition: width 0.4s ease-in-out;
+        text-align: center;
+        color: white;
+        border-radius: 8px; /* Ensure same border-radius as progress container */
+        height: 100%; /* Full height to match the container */
+        position: absolute; /* Position absolute to ensure full coverage */
+        top: 0; /* Align to the top */
+        left: 0; /* Align to the left */
+    }
+    
+</style>
 </head>
 <body>
     <div class="payment-container">
         <div class="header">Finalize Your Payment</div>
-        <div class="detail"><strong>Cinema Type:</strong> {{ cinema_type }}</div>
-        <div class="detail"><strong>Movie Title:</strong> {{ movie_title }}</div>
-        <div class="detail"><strong>Show:</strong> {{ show }}</div>
-        <div class="detail"><strong>Movie Duration:</strong> {{ movie_duration }} minutes</div>
-        <div class="detail"><strong>Total Price:</strong> ${{ total_price }}</div>
-        <div class="detail"><strong>Selected Seats:</strong>
+        <div class="detail"><i class="fas fa-building"></i><strong class="label">Cinema Type: </strong> {{ cinema_type }}</div>
+        <div class="detail"><i class="fas fa-film"></i><strong class="label">Movie Title: </strong> {{ movie_title }}</div>
+        <div class="detail"><i class="fas fa-clock"></i><strong class="label">Show: </strong> {{ show }}</div>
+        <div class="detail"><i class="fas fa-hourglass-start"></i><strong class="label">Movie Duration: </strong> {{ movie_duration }} minutes</div>
+        <div class="detail"><i class="fas fa-ticket-alt"></i><strong class="label">Total Price: </strong> ${{ total_price }}</div>
+        <div class="detail"><i class="fas fa-chair"></i><strong class="label">Selected Seats: </strong>
             <div id="seat-list">
                 {% for seat in selected_seats %}
                     <span class="seat-label" data-id="{{ seat.id }}">{{ seat.seat_label }}</span>{% if not forloop.last %}, {% endif %}
@@ -83,7 +138,7 @@
             </div>
         </div>
 
-        <div class="progress">
+        <div class="progress" id="payment-progress-container">
             <div id="payment-progress" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">Processing...</div>
         </div>
 
@@ -118,7 +173,9 @@
         });
 
         function submitPayment() {
+            var progressContainer = document.getElementById('payment-progress-container');
             var progressElem = document.getElementById('payment-progress');
+            progressContainer.style.display = 'block'; // Show progress bar on button click
             progressElem.style.width = "0%"; // Reset progress on new submission
             stripe.createPaymentMethod({
                 type: 'card',
@@ -186,4 +243,4 @@
             progressElem.textContent = percent < 100 ? "Processing..." : "Payment successful!";
         }
     </script>
-    {% endblock %}
+{% endblock %}

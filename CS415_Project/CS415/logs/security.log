@@ -9,3 +9,10 @@ INFO 2024-06-01 01:56:47,362 signals User karan logged in from IP 127.0.0.1
 INFO 2024-06-01 01:57:03,458 signals User karan logged out from IP 127.0.0.1
 INFO 2024-06-01 02:30:09,763 signals User karan logged in from IP 127.0.0.1
 INFO 2024-06-01 03:09:48,927 signals User karan logged in from IP 127.0.0.1
+INFO 2024-06-01 13:50:35,256 signals User karan logged out from IP 127.0.0.1
+INFO 2024-06-01 13:50:46,728 views  OTP was sent to laila
+INFO 2024-06-01 13:53:25,613 signals User karan logged in from IP 127.0.0.1
+INFO 2024-06-01 14:08:46,966 signals User karan logged out from IP 127.0.0.1
+INFO 2024-06-01 14:08:51,684 views  OTP was sent to laila
+INFO 2024-06-01 14:11:14,602 signals User karan logged in from IP 127.0.0.1
+INFO 2024-06-01 15:08:59,540 signals User karan logged in from IP 127.0.0.1
