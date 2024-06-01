@@ -4,6 +4,10 @@
 <title>Movies</title>
 {% endblock %}
 
+{% block css %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'tooltips.css' %}">
+{% endblock %}
 
 {% block content %}
 <style>
@@ -98,31 +102,6 @@
         margin-bottom: 20px;
     }
 
-    .question-mark {
-        position: fixed;
-        top: 20.37%;
-        right: 9.38%;
-        font-size: 32px;
-        color: rgb(216, 238, 20);
-        cursor: pointer;
-        z-index: 1050;
-    }
-
-    .bubble-message {
-        visibility: hidden;
-        position: fixed;
-        top: 200px;
-        right: 180px;
-        background-color: #333;
-        color: #fff;
-        border-radius: 10px;
-        padding: 10px 20px;
-        z-index: 1060;
-        font-size: 16px;
-        width: 200px;
-        text-align: center;
-    }
-
     .col button {
         background-color: white;
         color: #000;
@@ -133,159 +112,6 @@
         background-color: rgb(64, 58, 139);
         color: #000;
         border: none;
-    }
-
-    .box {
-        position: relative;
-        cursor: pointer;
-        transition: all 0.9s;
-        font-size: 17px;
-    }
-
-    .box1 {
-        position: absolute;
-        top: 0;
-        transform: translateX(-60px);
-        padding: 10px;
-        opacity: 0;
-        pointer-events: none;
-        transition: all 0.7s;
-        border-radius: 5px 40px 5px;
-        border: 2px solid #fff;
-        box-shadow: rgba(241, 245, 241, 0.25) 0px 30px 60px -12px inset,
-            rgba(242, 238, 238, 0.3) 0px 18px 36px -18px inset;
-    }
-
-    .box2 {
-        background: green;
-        border-radius: 5px 40px 5px;
-        padding: 10px;
-        border: 1px solid rgb(221, 228, 232);
-    }
-
-    .box:hover .box1 {
-        top: -150px;
-        opacity: 1;
-        visibility: visible;
-        pointer-events: auto;
-    }
-
-    .layer {
-        width: 55px;
-        height: 55px;
-        transition: transform 0.9s;
-    }
-
-    .icon:hover .layer {
-        transform: rotate(-25deg) skew(10deg);
-    }
-
-    .layer span {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 100%;
-        width: 100%;
-        border: 1px solid #8fc681;
-        border-radius: 10px;
-        transition: all 0.9s;
-    }
-
-    .layer span,
-    .text11 {
-        color: rgb(163, 213, 163);
-        border-color: #a4c9a3;
-        font-size: 30px;
-        font-weight: 900;
-    }
-
-    .icon:hover.layer span {
-        box-shadow: -1px 1px 3px #2fbc2f;
-    }
-
-    .icon .text11 {
-        position: absolute;
-        left: 50%;
-        opacity: 0;
-        font-weight: 500;
-        transform: translateX(-50%);
-        transition: bottom 0.8s ease, opacity 0.8s ease;
-    }
-
-    .icon:hover .text11 {
-        bottom: -55px;
-        opacity: 1;
-    }
-
-    .icon:hover .layer span:nth-child(1) {
-        opacity: 0.2;
-    }
-
-    .icon:hover .layer span:nth-child(2) {
-        opacity: 0.4;
-        transform: translate(4px, -4px);
-    }
-
-    .icon:hover .layer span:nth-child(3) {
-        opacity: 0.6;
-        transform: translate(8px, -8px);
-    }
-
-    .icon:hover .layer span:nth-child(4) {
-        opacity: 0.8;
-        transform: translate(12px, -12px);
-    }
-
-    .icon:hover .layer span:nth-child(5) {
-        opacity: 1;
-        transform: translate(17px, -17px);
-    }
-
-    .layer span.fab {
-        font-size: 30px;
-        line-height: 64px;
-        text-align: center;
-        fill: #1da1f2;
-        background: #000;
-    }
-
-    .box3 {
-        display: flex;
-        gap: 6px;
-    }
-
-    .img {
-        width: 70px;
-        height: 50px;
-        font-size: 25px;
-        font-weight: 700;
-        border: 2px solid #204410;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #fff;
-    }
-
-    .name {
-        font-size: 17px;
-        font-weight: 700;
-        color: rgb(120, 222, 87);
-    }
-
-    h1,
-    h3 {
-        text-align: center;
-        color: aliceblue;
-    }
-
-    .details {
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-        flex-direction: column;
-        gap: 0;
-        color: #fff;
     }
 </style>
 
@@ -307,10 +133,6 @@
         });
     });
 
-    function toggleBubbleMessage() {
-        var bubble = document.getElementById('bubbleMessage');
-        bubble.style.visibility = (bubble.style.visibility === 'visible') ? 'hidden' : 'visible';
-    }
 
     function filterByDate(selectedDate, button) {
         var buttons = document.querySelectorAll('.btn-outline-light-dates');
@@ -352,6 +174,41 @@
             </div>
             <div class="col">
                 <button type="button" class="btn btn-outline-danger" onclick="clearFilters()">Reset</button>
+            </div>
+            <div class="col">
+                <div class="box" style="float: right;"> 
+                    <div class="box1"> 
+                        <div class="box2"> 
+                            <div class="box3"> 
+                                <div class="details"> 
+                                    <div class="name"> 
+                                        Filter 
+                                    </div> 
+                                    <div class="coursename"> 
+                                        Select a Category or a Date to filter your movies.
+                                    </div> 
+                                </div> 
+                            </div> 
+                        </div> 
+                    </div> 
+                    <div class="text11"> 
+                        <a class="icon"> 
+                            <div class="layer"> 
+                                <span></span> 
+                                <span></span> 
+                                <span></span> 
+                                <span></span> 
+                                <span></span> 
+                                <span></span> 
+                                <span></span> 
+                                <span></span> 
+                                <span style="background-color: rgb(151, 179, 234); text-align: center;">
+                                    i
+                                </span> 
+                            </div> 
+                        </a> 
+                    </div>
+                </div>
             </div>
         </div>
     </form>

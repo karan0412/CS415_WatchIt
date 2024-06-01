@@ -4,6 +4,11 @@
 <title>{{ movie.title }}</title>
 {% endblock %}
 
+{% block css %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'tooltips.css' %}">
+{% endblock %}
+
 {% block content %}
 <style>
     .trailer-container {
@@ -44,7 +49,46 @@
         border: none; /* Accent color border for active button */
     }
 </style>
+
+
 <div class="container mt-5">
+
+    <div class="col">
+        <div class="box" style="float: right;"> 
+            <div class="box1"> 
+                <div class="box2"> 
+                    <div class="box3"> 
+                        <div class="details"> 
+                            <div class="name"> 
+                                Book Your Movie 
+                            </div> 
+                            <div class="coursename"> 
+                                This page displays movie details and available showtimes. Click 'Book Now' to reserve your seats.
+                            </div> 
+                        </div> 
+                    </div> 
+                </div> 
+            </div> 
+            <div class="text11"> 
+                <a class="icon"> 
+                    <div class="layer"> 
+                        <span></span> 
+                        <span></span> 
+                        <span></span> 
+                        <span></span> 
+                        <span></span> 
+                        <span></span> 
+                        <span></span> 
+                        <span></span> 
+                        <span style="background-color: rgb(151, 179, 234); text-align: center;">
+                            i
+                        </span> 
+                    </div> 
+                </a> 
+            </div>
+        </div>
+    </div>
+
     <!-- Trailer Section -->
     <div class="row mb-4">
         <div class="trailer-container">
@@ -59,6 +103,7 @@
         </div>
     </div>
 
+    
     <!-- Movie Details Section -->
     <div class="row">
         <div class="col-md-12">
