@@ -53,6 +53,7 @@
         width: 40%;
         height: 40%;
     }
+    
 </style>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -98,11 +99,10 @@
           <li class="nav-item mx-3">
             <a class="nav-link" href="#findUs"><button class="link">Find Us</button></a>
           </li>
+          {% if request.user.is_authenticated %}
           <li class="nav-item mx-3">
             <a class="nav-link text-light" href="{% url 'submit_feedback' %}"><button class="link">Feedback</button></a>
-          </li>
-          {% if request.user.is_authenticated %}
-         
+          </li>         
           {% else %}
           <li class="nav-item mx-3" id="signup-link">
             <a class="nav-link text-light" href="{% url 'SignUp' %}"><button class="signup link">Sign Up Now</button></a>

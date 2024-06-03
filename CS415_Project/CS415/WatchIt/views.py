@@ -447,12 +447,23 @@ def movie_detail(request, movie_id):
     else:
         selected_date = min(show_dates, default=None)
     
+    # Initialize cinema_type variable
+    cinema_type = None
+
+    # Check if selected_date has showtimes
+    if selected_date in showtimes_by_date:
+        # Get the first showtime for the selected date
+        first_showtime = showtimes_by_date[selected_date][0]
+        # Access cinema type from the first showtime
+        cinema_type = first_showtime.cinema_hall.cinema_type
+
     context = {
         'movie': movie,
         'showtimes_by_date': dict(showtimes_by_date),
         'show_dates': sorted(show_dates),
         'selected_date': selected_date,
-        'showtimes': showtimes_by_date[selected_date] if selected_date in showtimes_by_date else None
+        'showtimes': showtimes_by_date[selected_date] if selected_date in showtimes_by_date else None,
+        'cinema_type': cinema_type  # Assign cinema type
     }
     return render(request, 'movie_detail.html', context)
 

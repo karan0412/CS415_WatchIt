@@ -141,6 +141,7 @@
                             {% for showtime in showtimes %}
                                 <li>
                                     <p><strong>Showtime:</strong> {{ showtime.showtime|date:"g:i A" }}</p>
+                                    <p><strong>Cinema:</strong> {{ cinema_type}}</p>
                                     <a href="{% url 'selectTickets' cinema_hall_id=showtime.cinema_hall.id movie_id=movie.id showtime_id=showtime.id %}" class="btn btn-outline-light">
                                         Book Now
                                     </a>
