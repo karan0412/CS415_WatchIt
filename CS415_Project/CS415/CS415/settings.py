@@ -29,8 +29,8 @@ SECRET_KEY = 'django-insecure-%)+3a&lnyn+_7@x$^b!1nx6f!vq=y48o(9at-tswd(l+b$n7h&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-#ALLOWED_HOSTS = ['192.168.169.63']
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.131.63']
+#ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -217,17 +217,27 @@ LOGGING = {
     },
 }
 
-SECURE_SSL_REDIRECT = False
-SECURE_HSTS_SECONDS = 0
-SECURE_HSTS_INCLUDE_SUBDOMAINS = False
-SECURE_HSTS_PRELOAD = False
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
+#SECURE_SSL_REDIRECT = False
+#SECURE_HSTS_SECONDS = 0
+#SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+#SECURE_HSTS_PRELOAD = False
+#SESSION_COOKIE_SECURE = False
+#CSRF_COOKIE_SECURE = False
+
 
 # Path to the SSL certificate and key
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SSL_CERTIFICATE = os.path.join(BASE_DIR, 'certs', 'localhost.crt')
 SSL_KEY = os.path.join(BASE_DIR, 'certs', 'localhost.key')
+
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
 
 #TWILIO_ACCOUNT_SID = 'ACbab5a0fb84843f39a1c52f75d4eec69b'
 #TWILIO_AUTH_TOKEN = '0eb5dd22f89043e4f7daf7326a4e08ce'
