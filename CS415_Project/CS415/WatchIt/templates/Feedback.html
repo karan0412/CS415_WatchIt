@@ -8,57 +8,107 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'SignUp.css' %}">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <style>
     @media (max-width: 768px) {
         .card-container {
             padding: 0 15px;
         }
     }
+
+    .custom-input {
+        border: none;
+        /* Remove all borders */
+        border-bottom: 2px solid black;
+        /* Add a bottom border */
+        background: transparent;
+        /* Ensure background is transparent */
+        height: 2rem;
+        color: black;
+        font-weight: bold;
+    }
+
+    .custom-input:focus {
+        outline: none;
+        /* Remove default focus outline */
+        border-bottom-color: rgb(155, 170, 222);
+        /* Change bottom border color on focus */
+    }
+
+    #card-feedback {
+        background: linear-gradient(to bottom, #3a3838, #6d6c6c);
+    }
 </style>
 {% endblock %}
 {% block content %}
 
 <div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card bg-dark text-white mt-5 mb-5">
-                <div class="card-body">
+    <div class="card-body">
+
+        <form method="post" action="{% url 'submit_feedback' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="py-20 h-screen px-2" style="color: white;">
+                <div id="card-feedback" class="max-w-md mx-auto -lg overflow-hidden md:max-w-lg">
+                    <br>
                     <h3 class="text-center mb-4">Submit Your Feedback
                     </h3>
-                    
+
                     {% if messages %}
-                        <div>
-                            {% for message in messages %}
-                                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
-                                    {{ message }}
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                            {% endfor %}
+                    <div>
+                        {% for message in messages %}
+                        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show "
+                            style="margin-left:12px; margin-right:12px; background-color:  rgb(245, 185, 185); color: red;"
+                            role="alert">
+                            {{ message }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
                         </div>
+                        {% endfor %}
+                    </div>
                     {% endif %}
-                    
-                    <form method="post" action="{% url 'submit_feedback' %}" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <div class="form-group mb-3">
-                            <label for="feedback_subject">Subject of Change Request:</label>
-                            <input type="text" class="form-control" id="feedback_subject" name="subject" required>
+                    <div class="md:flex">
+                        <div class="w-full px-4 py-6 ">
+
+                            <div class="mb-1">
+                                <span class="text-sm">Subject</span>
+                                <input type="text" class="custom-input h-12 px-3 w-full focus:outline-none">
+                            </div>
+                            <br>
+                            <div class="mb-1">
+                                <span class="text-sm">Attachments</span>
+                                <div class="form-group mb-3">
+                                    <input type="file" class="form-control-file" id="feedback_file" name="file">
+                                </div>
+                            </div>
+                            <br>
+                            <div class="mb-1">
+                                <span class="text-sm">Message</span>
+                                <textarea type="text"
+                                    class=" custom-input h-24 py-1 px-3 w-full border-2 border-black focus:outline-none focus:border-blue-600 resize-none"></textarea>
+                            </div>
+                            <br>
+
+                            <div class="mt-3 text-right">
+                                <button
+                                    class="ml-2 h-10 w-32 bg-blue-600 rounded text-white hover:bg-blue-700">Submit</button>
+
+                            </div>
+
+
+
                         </div>
-                        <div class="form-group mb-3">
-                            <label for="feedback_file">Attach File:</label>
-                            <input type="file" class="form-control-file" id="feedback_file" name="file">
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="feedback_text">Your Feedback:</label>
-                            <textarea class="form-control" id="feedback_text" name="feedback" rows="5" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-outline-light btn-block">Submit Feedback</button>
-                    </form>
+                    </div>
                 </div>
             </div>
-        </div>
+        </form>
     </div>
+</div>
+</div>
+</div>
 </div>
 {% endblock %}
 
