@@ -1,4 +1,4 @@
-{% extends 'index.html' %}  <!-- Assuming there is a base.html that contains the site-wide layout -->
+{% extends 'index.html' %}
 
 {% block title %}
 <title>{{ movie.title }}</title>
@@ -26,33 +26,9 @@
         width: 100%; /* iframe takes the width of its parent */
         height: 100%; /* iframe takes the height of its parent */
     }
-    .btn-outline-light-dates {
-        background-color: #0B60B0; /* Dark background for buttons */
-        color: #fdfafa; /* White text for visibility */
-        border: none; /* White border for contrast */
-        margin: 5px; /* Spacing between buttons */
-        padding: 10px 20px; /* Padding for a comfortable clickable area */
-        font-size: 16px; /* Slightly larger font size */
-        border-radius: 5px; /* Rounded corners for modern look */
-        transition: background-color 0.3s, color 0.3s; /* Smooth transition for hover effects */
-    }
-    
-    .btn-outline-light-dates:hover {
-        background-color: rgb(64, 58, 139); /* White background on hover */
-        color: rgb(253, 252, 252); /* Black text on hover */
-        border: none; /* Accent color border on hover */
-    }
-
-    .btn-outline-light-dates.active {
-        background-color: rgb(64, 58, 139); /* Accent color for active button */
-        color: white; /* White text for active button */
-        border: none; /* Accent color border for active button */
-    }
 </style>
 
-
 <div class="container mt-5">
-
     <div class="col">
         <div class="box" style="float: right;"> 
             <div class="box1"> 
@@ -72,7 +48,6 @@
             <div class="text11"> 
                 <a class="icon"> 
                     <div class="layer"> 
-                        <span></span> 
                         <span></span> 
                         <span></span> 
                         <span></span> 
@@ -103,7 +78,6 @@
         </div>
     </div>
 
-    
     <!-- Movie Details Section -->
     <div class="row">
         <div class="col-md-12">
@@ -124,82 +98,26 @@
             <hr class="my-5">
 
             <!-- Showtimes and Booking Buttons -->
-            <div class="d-flex flex-wrap justify-content-center mb-4">
-                {% for show_date in show_dates %}
-                <button type="button" class="btn-outline-light-dates m-2 {% if show_date == selected_date %} active {% endif %}"
-                        onclick="filterByDate('{{ show_date|date:'Y-m-d' }}', this)">
-                    {{ show_date|date:'N j, Y' }}
-                </button>
-                {% endfor %}
-            </div>
-
             <div id="showtimes" class="row mb-5">
                 {% if showtimes %}
-                    <div class="col-md-12">
-                        <h4>{{ selected_date|date:"N j, Y" }}</h4>
-                        <ul>
-                            {% for showtime in showtimes %}
-                                <li>
-                                    <p><strong>Showtime:</strong> {{ showtime.showtime|date:"g:i A" }}</p>
-                                    <p><strong>Cinema:</strong> {{ cinema_type}}</p>
+                    {% for showtime in showtimes %}
+                        <div class="col-md-4 col-sm-6 mb-3">
+                            <div class="h-100">
+                                <div class="card-body">
+                                    <p><strong>Showtime:</strong> {{ showtime.showtime }}</p>
+                                    <p><strong>Cinema:</strong> {{ showtime.cinema_hall.cinema_type }}</p>
                                     <a href="{% url 'selectTickets' cinema_hall_id=showtime.cinema_hall.id movie_id=movie.id showtime_id=showtime.id %}" class="btn btn-outline-light">
                                         Book Now
                                     </a>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No upcoming showtimes available.</p>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
-
-<script>
-    function filterByDate(date, button) {
-        // Remove 'active' class from all buttons
-        document.querySelectorAll('.btn-outline-light-dates').forEach(btn => btn.classList.remove('active'));
-        
-        // Add 'active' class to the clicked button
-        button.classList.add('active');
-        
-        fetch(`/movies/{{ movie.id }}/showtimes/?date=${date}`)
-            .then(response => response.json())
-            .then(data => {
-                const showtimesDiv = document.getElementById('showtimes');
-                showtimesDiv.innerHTML = '';
-
-                if (data.showtimes.length > 0) {
-                    const header = document.createElement('h4');
-                    header.textContent = new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                    showtimesDiv.appendChild(header);
-
-                    const ul = document.createElement('ul');
-                    data.showtimes.forEach(showtime => {
-                        const li = document.createElement('li');
-
-                        const showtimeText = document.createElement('p');
-                        showtimeText.innerHTML = `<strong>Showtime:</strong> ${new Date(showtime.showtime).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}`;
-                        li.appendChild(showtimeText);
-
-                        const bookNowLink = document.createElement('a');
-                        bookNowLink.href = `/selectTickets/${showtime.cinema_hall_id}/${showtime.movie_id}/${showtime.id}/`;
-                        bookNowLink.className = 'btn btn-outline-light';
-                        bookNowLink.textContent = 'Book Now';
-                        li.appendChild(bookNowLink);
-
-                        ul.appendChild(li);
-                    });
-
-                    showtimesDiv.appendChild(ul);
-                } else {
-                    const noShowtimesText = document.createElement('p');
-                    noShowtimesText.className = 'text-center';
-                    noShowtimesText.textContent = 'No showtimes available for the selected date.';
-                    showtimesDiv.appendChild(noShowtimesText);
-                }
-            })
-            .catch(error => console.error('Error fetching showtimes:', error));
-    }
-</script>
 {% endblock %}
