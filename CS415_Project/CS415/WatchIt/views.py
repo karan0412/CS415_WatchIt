@@ -425,6 +425,8 @@ def movie_list(request):
 
 from collections import defaultdict
 
+from collections import defaultdict
+
 def movie_detail(request, movie_id):
     movie = get_object_or_404(Movie, pk=movie_id)
     showtimes_by_date = defaultdict(list)
