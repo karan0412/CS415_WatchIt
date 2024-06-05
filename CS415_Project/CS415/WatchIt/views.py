@@ -425,47 +425,23 @@ def movie_list(request):
 
 from collections import defaultdict
 
+
+from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
+
 def movie_detail(request, movie_id):
     movie = get_object_or_404(Movie, pk=movie_id)
-    showtimes_by_date = defaultdict(list)
-    show_dates = set()
-    
     now = timezone.now()
 
-    # Grouping showtimes by date and collecting unique show dates
-    for showtime in movie.showtimes.filter(showtime__gt=now).order_by('showtime'):
-        showtime_date = showtime.showtime.date()
-        showtimes_by_date[showtime_date].append(showtime)
-        show_dates.add(showtime_date)
-
-    selected_date_str = request.GET.get('date', None)
-    if selected_date_str:
-        try:
-            selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
-        except ValueError:
-            selected_date = min(show_dates, default=None)
-    else:
-        selected_date = min(show_dates, default=None)
-    
-    # Initialize cinema_type variable
-    cinema_type = None
-
-    # Check if selected_date has showtimes
-    if selected_date in showtimes_by_date:
-        # Get the first showtime for the selected date
-        first_showtime = showtimes_by_date[selected_date][0]
-        # Access cinema type from the first showtime
-        cinema_type = first_showtime.cinema_hall.cinema_type
+    # Retrieve all upcoming showtimes for the movie
+    showtimes = movie.showtimes.filter(showtime__gt=now).order_by('showtime')
 
     context = {
         'movie': movie,
-        'showtimes_by_date': dict(showtimes_by_date),
-        'show_dates': sorted(show_dates),
-        'selected_date': selected_date,
-        'showtimes': showtimes_by_date[selected_date] if selected_date in showtimes_by_date else None,
-        'cinema_type': cinema_type  # Assign cinema type
+        'showtimes': showtimes,
     }
     return render(request, 'movie_detail.html', context)
+
 
 from django.http import JsonResponse
 
@@ -511,6 +487,11 @@ def save_total_price_to_session(request):
 from django.shortcuts import get_object_or_404, render, redirect
 
 
+from django.shortcuts import get_object_or_404, render, redirect
+from django.utils import timezone
+from decimal import Decimal
+import pytz
+
 def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
     cinema_hall = get_object_or_404(CinemaHall, id=cinema_hall_id)
     movie = get_object_or_404(Movie, id=movie_id)
@@ -520,7 +501,14 @@ def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
     print("Movie ID:", movie_id)
     print("Showtime ID:", show)
 
-    is_wednesday = show.showtime.weekday() == 2
+    # Define the Pacific/Fiji time zone
+    fiji_tz = pytz.timezone('Pacific/Fiji')
+    
+    # Convert the showtime to the Fiji time zone
+    showtime_in_fiji = show.showtime.astimezone(fiji_tz)
+
+    # Check if the showtime falls on a Wednesday in Fiji time
+    is_wednesday = showtime_in_fiji.weekday() == 2
 
     if request.method == 'POST':
         adult_tickets = int(request.POST.get('adult_quantity', 0))
@@ -531,12 +519,10 @@ def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
         total_tickets = adult_tickets + child_tickets
 
         if is_wednesday:
-            total_amount = (Decimal(adult_tickets) * (adult_price/2)) + (Decimal(child_tickets) * (child_price/2))
-            
+            total_amount = (Decimal(adult_tickets) * (adult_price / 2)) + (Decimal(child_tickets) * (child_price / 2))
         else:
             total_amount = (Decimal(adult_tickets) * adult_price) + (Decimal(child_tickets) * child_price)
 
-        
         if total_tickets == 0:
             message = "Please select at least one ticket before proceeding."
             return render(request, 'selectTickets.html', {
@@ -559,9 +545,11 @@ def selectTickets(request, cinema_hall_id, movie_id, showtime_id):
         'movie': movie,
         'show': show,
         'is_wednesday': is_wednesday,
-        'half_adult_price': cinema_hall.adult_price/2,
-        'half_child_price': cinema_hall.child_price/2,
+        'half_adult_price': cinema_hall.adult_price / 2,
+        'half_child_price': cinema_hall.child_price / 2,
     })
+
+
 
 def payment(request, cinema_hall_id):
     movie_id = request.GET.get('movie_id')

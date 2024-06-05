@@ -24,12 +24,12 @@
     .custom-input {
         border: none;
         /* Remove all borders */
-        border-bottom: 2px solid black;
+        border-bottom: 2px solid white;
         /* Add a bottom border */
         background: transparent;
         /* Ensure background is transparent */
         height: 2rem;
-        color: black;
+        color: white;
         font-weight: bold;
     }
 
@@ -41,8 +41,21 @@
     }
 
     #card-feedback {
-        background: linear-gradient(to bottom, #3a3838, #6d6c6c);
+        background: linear-gradient(to right, #000000, #1a1a1a 50%, #ffffff 50%, #1a1a1a 50%, #000000); /* Gradient background */
+        color: #ffffff; /* White text color for contrast */
+        padding: 20px; /* Padding inside the card */
+        border-radius: 10px; /* Rounded corners */
+        box-shadow: 0 -1px 2px rgba(0, 0, 255, 0.5), 0 1px 2px rgba(0, 0, 255, 0.5);
+        transition: all 0.3s ease; /* Smooth transition for hover effects */
     }
+    #card-feedback:hover {
+        box-shadow: 0 -4px 8px rgba(0, 0, 255, 0.7), 0 4px 8px rgba(0, 0, 255, 0.7); /* Increased blue shadow on hover */
+        background: linear-gradient(to right, #000000, #1a1a1a 50%, #0000ff 50%, #1a1a1a 50%, #000000); /* Gradient background */
+    }
+    
+   
+    
+    
 </style>
 {% endblock %}
 {% block content %}
@@ -79,7 +92,7 @@
                             <br>
                             <div class="mb-1">
                                 <span class="text-sm">Attachments</span>
-                                <div class="form-group mb-3">
+                                <div class="form-group mb-3 input-group">
                                     <input type="file" class="form-control-file" id="feedback_file" name="file">
                                 </div>
                             </div>
@@ -93,8 +106,7 @@
 
                             <div class="mt-3 text-right">
                                 <button
-                                    class="ml-2 h-10 w-32 bg-blue-600 rounded text-white hover:bg-blue-700">Submit</button>
-
+                                    class="btn btn-outline-primary">Submit</button>
                             </div>
                         </div>
                     </div>
