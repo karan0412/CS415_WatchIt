@@ -1411,7 +1411,16 @@ def view_log_entries(request):
         log_file_path = os.path.join(settings.BASE_DIR, 'logs', log_file)
         with open(log_file_path, 'r') as file:
             for line in file:
+                # Skip empty lines
+                if not line.strip():
+                    continue
+                
                 parts = line.strip().split(' ')  # Split log entry into parts
+                # Check if the parts list has the expected number of elements
+                if len(parts) < 4:
+                    # Log entry does not have enough parts, skip it or handle it accordingly
+                    continue
+                
                 timestamp = ' '.join(parts[:2])  # Extract timestamp
                 level = parts[2]  # Extract log level
                 message = ' '.join(parts[3:])  # Extract log message
@@ -1432,16 +1441,19 @@ def submit_feedback(request):
     if request.method == 'POST':
         form = FeedbackForm(request.POST, request.FILES)
         if form.is_valid():
+            messages.success(request, 'Feedback successfully submitted!')
             feedback = form.save(commit=False)
             feedback.user = request.user
+            
             feedback.save()
-            messages.success(request, 'Feedback successfully submitted!')
-            return redirect('my_feedback')  # Redirect to 'user_feedback_list'
+            
+            #return redirect('my_feedback')  # Redirect to 'user_feedback_list'
         else:
             print(form.errors)  # Print form errors to the console
             messages.error(request, 'Please correct the error below.')
     else:
         form = FeedbackForm()
+        
     return render(request, 'Feedback.html', {'form': form})
 
 def my_feedback(request):
