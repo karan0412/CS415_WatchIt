@@ -12,6 +12,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
 <style>
     @media (max-width: 768px) {
         .card-container {
@@ -58,6 +60,17 @@
 {% endblock %}
 {% block content %}
 
+{% for message in messages %}
+<div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show "
+    style="margin-left:30%; margin-right:30%; background-color:  rgb(171, 240, 169); color: rgb(7, 109, 20);"
+    role="alert">
+    {{ message }}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+{% endfor %}
+
 <div class="container">
     <div class="card-body">
 
@@ -69,26 +82,12 @@
                     <h3 class="text-center mb-4">Submit Your Feedback
                     </h3>
 
-                    {% if messages %}
-                    <div>
-                        {% for message in messages %}
-                        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show "
-                            style="margin-left:12px; margin-right:12px; background-color:  rgb(245, 185, 185); color: red;"
-                            role="alert">
-                            {{ message }}
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
                     <div class="md:flex">
                         <div class="w-full px-4 py-6 ">
 
                             <div class="mb-1">
                                 <span class="text-sm">Subject</span>
-                                <input type="text" class="custom-input h-12 px-3 w-full focus:outline-none">
+                                <input type="text" class="custom-input h-12 px-3 w-full focus:outline-none" name="subject">
                             </div>
                             <br>
                             <div class="mb-1">
@@ -100,10 +99,10 @@
                             <br>
                             <div class="mb-1">
                                 <span class="text-sm">Message</span>
-                                <textarea type="text"
-                                    class=" custom-input h-24 py-1 px-3 w-full border-2 border-black focus:outline-none focus:border-blue-600 resize-none"></textarea>
+                                <textarea type="text" class="custom-input h-24 py-1 px-3 w-full border-2 border-black focus:outline-none focus:border-blue-600 resize-none" name="feedback"></textarea>
                             </div>
                             <br>
+                            
 
                             <div class="mt-3 text-right">
                                 <button
@@ -123,6 +122,17 @@
 
 {% block scripts %}
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<script>
+    // Automatically hide alert messages after 5 seconds
+    $(document).ready(function() {
+        $(".alert").fadeTo(5000, 0).slideUp(500, function() {
+            $(this).remove();
+        });
+    });
+</script>
+
 {% endblock %}
