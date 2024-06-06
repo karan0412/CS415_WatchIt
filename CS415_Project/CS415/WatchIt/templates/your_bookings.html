@@ -118,7 +118,7 @@
                             <div class="modal-body">
                                 
                                 <a href="{% url 'edit_seats' booking.id booking.showtime.id booking.cinema_hall.id %}" class="btn btn-outline-light">Change Seats</a>
-                                <a href="{% url 'edit_showtime' booking.id booking.movie.id booking.cinema_hall.id %}" class="btn btn-outline-light">Change Showtime</a>
+                                <a href="{% url 'edit_showtime' booking.id booking.movie.id %}" class="btn btn-outline-light">Change Showtime</a>
                                 <a href="{% url 'edit_booking' booking.id %}" class="btn btn-outline-light">Change Movie</a>
                                
                             </div>

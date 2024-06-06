@@ -367,6 +367,8 @@ def display_hall(request, cinema_hall_id, movie_id, showtime_id):
         'movie': showtime.movie,
         'seats': seats,
         'total_tickets': total_tickets,
+        'adult_tickets': adult_tickets,
+        'child_tickets': child_tickets,
         'showtime': showtime,
     })
 
@@ -557,6 +559,8 @@ def payment(request, cinema_hall_id):
     selected_seat_ids = request.GET.get('seats', '').split(',')
     total_price = request.session.get('total_price', 0)
     total_tickets = int(request.GET.get('total_tickets', 0))
+    adult_tickets = int(request.GET.get('adult_tickets', 0))
+    child_tickets = int(request.GET.get('child_tickets', 0))
     
     cinema_hall = get_object_or_404(CinemaHall, id=cinema_hall_id)
     movie = get_object_or_404(Movie, id=movie_id)
@@ -574,6 +578,8 @@ def payment(request, cinema_hall_id):
         'movie_duration': movie.duration,
         'total_price': total_price,
         'total_tickets': total_tickets,
+        'adult_tickets': adult_tickets,
+        'child_tickets': child_tickets,
         'selected_seats': seats,
         'show': show,
         'showtime_id': showtime_id,
@@ -595,6 +601,8 @@ def process_payment(request):
             showtime_id = data.get('showtime_id')
             total_price = data.get('total_price')
             total_tickets = data.get('total_tickets')
+            adult_tickets = data.get('adult_tickets')
+            child_tickets = data.get('child_tickets')
             selected_seat_ids = data.get('seats', [])
 
             print(f"Payment Method ID: {payment_method_id}")
@@ -603,7 +611,8 @@ def process_payment(request):
             print(f"Showtime ID: {showtime_id}")
             print(f"Total Price: {total_price}")
             print(f"Total Tickets: {total_tickets}")
-            print(f"Selected Seat IDs: {selected_seat_ids}")
+            print(f"Adult Tickets: {adult_tickets}")
+            print(f"Child Tickets: {child_tickets}")
 
             total_price_cents = int(float(total_price) * 100)
 
@@ -645,6 +654,8 @@ def process_payment(request):
                     payment_amount=total_price,
                     showtime=showtime,
                     num_seats=total_tickets,
+                    adults=adult_tickets,
+                    children=child_tickets,
                     charge_id=payment_intent.id,  # Store the PaymentIntent ID
                     card_last4=card_last4
                 )
@@ -758,7 +769,7 @@ def edit_booking(request, booking_id):
 
     if request.method == 'POST':
         selected_movie_id = request.POST.get('movie_id')
-        return redirect('edit_showtime', booking_id=booking.id, movie_id=selected_movie_id, cinema_hall_id=booking.cinema_hall.id)
+        return redirect('edit_showtime', booking_id=booking.id, movie_id=selected_movie_id)
 
     return render(request, 'edit_booking.html', {
         'booking': booking,
@@ -766,24 +777,25 @@ def edit_booking(request, booking_id):
     })
 
 @login_required
-def edit_showtime(request, booking_id, movie_id, cinema_hall_id):
+def edit_showtime(request, booking_id, movie_id):
     booking = get_object_or_404(Booking, id=booking_id)
 
     if booking.edited or timezone.now() > booking.showtime.showtime - timedelta(hours=2):
         return redirect('your_bookings')
 
     movie = get_object_or_404(Movie, id=movie_id)
-    cinema_hall = get_object_or_404(CinemaHall, id=cinema_hall_id)
-    showtimes = Showtime.objects.filter(movie=movie, cinema_hall=cinema_hall, showtime__gt=timezone.now())
+    #cinema_hall = get_object_or_404(CinemaHall, id=cinema_hall_id)
+    showtimes = Showtime.objects.filter(movie=movie, showtime__gt=timezone.now())
 
     if request.method == 'POST':
         selected_showtime_id = request.POST.get('showtime_id')
-        return redirect('edit_seats', booking_id=booking_id, showtime_id=selected_showtime_id, cinema_hall_id=cinema_hall_id)
+        selected_cinema_id = request.POST.get('cinema_id')
+        return redirect('edit_seats', booking_id=booking_id, showtime_id=selected_showtime_id, cinema_hall_id=selected_cinema_id)
 
     return render(request, 'edit_showtime.html', {
         'movie': movie,
         'showtimes': showtimes,
-        'cinema_hall': cinema_hall,
+        #'cinema_hall': cinema_hall,
     })
 
 @login_required
@@ -793,7 +805,7 @@ def edit_seats(request, booking_id, showtime_id, cinema_hall_id):
     if booking.edited or timezone.now() > booking.showtime.showtime - timedelta(hours=2):
         return redirect('your_bookings')
 
-    showtime = get_object_or_404(Showtime, id=showtime_id, cinema_hall_id=cinema_hall_id)
+    showtime = get_object_or_404(Showtime, id=showtime_id)
     seats = showtime.seats.all().order_by('id')
 
     if request.method == 'POST':
@@ -805,9 +817,9 @@ def edit_seats(request, booking_id, showtime_id, cinema_hall_id):
                 'seats': seats,
                 'message': message,
                 'num_seats': booking.num_seats,
-                'cinema_hall': showtime.cinema_hall,
+                'cinema_hall': cinema_hall_id,
             })
-        return redirect('confirm_edit_booking', booking_id=booking_id, showtime_id=showtime_id, seats=','.join(selected_seat_ids))
+        return redirect('confirm_edit_booking', booking_id=booking_id, showtime_id=showtime_id, cinema_hall_id=cinema_hall_id, seats=','.join(selected_seat_ids))
 
     return render(request, 'edit_seats.html', {
         'showtime': showtime,
@@ -818,13 +830,13 @@ def edit_seats(request, booking_id, showtime_id, cinema_hall_id):
 
 
 @login_required
-def confirm_edit_booking(request, booking_id, showtime_id, seats):
+def confirm_edit_booking(request, booking_id, showtime_id, cinema_hall_id, seats):
     booking = get_object_or_404(Booking, id=booking_id)
 
     if booking.edited or timezone.now() > booking.showtime.showtime - timedelta(hours=2):
         return redirect('your_bookings')
 
-    showtime = get_object_or_404(Showtime, id=showtime_id, cinema_hall_id=booking.cinema_hall.id)
+    showtime = get_object_or_404(Showtime, id=showtime_id, cinema_hall_id=cinema_hall_id)
     seat_ids = seats.split(',')
     selected_seats = Seat.objects.filter(id__in=seat_ids)
 
@@ -837,6 +849,7 @@ def confirm_edit_booking(request, booking_id, showtime_id, seats):
             previous_seats.update(availability=True)
             booking.showtime = showtime
             booking.movie = showtime.movie
+            booking.cinema_hall = showtime.cinema_hall
             booking.seats.set(selected_seats)
             booking.edited = True  # Mark the booking as edited
             booking.save()
@@ -848,6 +861,7 @@ def confirm_edit_booking(request, booking_id, showtime_id, seats):
         'booking': booking,
         'showtime': showtime,
         'seats': selected_seats,
+        'cinema': selected_seats,
     })
 
 

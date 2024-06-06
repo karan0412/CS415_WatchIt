@@ -67,7 +67,6 @@
     </style>
     <div class="container mt-5 mb-5">
         <h1 class="text-center">Select Your Seats</h1>
-    
         <div id="screen" class="mb-5">SCREEN</div>
         <div id="seats-container" class="my-5">
             {% for seat in seats %}
@@ -88,6 +87,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var totalTicketsAllowed = parseInt('{{ total_tickets }}');
+            var adult = parseInt('{{ adult_tickets }}');
+            var child = parseInt('{{ child_tickets }}');
             var selectedSeats = [];
             const seats = document.querySelectorAll('.seat:not(.unavailable)');
         
@@ -108,7 +109,7 @@
                     var cinemaHallId = '{{ cinema_hall.id }}';
                     var movieId = '{{ movie.id }}';
                     var showtimeId = '{{ showtime.id }}';
-                    var redirectUrl = `/payment/${cinemaHallId}/?seats=${selectedSeats.join(',')}&movie_id=${movieId}&showtime_id=${showtimeId}&total_tickets=${totalTicketsAllowed}`;
+                    var redirectUrl = `/payment/${cinemaHallId}/?seats=${selectedSeats.join(',')}&movie_id=${movieId}&showtime_id=${showtimeId}&total_tickets=${totalTicketsAllowed}&adult_tickets=${adult}&child_tickets=${child}`;
                     window.location.href = redirectUrl;
                 } else {
                     alert('Please select exactly ' + totalTicketsAllowed + ' seats.');

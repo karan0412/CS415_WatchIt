@@ -69,3 +69,6 @@ CS415_Project/CS415/logs/user_activity.log
 CS415_Project/CS415/WatchIt/__pycache__/models.cpython-311.pyc
 CS415_Project/CS415/WatchIt/__pycache__/views.cpython-311.pyc
 CS415_Project/CS415/CS415/__pycache__/settings.cpython-311.pyc
+*.log
+CS415_Project/CS415/logs/security.log
+CS415_Project/CS415/logs/user_activity.log
