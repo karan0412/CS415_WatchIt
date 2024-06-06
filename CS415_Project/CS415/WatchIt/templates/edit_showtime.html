@@ -16,9 +16,11 @@
                         <div class="col-md-4 mb-2">
                             <div class="showtime-card text-center p-2">
                                 <h5 class="showtime-title">Showtime: {{ showtime.local_showtime }}</h5>
+                                <h5 class="showtime-title">Showtime: {{ showtime.cinema_hall.cinema_type }}</h5>
                                 <form method="post" class="d-inline">
                                     {% csrf_token %}
                                     <input type="hidden" name="showtime_id" value="{{ showtime.id }}">
+                                    <input type="hidden" name="cinema_id" value="{{ showtime.cinema_hall.id }}">
                                     <button type="submit" class="btn btn-outline-light">Book Now</button>
                                 </form>
                             </div>

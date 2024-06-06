@@ -26,3 +26,10 @@ INFO 2024-06-04 17:41:13,117 signals User jbir logged out from IP 192.168.244.99
 INFO 2024-06-04 17:41:48,031 views  OTP was sent to jbir
 INFO 2024-06-04 17:42:13,652 signals User jbir logged in from IP 192.168.244.99
 INFO 2024-06-04 17:42:13,652 views  jbir's OTP was Verified 
+INFO 2024-06-05 18:00:21,755 views Activation link sent to savi2001
+INFO 2024-06-05 18:00:55,822 views  OTP was sent to savi2001
+INFO 2024-06-05 18:02:31,138 signals User karan logged in from IP 192.168.147.63
+INFO 2024-06-05 18:02:53,153 views Activation link sent to amz2003
+INFO 2024-06-05 18:04:30,125 signals User savi2001 logged in from IP 192.168.147.106
+INFO 2024-06-05 18:11:14,654 signals User savi2001 logged out from IP 192.168.147.106
+INFO 2024-06-06 19:01:49,367 signals User karan logged in from IP 127.0.0.1

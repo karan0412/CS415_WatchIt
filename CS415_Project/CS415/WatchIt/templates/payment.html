@@ -130,6 +130,8 @@
         <div class="detail"><i class="fas fa-clock"></i><strong class="label">Show: </strong> {{ show }}</div>
         <div class="detail"><i class="fas fa-hourglass-start"></i><strong class="label">Movie Duration: </strong> {{ movie_duration }} minutes</div>
         <div class="detail"><i class="fas fa-ticket-alt"></i><strong class="label">Total Price: </strong> ${{ total_price|floatformat:2 }}</div>
+        <div class="detail"><i class="fa-solid fa-person"></i><strong class="label">Child tickets: </strong> {{ adult_tickets }}</div>
+        <div class="detail"><i class="fa-solid fa-child-reaching"></i><strong class="label">Adult tickets: </strong> {{ child_tickets }}</div>
         <div class="detail"><i class="fas fa-chair"></i><strong class="label">Selected Seats: </strong>
             <div id="seat-list">
                 {% for seat in selected_seats %}
