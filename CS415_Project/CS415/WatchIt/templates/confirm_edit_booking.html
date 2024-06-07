@@ -35,7 +35,7 @@
     {% if difference > 0 %}
     <form method="post" class="pt-3">
         {% csrf_token %}
-        <h5>You have to pay<h5>
+        <h5>Please proceed with payment<h5>
         <button type="submit" class="btn btn-success">Confirm</button>
         <a href="{% url 'your_bookings' %}" class="btn btn-secondary">Cancel</a>
     </form>
