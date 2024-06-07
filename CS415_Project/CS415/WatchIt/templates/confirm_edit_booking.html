@@ -7,10 +7,38 @@
     <p>Cinema Hall: {{ showtime.cinema_hall.cinema_type }}</p>
     <p>Showtime: {{ showtime.local_showtime }}</p>
     <p>Seats: {% for seat in seats %}{{ seat.seat_label }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
-    <form method="post">
+
+    <hr>
+
+    <p>Original Amount: ${{ original_amount }}</p>
+    <p>New Amount: ${{ new_amount| floatformat:2 }}</p>
+    <p>Difference to pay: ${{ difference| floatformat:2 }}</p>
+
+    {% if difference == 0 %}
+    <form method="post" class="pt-3">
         {% csrf_token %}
+        <h5>You are all good to go!<h5>
         <button type="submit" class="btn btn-success">Confirm</button>
         <a href="{% url 'your_bookings' %}" class="btn btn-secondary">Cancel</a>
     </form>
+    {% endif %}
+
+    {% if difference < 0 %}
+    <form method="post" class="pt-3">
+        {% csrf_token %}
+        <h5>Warning: you are degrading from your current booking. No refund will be issued<h5>
+        <button type="submit" class="btn btn-success">Confirm</button>
+        <a href="{% url 'your_bookings' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+    {% endif %}
+
+    {% if difference > 0 %}
+    <form method="post" class="pt-3">
+        {% csrf_token %}
+        <h5>You have to pay<h5>
+        <button type="submit" class="btn btn-success">Confirm</button>
+        <a href="{% url 'your_bookings' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+    {% endif %}
 </div>
 {% endblock %}

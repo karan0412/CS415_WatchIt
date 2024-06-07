@@ -817,7 +817,7 @@ def edit_seats(request, booking_id, showtime_id, cinema_hall_id):
                 'seats': seats,
                 'message': message,
                 'num_seats': booking.num_seats,
-                'cinema_hall': cinema_hall_id,
+                'cinema_hall': showtime.cinema_hall,
             })
         return redirect('confirm_edit_booking', booking_id=booking_id, showtime_id=showtime_id, cinema_hall_id=cinema_hall_id, seats=','.join(selected_seat_ids))
 
@@ -832,6 +832,7 @@ def edit_seats(request, booking_id, showtime_id, cinema_hall_id):
 @login_required
 def confirm_edit_booking(request, booking_id, showtime_id, cinema_hall_id, seats):
     booking = get_object_or_404(Booking, id=booking_id)
+    original_amount = booking.payment_amount
 
     if booking.edited or timezone.now() > booking.showtime.showtime - timedelta(hours=2):
         return redirect('your_bookings')
@@ -839,11 +840,23 @@ def confirm_edit_booking(request, booking_id, showtime_id, cinema_hall_id, seats
     showtime = get_object_or_404(Showtime, id=showtime_id, cinema_hall_id=cinema_hall_id)
     seat_ids = seats.split(',')
     selected_seats = Seat.objects.filter(id__in=seat_ids)
+    adult_price = showtime.cinema_hall.adult_price or Decimal('0')
+    child_price = showtime.cinema_hall.child_price or Decimal('0')
+    new_amount = (Decimal(adult_price) * booking.adults) + (Decimal(child_price) * booking.children)
+    difference = new_amount - original_amount
 
     if len(selected_seats) != booking.num_seats:
         return redirect('edit_seats', booking_id=booking_id, showtime_id=showtime_id, cinema_hall_id=booking.cinema_hall.id)
 
     if request.method == 'POST':
+        if difference > 0:
+            request.session['amount_due'] = float(difference)
+            request.session['booking_id'] = booking.id
+            request.session['showtime_id'] = showtime.id
+            request.session['cinema_hall_id'] = showtime.cinema_hall.id
+            request.session['seat_ids'] = seat_ids
+            return redirect('edit_payment', cinema_hall_id=showtime.cinema_hall.id)
+
         with transaction.atomic():
             previous_seats = booking.seats.all()
             previous_seats.update(availability=True)
@@ -851,6 +864,7 @@ def confirm_edit_booking(request, booking_id, showtime_id, cinema_hall_id, seats
             booking.movie = showtime.movie
             booking.cinema_hall = showtime.cinema_hall
             booking.seats.set(selected_seats)
+            booking.payment_amount = new_amount
             booking.edited = True  # Mark the booking as edited
             booking.save()
             selected_seats.update(availability=False)
@@ -861,9 +875,92 @@ def confirm_edit_booking(request, booking_id, showtime_id, cinema_hall_id, seats
         'booking': booking,
         'showtime': showtime,
         'seats': selected_seats,
-        'cinema': selected_seats,
+        'original_amount': original_amount,
+        'new_amount': new_amount,
+        'difference': difference,
     })
 
+@login_required
+def edit_payment(request, cinema_hall_id):
+    amount_due = request.session.get('amount_due', 0)
+    booking_id = request.session.get('booking_id')
+    showtime_id = request.session.get('showtime_id')
+    seat_ids = request.session.get('seat_ids', [])
+
+    # Fetch additional details if needed
+    cinema_hall = get_object_or_404(CinemaHall, id=cinema_hall_id)
+    booking = get_object_or_404(Booking, id=booking_id)
+    showtime = get_object_or_404(Showtime, id=showtime_id)
+    seats = Seat.objects.filter(id__in=seat_ids)
+    movie = booking.movie
+
+    return render(request, 'edit_payment.html', {
+        'cinema_type': cinema_hall.cinema_type,
+        'movie_title': movie.title,
+        'movie_id': movie.id,
+        'cinema_hall_id': cinema_hall.id,
+        'movie_duration': movie.duration,
+        'total_price': amount_due,
+        'total_tickets': booking.num_seats,
+        'adult_tickets': booking.adults,
+        'child_tickets': booking.children,
+        'selected_seats': seats,
+        'show': showtime.local_showtime,
+        'showtime_id': showtime.id,
+        'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
+    })
+
+@csrf_exempt
+def edit_process_payment(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            payment_method_id = data.get('payment_method_id')
+            amount_due = request.session.get('amount_due', 0)
+            amount_due_cents = int(float(amount_due) * 100)
+
+            # Step 1: Create the PaymentIntent without the confirmation_method parameter
+            payment_intent = stripe.PaymentIntent.create(
+                amount=amount_due_cents,
+                currency='usd',
+                payment_method=payment_method_id,
+                automatic_payment_methods={
+                    'enabled': True,
+                    'allow_redirects': 'never'
+                }
+            )
+
+            # Step 2: Manually confirm the PaymentIntent
+            stripe.PaymentIntent.confirm(
+                payment_intent.id,
+                payment_method=payment_method_id
+            )
+
+            booking_id = request.session.get('booking_id')
+            booking = get_object_or_404(Booking, id=booking_id)
+            showtime_id = request.session.get('showtime_id')
+            showtime = get_object_or_404(Showtime, id=showtime_id)
+            seat_ids = request.session.get('seat_ids', [])
+            selected_seats = Seat.objects.filter(id__in=seat_ids)
+
+            with transaction.atomic():
+                previous_seats = booking.seats.all()
+                previous_seats.update(availability=True)
+                booking.showtime = showtime
+                booking.movie = showtime.movie
+                booking.cinema_hall = showtime.cinema_hall
+                booking.seats.set(selected_seats)
+                booking.payment_amount += Decimal(amount_due)
+                booking.edited = True  # Mark the booking as edited
+                booking.save()
+                selected_seats.update(availability=False)
+
+            return JsonResponse({'success': True})
+        except stripe.error.CardError as e:
+            return JsonResponse({'success': False, 'error': str(e.user_message)})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'error': 'Invalid request method'})
 
 class EmailThread(threading.Thread):
 
