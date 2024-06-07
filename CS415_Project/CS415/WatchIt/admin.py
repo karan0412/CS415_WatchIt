@@ -1,8 +1,10 @@
 import csv
 from datetime import datetime
+from pyexpat.errors import messages
 from django import forms
+from django.conf import settings
 from django.contrib import admin
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.http import HttpResponse
@@ -20,7 +22,7 @@ from django.core.mail import send_mail
 
 import logging
 
-from django.urls import path
+from django.urls import path, reverse
 from .models import Booking
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
@@ -30,10 +32,43 @@ import os
 from xhtml2pdf import pisa
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.timezone import make_aware
+from .utils import backup_database, restore_database
+
 
 admin.site.site_header = "WatchIt Administration"
 admin.site.site_title = "WatchIt Admin"
 admin.site.index_title = "Welcome to the WatchIt Admin Panel"
+
+def get_urls():
+    urls = admin.site.get_urls()
+    custom_urls = [
+        path('admin/manual_backup/', admin.site.admin_view(manual_backup), name='manual_backup'),
+        path('admin/manual_restore/', admin.site.admin_view(manual_restore), name='manual_restore'),
+    ]
+    return custom_urls + urls
+
+# admin.site.get_urls = get_urls
+
+
+
+def manual_backup(request):
+    backup_file = backup_database()
+    messages.success(request, f'Backup created successfully: {backup_file}')
+    return HttpResponseRedirect(reverse('admin:index'))
+
+def manual_restore(request):
+    if request.method == 'POST':
+        file = request.FILES['backup_file']
+        file_path = os.path.join(settings.BASE_DIR, 'temp', file.name)
+        with open(file_path, 'wb+') as destination:
+            for chunk in file.chunks():
+                destination.write(chunk)
+        restore_database(file_path)
+        messages.success(request, 'Database restored successfully.')
+        return HttpResponseRedirect(reverse('admin:index'))
+    return render(request, 'admin/manual_restore.html')
+
+     
 
 
 class MovieAdmin(admin.ModelAdmin):
@@ -147,6 +182,11 @@ class FeedbackAdmin(admin.ModelAdmin):
     list_display = ('user', 'subject', 'created_at', 'approved', 'reviewed')
     list_filter = ('approved', 'reviewed')
     search_fields = ('subject', 'feedback')
+
+
+
+
+    
 
 
 admin.site.register(models.CinemaHall)

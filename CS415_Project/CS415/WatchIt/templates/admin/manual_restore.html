@@ -1,0 +1,24 @@
+<!-- templates/admin/manual_restore.html -->
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<h1>Database Backup and Restore</h1>
+
+<!-- Manual Backup Form -->
+<h2>Manual Backup</h2>
+<form method="post" action="{% url 'manual_backup' %}">
+    {% csrf_token %}
+    <button type="submit">Backup</button>
+</form>
+
+<hr>
+
+<!-- Manual Restore Form -->
+<h2>Manual Restore</h2>
+<form method="post" enctype="multipart/form-data" action="{% url 'manual_restore' %}">
+    {% csrf_token %}
+    <label for="backup_file">Select backup file:</label>
+    <input type="file" name="backup_file" id="backup_file" required>
+    <button type="submit">Restore</button>
+</form>
+{% endblock %}

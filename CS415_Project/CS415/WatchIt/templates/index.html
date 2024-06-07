@@ -94,10 +94,10 @@
             <a class="nav-link text-light" href="{% url 'movie_list' %}"><button class="link">Movies</button></a>
           </li>
           <li class="nav-item mx-3">
-            <a class="nav-link" href="#nowShowing"><button class="link">Now Showing</button></a>
+            <a class="nav-link" href="{% url 'movie_list' %}"#nowShowing"><button class="link">Now Showing</button></a>
           </li>
           <li class="nav-item mx-3">
-            <a class="nav-link" href="#findUs"><button class="link">Find Us</button></a>
+            <a class="nav-link"href="{% url 'Home' %}#findUs"><button class="link">Find Us</button></a>
           </li>
           {% if request.user.is_authenticated %}
           <li class="nav-item mx-3">

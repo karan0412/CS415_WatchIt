@@ -1,4 +1,5 @@
 
+from functools import cache
 import logging
 
 import csv
@@ -67,7 +68,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-from .utils import generate_token
+from .utils import backup_database, generate_token, restore_database
 from django.core.mail import EmailMessage
 import threading
 from urllib.parse import urlencode
@@ -156,6 +157,35 @@ def booking_report_view(request):
         'total_amount': total_amount,
     })
 
+def manual_backup(request):
+    backup_file = backup_database()
+    if backup_file:
+        messages.success(request, f'Backup created successfully: {backup_file}')
+    else:
+        messages.error(request, 'Backup failed.')
+    return HttpResponseRedirect(reverse('admin:index'))
+
+def manual_restore(request):
+    if request.method == 'POST':
+        file = request.FILES['backup_file']
+        temp_dir = os.path.join(settings.BASE_DIR, 'temp')
+
+        if not os.path.exists(temp_dir):
+            os.makedirs(temp_dir)
+
+        file_path = os.path.join(temp_dir, file.name)
+        with open(file_path, 'wb+') as destination:
+            for chunk in file.chunks():
+                destination.write(chunk)
+
+        restore_database(file_path)
+
+        messages.success(request, 'Database restored successfully.')
+        return HttpResponseRedirect(reverse('admin:index'))
+
+    return render(request, 'admin/manual_restore.html')
+
+
 
 def admin_dashboard(request):
     total_bookings = Booking.objects.count()
@@ -218,6 +248,8 @@ def minute_registrations(request):
         'minute_registrations': minute_registrations_data,
     }
     return render(request, 'admin/minute_registrations.html', context)
+
+
 
 @login_required
 def transaction_report(request):

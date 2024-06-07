@@ -6,30 +6,10 @@ INFO 2024-06-03 20:57:20,424 signals User karan logged in from IP 127.0.0.1
 INFO 2024-06-02 11:18:29,862 signals User karan logged in from IP 127.0.0.1
 INFO 2024-06-02 11:58:50,760 signals User karan logged in from IP 127.0.0.1
 INFO 2024-06-03 20:19:13,649 signals User karan logged in from IP 192.168.131.63
-INFO 2024-06-03 20:37:49,161 signals User karan logged in from IP 127.0.0.1
-INFO 2024-06-04 11:53:00,481 signals User karan logged out from IP 127.0.0.1
-INFO 2024-06-04 12:04:42,174 signals User karan logged in from IP 127.0.0.1
-INFO 2024-06-04 17:01:01,858 signals User karan logged out from IP 127.0.0.1
-INFO 2024-06-04 17:01:54,794 views Activation link sent to karan04
-INFO 2024-06-04 17:15:40,058 signals User karan logged in from IP 127.0.0.1
-INFO 2024-06-04 17:16:09,421 signals User karan logged out from IP 127.0.0.1
-INFO 2024-06-04 17:16:47,612 views Activation link sent to karan04
-INFO 2024-06-04 17:17:05,135 signals User karan04 logged in from IP 127.0.0.1
-INFO 2024-06-04 17:24:54,687 signals User karan logged in from IP 127.0.0.1
-INFO 2024-06-04 17:25:15,941 signals User karan logged out from IP 127.0.0.1
-INFO 2024-06-04 17:25:52,366 views Activation link sent to karan04
-INFO 2024-06-04 17:26:12,897 signals User karan04 logged in from IP 127.0.0.1
-INFO 2024-06-04 17:34:11,855 signals User karan logged in from IP 192.168.244.63
-INFO 2024-06-04 17:39:54,830 views Activation link sent to jbir
-INFO 2024-06-04 17:40:46,600 signals User jbir logged in from IP 192.168.244.99
-INFO 2024-06-04 17:41:13,117 signals User jbir logged out from IP 192.168.244.99
-INFO 2024-06-04 17:41:48,031 views  OTP was sent to jbir
-INFO 2024-06-04 17:42:13,652 signals User jbir logged in from IP 192.168.244.99
-INFO 2024-06-04 17:42:13,652 views  jbir's OTP was Verified 
-INFO 2024-06-05 18:00:21,755 views Activation link sent to savi2001
-INFO 2024-06-05 18:00:55,822 views  OTP was sent to savi2001
-INFO 2024-06-05 18:02:31,138 signals User karan logged in from IP 192.168.147.63
-INFO 2024-06-05 18:02:53,153 views Activation link sent to amz2003
-INFO 2024-06-05 18:04:30,125 signals User savi2001 logged in from IP 192.168.147.106
-INFO 2024-06-05 18:11:14,654 signals User savi2001 logged out from IP 192.168.147.106
-INFO 2024-06-06 19:01:49,367 signals User karan logged in from IP 127.0.0.1
+INFO 2024-06-04 16:54:44,408 signals User karan logged out from IP 127.0.0.1
+INFO 2024-06-04 16:55:25,294 views Activation link sent to fj_deli
+INFO 2024-06-04 16:58:43,082 signals User karan logged in from IP 127.0.0.1
+INFO 2024-06-04 17:11:29,385 signals User karan logged in from IP 127.0.0.1
+INFO 2024-06-07 15:47:10,278 signals User karan logged in from IP 127.0.0.1
+INFO 2024-06-07 15:52:47,151 signals User karan logged in from IP 127.0.0.1
+INFO 2024-06-07 16:04:02,297 signals User karan logged in from IP 127.0.0.1

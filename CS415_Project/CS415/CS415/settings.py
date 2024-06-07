@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-%)+3a&lnyn+_7@x$^b!1nx6f!vq=y48o(9at-tswd(l+b$n7h&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-#ALLOWED_HOSTS = ['192.168.147.63']
+# ALLOWED_HOSTS = ['192.168.131.63']
 ALLOWED_HOSTS = []
 
 # Application definition
@@ -218,12 +218,12 @@ LOGGING = {
     },
 }
 
-#SECURE_SSL_REDIRECT = False
-#SECURE_HSTS_SECONDS = 0
-#SECURE_HSTS_INCLUDE_SUBDOMAINS = False
-#SECURE_HSTS_PRELOAD = False
-#SESSION_COOKIE_SECURE = False
-#CSRF_COOKIE_SECURE = False
+SECURE_SSL_REDIRECT = False
+SECURE_HSTS_SECONDS = 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 
 
 # Path to the SSL certificate and key

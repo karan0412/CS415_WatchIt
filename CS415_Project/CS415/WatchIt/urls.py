@@ -2,7 +2,8 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
-from .import views
+
+from .import views, admin
 from .views import admin_dashboard
 
 
@@ -60,7 +61,10 @@ urlpatterns = [
     path('reject_feedback/<int:feedback_id>/', views.reject_feedback, name='reject_feedback'),
     path('my_feedback/', views.my_feedback, name='my_feedback'),
     path('booking_report_view/', views.booking_report_view, name='booking_report_view'),
-
+    path('manual_backup/', views.manual_backup, name='manual_backup'),
+    path('manual_restore/', views.manual_restore, name='manual_restore'),
+    # path('admin/', admin.site.urls),
+    # path('', include('WatchIt.urls')),
 ]
 
 
