@@ -132,7 +132,7 @@ class BookingAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'movie', 'cinema_hall', 'showtime', 'booking_date', 'payment_amount', 'num_seats', 'get_seat_labels')
     search_fields = ('user__username', 'movie__title')
     list_filter = ('booking_date', 'showtime')
-    fields = ('user', 'movie', 'cinema_hall', 'showtime', 'booking_date', 'payment_amount', 'num_seats', 'seats', 'edited')
+    fields = ('user', 'movie', 'cinema_hall', 'showtime', 'booking_date', 'payment_amount', 'num_seats', 'adults', 'children', 'seats', 'edited')
     readonly_fields = ('booking_date',)
     filter_horizontal = ('seats',)
 
