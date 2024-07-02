@@ -1,0 +1,141 @@
+{% extends 'index.html' %}
+{% block content %}
+
+
+    <style>
+ 
+
+        .accordion {
+            width: 80%;
+            margin: 20px auto;
+        }
+
+        .accordion-item {
+            background: #333; /* Darker background for each item */
+            border: none;
+        }
+
+        .accordion-button {
+            background: #19A7CE; 
+            color: white; 
+            cursor: pointer;
+            padding: 18px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            transition: background-color 0.6s ease;
+            border-bottom: 1px solid #444;
+        }
+
+        .accordion-button:hover {
+            background-color: #146C94; /* Slightly lighter for hover */
+        }
+
+    </style>
+
+    <div class="accordion" id="accordionFlushExample">
+
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                How many times can I edit bookings?
+            </button>
+          </h2>
+          <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+            <div class="accordion-body">You can only edit the booking once.</div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseTwo" aria-expanded="false" aria-controls="flush-collapseTwo">
+                Can I edit a movie?
+            </button>
+          </h2>
+          <div id="flush-collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+            <div class="accordion-body">You can only edit a movie 3 hours prior to the showtime.</div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseThree" aria-expanded="false" aria-controls="flush-collapseThree">
+                Can I edit a discounted ticket?
+            </button>
+          </h2>
+          <div id="flush-collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+            <div class="accordion-body">According to WatchIt Cinemas Sales and Customer Care Policy, the customer cannot edit a discounted ticket. Discounts are available on Wednesdays and cannot be upgraded.</div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseFour" aria-expanded="false" aria-controls="flush-collapseTwo">
+                What features do guest users have?
+              </button>
+            </h2>
+            <div id="flush-collapseFour" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+              <div class="accordion-body">Guest users can only book tickets.</div>
+            </div>
+          </div>
+    
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseFive" aria-expanded="false" aria-controls="flush-collapseTwo">
+                What features do registered users have?
+              </button>
+            </h2>
+            <div id="flush-collapseFive" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+              <div class="accordion-body">registered users can access their purchase history, view their upcoming bookings, edit their bookings as per the conditions, get movie recommendations, and give feedback to the company</div>
+            </div>
+          </div>
+    
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseSix" aria-expanded="false" aria-controls="flush-collapseTwo">
+                Are the tickets refundable?
+              </button>
+            </h2>
+            <div id="flush-collapseSix" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+              <div class="accordion-body">According to WatchIt Cinemas Sales and Customer Care Policy, issued tickets are non-refundable.</div>
+            </div>
+          </div>
+    
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseSeven" aria-expanded="false" aria-controls="flush-collapseTwo">
+                Does the site have multifactor authentication?
+              </button>
+            </h2>
+            <div id="flush-collapseSeven" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+              <div class="accordion-body">Yes, WatchIt Cinemas provides multifactor authentication to ensure the security of your account.</div>
+            </div>
+          </div>
+    
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseEight" aria-expanded="false" aria-controls="flush-collapseTwo">
+                How can I see shows later in the week?
+              </button>
+            </h2>
+            <div id="flush-collapseEight" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+              <div class="accordion-body">On the movie page, you can see dates at the top which can be clicked to access the movies showing on that particular day.</div>
+            </div>
+          </div>
+    
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseNine" aria-expanded="false" aria-controls="flush-collapseTwo">
+                How is feedback processed?
+              </button>
+            </h2>
+            <div id="flush-collapseNine" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+              <div class="accordion-body">Feedback provided by users is processed within 1 to 2 working days. The administrator will approve or review it which can be followed on user dashboard.</div>
+            </div>
+          </div>
+        
+      </div>
+
+      
+
+    {% endblock %}
