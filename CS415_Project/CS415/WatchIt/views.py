@@ -1648,3 +1648,5 @@ def minute_registrations(request):
     return render(request, 'admin/minute_registrations.html', context)
 
 
+def faq_view(request):
+    return render(request, 'FAQ.html')

@@ -33,3 +33,25 @@ INFO 2024-06-05 18:02:53,153 views Activation link sent to amz2003
 INFO 2024-06-05 18:04:30,125 signals User savi2001 logged in from IP 192.168.147.106
 INFO 2024-06-05 18:11:14,654 signals User savi2001 logged out from IP 192.168.147.106
 INFO 2024-06-06 19:01:49,367 signals User karan logged in from IP 127.0.0.1
+INFO 2024-06-07 22:33:58,304 signals User karan logged out from IP 127.0.0.1
+INFO 2024-06-07 22:39:27,496 views Activation link sent to karan04
+INFO 2024-06-07 22:39:59,838 signals User karan04 logged in from IP 127.0.0.1
+INFO 2024-06-07 22:40:07,440 signals User karan04 logged out from IP 127.0.0.1
+INFO 2024-06-07 22:40:25,962 views  OTP was sent to karan04
+INFO 2024-06-07 22:40:47,345 signals User karan04 logged in from IP 127.0.0.1
+INFO 2024-06-07 22:40:47,346 views  karan04's OTP was Verified 
+INFO 2024-06-07 22:40:57,445 signals User karan04 logged out from IP 127.0.0.1
+INFO 2024-06-07 22:41:50,248 views  OTP was sent to karan04
+INFO 2024-06-07 22:42:03,597 signals User karan04 logged in from IP 127.0.0.1
+INFO 2024-06-07 22:42:03,599 views  karan04's OTP was Verified 
+INFO 2024-06-07 22:46:24,320 signals User karan logged in from IP 127.0.0.1
+INFO 2024-06-07 22:47:38,691 signals User karan logged out from IP 127.0.0.1
+INFO 2024-06-07 22:48:09,187 views  OTP was sent to karan04
+INFO 2024-06-07 22:48:30,943 signals User karan04 logged in from IP 127.0.0.1
+INFO 2024-06-07 22:48:30,943 views  karan04's OTP was Verified 
+INFO 2024-06-07 22:58:06,157 signals User karan logged in from IP 127.0.0.1
+INFO 2024-06-07 22:59:08,200 signals User karan logged out from IP 127.0.0.1
+INFO 2024-06-07 22:59:26,896 views  OTP was sent to karan04
+INFO 2024-06-07 22:59:42,971 signals User karan04 logged in from IP 127.0.0.1
+INFO 2024-06-07 22:59:42,971 views  karan04's OTP was Verified 
+INFO 2024-06-07 23:52:09,750 signals User karan logged in from IP 127.0.0.1
